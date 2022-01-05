@@ -25,8 +25,9 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Sphinx Build
         working-directory: ./sphinx
-        run: make html
-        run: touch _build/html/.nojekyll
+        run: | 
+          make html
+          touch _build/html/.nojekyll
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
