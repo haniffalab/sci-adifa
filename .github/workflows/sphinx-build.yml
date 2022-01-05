@@ -27,11 +27,10 @@ jobs:
         working-directory: ./sphinx
         run: make html
       - name: Deploy to gh-pages
-        working-directory: ./sphinx
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
           token: ${{ secrets.PAT }}
           branch: main
-          folder: _build
+          folder: sphinx/_build
           target-folder: docs
           clean: true
