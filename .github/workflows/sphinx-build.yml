@@ -30,6 +30,6 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
           branch: main
-          folder: sphinx/_build
+          folder: sphinx/_build/html
           target-folder: docs
           clean: true
