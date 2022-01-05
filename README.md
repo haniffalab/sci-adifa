@@ -5,5 +5,5 @@
 [![Coverage](https://codecov.io/gh/haniffalab/adia/branch/main/graph/badge.svg?token=SM1J6FVZ5C)](https://codecov.io/gh/haniffalab/adia)
 
 [![Python](https://img.shields.io/badge/python-3.8-blue)](https://python.org)
-[![Documentation](https://img.shields.io/badge/Documentation-online-blue)](http://haniffalab.github.io/adia)
+[![Documentation](https://img.shields.io/badge/docs-online-blue)](http://haniffalab.github.io/adia)
 
