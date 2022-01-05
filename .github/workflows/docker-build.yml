@@ -1,4 +1,4 @@
-name: Docker Builds
+name: docker-build
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
   pull_request:
     branches: [ main ]
-    
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,9 +21,7 @@ jobs:
         docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
     - name: docker build
       run: |
-        docker build . -f ./Dockerfile -t haniffalab/adia:${GITHUB_REF##*/}
         docker build . -f ./Dockerfile -t haniffalab/adia:latest
     - name: docker push
       run: |
-        docker push haniffalab/adia:${GITHUB_REF##*/}
         docker push haniffalab/adia:latest
