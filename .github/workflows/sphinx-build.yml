@@ -29,7 +29,6 @@ jobs:
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
-          token: ${{ secrets.PAT }}
           branch: main
           folder: sphinx/_build
           target-folder: docs
