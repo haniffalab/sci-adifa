@@ -16,12 +16,12 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}   
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}  
       run: |
-        docker login cellatlas.azurecr.io -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+        docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
     - name: docker build
       run: |
-        docker build . -f ./Dockerfile -t cellatlas.azurecr.io/cellatlas-api:${GITHUB_REF##*/}
-        docker build . -f ./Dockerfile -t cellatlas.azurecr.io/cellatlas-api:latest
+        docker build . -f ./Dockerfile -t haniffalab/adia:${GITHUB_REF##*/}
+        docker build . -f ./Dockerfile -t haniffalab/adia:latest
     - name: docker push
       run: |
-        docker push cellatlas.azurecr.io/cellatlas-api:${GITHUB_REF##*/}
-        docker push cellatlas.azurecr.io/cellatlas-api:latest
+        docker push haniffalab/adia:${GITHUB_REF##*/}
+        docker push haniffalab/adia:latest
