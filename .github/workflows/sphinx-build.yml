@@ -23,6 +23,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install sphinx
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          python -m pip install -e .
       - name: Sphinx Build
         working-directory: ./sphinx
         run: | 
