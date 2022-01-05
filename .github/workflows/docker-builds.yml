@@ -1,0 +1,27 @@
+name: Docker Builds
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: docker login
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}   
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}  
+      run: |
+        docker login cellatlas.azurecr.io -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+    - name: docker build
+      run: |
+        docker build . -f ./Dockerfile -t cellatlas.azurecr.io/cellatlas-api:${GITHUB_REF##*/}
+        docker build . -f ./Dockerfile -t cellatlas.azurecr.io/cellatlas-api:latest
+    - name: docker push
+      run: |
+        docker push cellatlas.azurecr.io/cellatlas-api:${GITHUB_REF##*/}
+        docker push cellatlas.azurecr.io/cellatlas-api:latest
