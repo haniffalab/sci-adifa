@@ -63,6 +63,7 @@ Test
 ::
 
     $ pip install '.[test]'
+    $ pip install pytest coverage
     $ pytest
 
 Run with coverage report::
@@ -70,3 +71,21 @@ Run with coverage report::
     $ coverage run -m pytest
     $ coverage report
     $ coverage html  # open htmlcov/index.html in a browser
+
+Sphinx documentation
+--------------------
+
+::
+
+    $ cd sphinx
+    $ make clean
+    $ make html # open _build/html/index.html in a browser
+
+Docker builds
+--------------------
+
+::
+
+    $ cd sphinx
+    $ make clean
+    $ make html # open _build/html/index.html in a browser    
