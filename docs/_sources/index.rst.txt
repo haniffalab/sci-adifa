@@ -1,21 +1,60 @@
-.. Adia documentation master file, created by
-   sphinx-quickstart on Wed Jan  5 15:10:44 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+|Tests| |Sphinx| |Coverage| |Python| |Docs|
 
-Welcome to Adia's documentation!
-================================
+.. |Tests| image:: https://github.com/haniffalab/adia/actions/workflows/test-coverage.yml/badge.svg
+   :target: https://github.com/haniffalab/adia/actions/workflows/test-coverage.yml
+.. |Sphinx| image:: https://github.com/haniffalab/adia/actions/workflows/sphinx-build.yml/badge.svg
+   :target: https://github.com/haniffalab/adia/actions/workflows/sphinx-build.yml
+.. |Coverage| image:: https://codecov.io/gh/haniffalab/adia/branch/main/graph/badge.svg?token=SM1J6FVZ5C
+   :target: https://codecov.io/gh/haniffalab/adia
+.. |Python| image:: https://img.shields.io/badge/python-3.8-blue
+   :target: https://python.org
+.. |Docs| image:: https://img.shields.io/badge/docs-online-blue
+   :target: http://haniffalab.github.io/adia
+
+
+Adifa - Annotated Data Insights Flask App
+=========================================
+
+Adifa is a scalable toolkit for analyzing single-cell gene expression data
+built jointly with `anndata <https://anndata.readthedocs.io>`__.  It includes
+preprocessing, visualization, clustering, trajectory inference and differential
+expression testing.  The Python-based implementation efficiently deals with
+datasets of more than one million cells.
+
+Discuss usage on Discourse_. Read the documentation_.
+If you'd like to contribute by opening an issue or creating a pull request,
+please take a look at our `contributing guide`_.
+If Scanpy is useful for your research, consider citing `Genome Biology (2018)`_.
+
+.. _Discourse: https://scanpy.discourse.group/
+.. _documentation: https://scanpy.readthedocs.io
+.. _contributing guide: CONTRIBUTING.md
+.. _Genome Biology (2018): https://doi.org/10.1186/s13059-017-1382-0
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Documentation
+   :glob:
+
+   overview
+   installation
+   deployment
+   contributing
    code
 
 
+Search
+------
 
-Indices and tables
-==================
-
-* :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Project Links
+  
+   Source Code <http://LINK.com>
+   Issue Tracker <http://LINK.com>
+   Website <http://LINK.com>
+   Twitter <http://LINK.com>
