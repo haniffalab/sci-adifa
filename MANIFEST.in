@@ -1,6 +1,6 @@
 include LICENSE.rst
-include adia/schema.sql
-graft adia/static
-graft adia/templates
+include adifa/schema.sql
+graft adifa/static
+graft adifa/templates
 graft tests
 global-exclude *.pyc

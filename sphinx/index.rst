@@ -1,15 +1,15 @@
 |Tests| |Sphinx| |Coverage| |Python| |Docs|
 
-.. |Tests| image:: https://github.com/haniffalab/adia/actions/workflows/test-coverage.yml/badge.svg
-   :target: https://github.com/haniffalab/adia/actions/workflows/test-coverage.yml
-.. |Sphinx| image:: https://github.com/haniffalab/adia/actions/workflows/sphinx-build.yml/badge.svg
-   :target: https://github.com/haniffalab/adia/actions/workflows/sphinx-build.yml
-.. |Coverage| image:: https://codecov.io/gh/haniffalab/adia/branch/main/graph/badge.svg?token=SM1J6FVZ5C
-   :target: https://codecov.io/gh/haniffalab/adia
+.. |Tests| image:: https://github.com/haniffalab/adifa/actions/workflows/test-coverage.yml/badge.svg
+   :target: https://github.com/haniffalab/adifa/actions/workflows/test-coverage.yml
+.. |Sphinx| image:: https://github.com/haniffalab/adifa/actions/workflows/sphinx-build.yml/badge.svg
+   :target: https://github.com/haniffalab/adifa/actions/workflows/sphinx-build.yml
+.. |Coverage| image:: https://codecov.io/gh/haniffalab/adifa/branch/main/graph/badge.svg?token=SM1J6FVZ5C
+   :target: https://codecov.io/gh/haniffalab/adifa
 .. |Python| image:: https://img.shields.io/badge/python-3.8-blue
    :target: https://python.org
 .. |Docs| image:: https://img.shields.io/badge/docs-online-blue
-   :target: http://haniffalab.github.io/adia
+   :target: http://haniffalab.github.io/adifa
 
 
 Adifa - Annotated Data Insights Flask App

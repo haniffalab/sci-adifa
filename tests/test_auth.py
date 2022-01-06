@@ -2,7 +2,7 @@ import pytest
 from flask import g
 from flask import session
 
-from adia.db import get_db
+from adifa.db import get_db
 
 
 def test_register(client, app):

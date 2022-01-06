@@ -1,6 +1,6 @@
 FROM python:3.8
 
-ENV FLASK_APP "adia"
+ENV FLASK_APP "adifa"
 ENV FLASK_RUN_PORT=5000
 
 RUN mkdir /app

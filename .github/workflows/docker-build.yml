@@ -21,7 +21,7 @@ jobs:
         docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
     - name: docker build
       run: |
-        docker build . -f ./Dockerfile -t haniffalab/adia:latest
+        docker build . -f ./Dockerfile -t haniffalab/adifa:latest
     - name: docker push
       run: |
-        docker push haniffalab/adia:latest
+        docker push haniffalab/adifa:latest

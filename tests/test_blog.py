@@ -1,6 +1,6 @@
 import pytest
 
-from adia.db import get_db
+from adifa.db import get_db
 
 
 def test_index(client, auth):

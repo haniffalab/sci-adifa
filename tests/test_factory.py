@@ -1,4 +1,4 @@
-from adia import create_app
+from adifa import create_app
 
 
 def test_config():

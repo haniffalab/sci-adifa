@@ -7,8 +7,8 @@ from flask import request
 from flask import url_for
 from werkzeug.exceptions import abort
 
-from adia.auth import login_required
-from adia.db import get_db
+from adifa.auth import login_required
+from adifa.db import get_db
 
 bp = Blueprint("blog", __name__)
 
