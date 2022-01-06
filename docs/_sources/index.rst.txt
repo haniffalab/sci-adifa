@@ -1,11 +1,11 @@
 |Tests| |Sphinx| |Coverage| |Python| |DOI|
  
-.. |Tests| image:: https://github.com/haniffalab/adifa/actions/workflows/test-coverage.yml/badge.svg
-   :target: https://github.com/haniffalab/adifa/actions/workflows/test-coverage.yml
-.. |Sphinx| image:: https://github.com/haniffalab/adifa/actions/workflows/sphinx-build.yml/badge.svg
-   :target: https://github.com/haniffalab/adifa/actions/workflows/sphinx-build.yml
-.. |Coverage| image:: https://codecov.io/gh/haniffalab/adifa/branch/main/graph/badge.svg?token=SM1J6FVZ5C
-   :target: https://codecov.io/gh/haniffalab/adifa
+.. |Tests| image:: https://github.com/haniffalab/sci-adifa/actions/workflows/test-coverage.yml/badge.svg
+   :target: https://github.com/haniffalab/sci-adifa/actions/workflows/test-coverage.yml
+.. |Sphinx| image:: https://github.com/haniffalab/sci-adifa/actions/workflows/sphinx-build.yml/badge.svg
+   :target: https://github.com/haniffalab/sci-adifa/actions/workflows/sphinx-build.yml
+.. |Coverage| image:: https://codecov.io/gh/haniffalab/sci-adifa/branch/main/graph/badge.svg?token=SM1J6FVZ5C
+   :target: https://codecov.io/gh/haniffalab/sci-adifa
 .. |Python| image:: https://img.shields.io/badge/python-3.8-blue
    :target: https://python.org
 .. |DOI| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5824895.svg
