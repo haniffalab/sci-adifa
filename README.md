@@ -1,15 +1,16 @@
 
-[![Tests](https://github.com/haniffalab/adifa/actions/workflows/test-coverage.yml/badge.svg)](https://github.com/haniffalab/adifa/actions/workflows/test-coverage.yml)
-[![Docker](https://github.com/haniffalab/adifa/actions/workflows/docker-build.yml/badge.svg)](https://github.com/haniffalab/adifa/actions/workflows/docker-build.yml)
-[![Sphinx](https://github.com/haniffalab/adifa/actions/workflows/sphinx-build.yml/badge.svg)](https://github.com/haniffalab/adifa/actions/workflows/sphinx-build.yml)
-[![Coverage](https://codecov.io/gh/haniffalab/adifa/branch/main/graph/badge.svg?token=SM1J6FVZ5C)](https://codecov.io/gh/haniffalab/adifa)
-[![Python](https://img.shields.io/badge/python-3.8-blue)](https://python.org)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5824895.svg)](https://doi.org/10.5281/zenodo.5824895)
+[![tests](https://github.com/haniffalab/sci-adifa/actions/workflows/test-coverage.yml/badge.svg)](https://github.com/haniffalab/sci-adifa/actions/workflows/test-coverage.yml)
+[![docker](https://github.com/haniffalab/sci-adifa/actions/workflows/docker-build.yml/badge.svg)](https://github.com/haniffalab/sci-adifa/actions/workflows/docker-build.yml)
+[![sphinx](https://github.com/haniffalab/sci-adifa/actions/workflows/sphinx-build.yml/badge.svg)](https://github.com/haniffalab/sci-adifa/actions/workflows/sphinx-build.yml)
+[![codecov](https://codecov.io/gh/haniffalab/sci-adifa/branch/main/graph/badge.svg?token=RQLL0HKQ5W)](https://codecov.io/gh/haniffalab/sci-adifa)
+[![python](https://img.shields.io/badge/python-3.8-blue)](https://python.org)
 
 ## SINGLE CELL INSIGHTS
+
 # Adifa - Annotated Data in Flask App
 
-[![Docs](https://img.shields.io/badge/docs-online-blue)](https://haniffalab.github.io/sci-adifa)
+[![docs](https://img.shields.io/badge/Documentation-online-blue)](https://haniffalab.github.io/sci-adifa)
+[![doi](https://zenodo.org/badge/DOI/10.5281/zenodo.5824895.svg)](https://doi.org/10.5281/zenodo.5824895)
 
 Adifa is a scalable toolkit for analyzing single-cell gene expression data built jointly with anndata. It includes preprocessing, visualization, clustering, trajectory inference and differential expression testing. The Python-based implementation efficiently deals with datasets of more than one million cells.
 
