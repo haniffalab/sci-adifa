@@ -45,6 +45,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#install">Install</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#run">Run</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#test">Test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sphinx-documentation">Sphinx documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#docker-builds">Docker builds</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
@@ -136,6 +138,7 @@ $ flask run
 <section id="test">
 <h2>Test<a class="headerlink" href="#test" title="Permalink to this headline"></a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install &#39;.[test]&#39;
+$ pip install pytest coverage
 $ pytest
 </pre></div>
 </div>
@@ -143,6 +146,22 @@ $ pytest
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ coverage run -m pytest
 $ coverage report
 $ coverage html  # open htmlcov/index.html in a browser
+</pre></div>
+</div>
+</section>
+<section id="sphinx-documentation">
+<h2>Sphinx documentation<a class="headerlink" href="#sphinx-documentation" title="Permalink to this headline"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd sphinx
+$ make clean
+$ make html # open _build/html/index.html in a browser
+</pre></div>
+</div>
+</section>
+<section id="docker-builds">
+<h2>Docker builds<a class="headerlink" href="#docker-builds" title="Permalink to this headline"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd sphinx
+$ make clean
+$ make html # open _build/html/index.html in a browser
 </pre></div>
 </div>
 </section>
