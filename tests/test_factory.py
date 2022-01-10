@@ -10,3 +10,8 @@ def test_config():
 def test_hello(client):
     response = client.get("/hello")
     assert response.data == b"Hello, World!"
+
+
+def test_privacy(client):
+    response = client.get("/privacy")
+    assert b"Privacy" in response.data

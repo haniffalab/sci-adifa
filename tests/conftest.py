@@ -1,62 +1,58 @@
 import os
-import tempfile
 
 import pytest
 
+from sqlalchemy import text
+
 from adifa import create_app
-from adifa.db import get_db
-from adifa.db import init_db
+from adifa import db as _db
 
-# read in SQL for populating test data
-with open(os.path.join(os.path.dirname(__file__), "data.sql"), "rb") as f:
-    _data_sql = f.read().decode("utf8")
-
-
-@pytest.fixture
+@pytest.fixture(scope='session')
 def app():
     """Create and configure a new app instance for each test."""
     # create a temporary file to isolate the database for each test
-    db_fd, db_path = tempfile.mkstemp()
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    db_path = os.path.join(basedir, "test.sqlite")   
+    sql_path = os.path.join(basedir, "data.sql")   
+    
     # create the app with common test config
-    app = create_app({"TESTING": True, "DATABASE": db_path})
-
+    app = create_app({"TESTING": True, "SQLALCHEMY_DATABASE_URI": "sqlite:///" + db_path})
+    
     # create the database and load test data
     with app.app_context():
-        init_db()
-        get_db().executescript(_data_sql)
+        
+        _db.init_app(app)
+        _db.create_all()
+        with open(sql_path) as f:
+            _db.engine.execute(text(f.read()))
+        yield app  
+        _db.session.remove()  # looks like db.session.close() would work as well
+        _db.drop_all()
 
-    yield app
-
-    # close and remove the temporary database
-    os.close(db_fd)
+    # remove the temporary database
     os.unlink(db_path)
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def client(app):
     """A test client for the app."""
     return app.test_client()
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def runner(app):
     """A test runner for the app's Click commands."""
     return app.test_cli_runner()
 
 
-class AuthActions:
-    def __init__(self, client):
-        self._client = client
-
-    def login(self, username="test", password="test"):
-        return self._client.post(
-            "/auth/login", data={"username": username, "password": password}
-        )
-
-    def logout(self):
-        return self._client.get("/auth/logout")
+@pytest.fixture(scope='session')
+def db(app):
+    _db.app = app
+    return _db
 
 
-@pytest.fixture
-def auth(client):
-    return AuthActions(client)
+@pytest.fixture(scope='function')
+def session(db, request):
+    """Creates a database session for a test."""
+    session = db.create_scoped_session()
+    return session
