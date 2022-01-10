@@ -1,0 +1,190 @@
+
+{% extends 'base.html' %}
+
+{% block headscripts %}
+<script type="module">
+  import { ValueSelector } from '{{ url_for("static", filename="scripts/ValueSelector.js" ) }}';
+  customElements.define('gene-selector', ValueSelector);
+</script>
+{% endblock %}
+
+{% block sidebar %}
+<!-- Main Sidebar -->
+<div class="main-navbar">
+  <nav class="navbar align-items-stretch navbar-light bg-white flex-md-nowrap p-0">
+    <a class="navbar-brand" href="{{ url_for('datasets.index') }}">
+      <img class="align-middle m-auto" src="/images/logo.svg" alt="Haniffa Lab">
+    </a>
+    <a class="navbar-text" href="{{ url_for('datasets.index') }}">
+      <span class="align-middle m-auto">CellAtlas.io</span>
+    </a> 
+    <a class="toggle-sidebar d-sm-inline d-md-none d-lg-none">
+      <i class="fas fa-arrow-left"></i>
+    </a>     
+  </nav>
+</div>
+<div class="nav-wrapper">
+  <h6 class="main-sidebar__nav-title">Dataset</h6>
+  <div class="p-3 border-bottom">
+    <h4 class="ds-title mb-2">
+      {{dataset.title}}            
+    </h4>
+    <div class="btn-group btn-group-toggle">
+      <a class="btn btn-secondary" href="{{ url_for('datasets.edit', id=did) }}">
+        <i class="fas fa-edit"></i> </a>  
+      <a class="btn btn-secondary" data-toggle="collapse" data-target="#collapseDataset" aria-controls="collapseDataset"><i class="fa fa-caret-down" style="color:white"></i></a>
+    </div>      
+    <div id="collapseDataset" class="collapse">
+      <dl class="row mt-2">
+        <dd class="col-sm-12">{{dataset.desc}}</dd>
+
+        <dt class="col-sm-12">Author</dt>
+        <dd class="col-sm-12">{{dataset.author}}</dd>
+      
+        <dt class="col-sm-12">DOI</dt>
+        <dd class="col-sm-12"><a href="{{dataset.doi}}">{{dataset.doi}}</a></dd>
+      
+        <dt class="col-sm-12">Filename</dt>
+        <dd class="col-sm-12">
+          {{dataset.filename}}<br />
+        </dd>  
+        <dd class="col-sm-12">
+          <a href="{{ url_for('datasets.download', id=did) }}" class="badge badge-secondary" rel="nofollow"><i class="fa fa-download"></i> Download</a>
+        </dd>              
+      </dl>
+    </div>                          
+  </div>
+  <h6 class="main-sidebar__nav-title">Observations</h6>
+  <ul class="nav flex-column">
+    <div id="obs-accordion">
+      <div class="list-group list-group-flush">                                                              
+        {% for ob in obs %}
+          <div class="list-group-item justify-content-between align-items-center" data-toggle="collapse" data-target="#collapse{{loop.index}}" aria-controls="collapse{{loop.index}}">
+            <h4>
+              <i class="fa fa-plus-square"></i>&nbsp;&nbsp;{{ dataset.data_obs[ob]['name'] }}
+            </h4>
+          </div>
+          <div id="collapse{{loop.index}}" class="collapse m-4 obs-values" aria-labelledby="heading{{loop.index}}" data-parent="#obs-accordion" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}">
+            <div class="list-group">
+              {% if dataset.data_obs[ob]['type'] == "categorical" %}
+                <div class="btn-group btn-group-toggle mb-4" role="group">
+                  <a class="btn btn-sm btn-white checkall" data-id="{{loop.index}}"><i class="far fa-2x fa-check-square"></i></a>
+                  <a class="btn btn-sm btn-white uncheckall" data-id="{{loop.index}}"><i class="far fa-2x fa-square"></i></a>
+                  <a class="btn btn-sm btn-white colourise" id="colourise{{loop.index}}" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}"><i class="fa fa-2x fa-tint"></i></a>
+                </div>   
+                {% for key, value in dataset.data_obs[ob]['values'].items()|sort(attribute=1) %}
+                <div class="list-group-item px-0 py-1">
+                  <div id="obs-list-{{ob}}" class="row">
+                    <div class="col-9">
+                      <label class="container-checkbox">{{dataset.data_obs[ob]['values'][key]}}
+                        <input class="obs_value_cb" id="obs-{{loop.index}}-value-{{key}}" type="checkbox" name="obs-{{value}}" value="{{value}}" checked="checked">
+                        <span class="checkmark"></span>
+                      </label>    
+                    </div>
+                    <!--<div class="col-3">
+                      <div class="progress-circle progress-10"></div>
+                    </div>-->
+                    <div class="col-3">
+                      <div id="{{ob}}-{{key}}" class="legend-box-color"></div>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              {% elif dataset.data_obs[ob]['type'] == "continuous" %}
+              <div class="btn-group btn-group-toggle mb-4" role="group">
+                <a class="btn btn-sm btn-white colourise" id="colourise{{loop.index}}" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}"><i class="fa fa-2x fa-tint"></i></a>
+              </div>               
+              <div class="list-group-item px-0 py-1">
+                <div class="row">
+                  <div class="col-6">
+                    Minimum
+                  </div>
+                  <div class="col-6 text-right">
+                    {{ dataset.data_obs[ob]['min'] }}
+                  </div>
+                </div>
+              </div>
+              <div class="list-group-item px-0 py-1">
+                <div class="row">
+                  <div class="col-6">
+                    Maximum
+                  </div>
+                  <div class="col-6 text-right">
+                    {{ dataset.data_obs[ob]['max'] }}
+                  </div>
+                </div>
+              </div>
+              <div class="list-group-item px-0 py-1">
+                <div class="row">
+                  <div class="col-6">
+                    Mean
+                  </div>
+                  <div class="col-6 text-right">
+                    {{ dataset.data_obs[ob]['mean'] }}
+                  </div>
+                </div>
+              </div>
+              <div class="list-group-item px-0 py-1">
+                <div class="row">
+                  <div class="col-6">
+                    Median
+                  </div>
+                  <div class="col-6 text-right">
+                    {{ dataset.data_obs[ob]['median'] }}
+                  </div>
+                </div>
+              </div>
+              {% else %}
+              {% endif %}    
+            </div>                                                           
+          </div>                          
+        {% endfor %}
+      </div>  
+    </div>           
+  </ul>
+</div>
+<!-- End Main Sidebar -->  
+{% endblock %}
+
+{% block content %}
+<script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
+<script src="https://unpkg.com/@deck.gl/core@^8.0.0/debug.min.js"></script>
+<div class="row">
+  <div class="col-lg-9 col-md-12">
+    <div class="card card-small">
+      <div class="card-body">
+        <code style="white-space: pre-wrap;">{{adata}}</code>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-md-12">
+    <!-- Gene selector -->
+    {% block geneselector %}
+    <div class='card card-small'>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item px-3">
+            <div class="btn-group d-flex" role="group">
+              <a href="{{ url_for('datasets.scatterplot', id=did) }}" class="btn btn-secondary w-100">Scatterplot</a>
+              <a href="{{ url_for('datasets.heatmap', id=did) }}" class="btn btn-secondary w-100">Heatmap</a>
+              <a href="{{ url_for('datasets.analysis', id=did) }}" class="btn btn-secondary w-100 active">Analysis</a>
+            </div>            
+          </li>
+          <li class="list-group-item px-3 pb-2">            
+            AnnData provides a scalable way of keeping track of data and learned annotations.
+          </li>
+        </ul>
+      </div>      
+    </div>
+    {% endblock %}
+    <!-- End Observations -->
+  </div>
+</div>
+{% endblock %}
+
+{% block bodyend %}
+{{ super() }}
+<!-- Load d3 -->
+<script src="https://d3js.org/d3.v6.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.13.3/js/standalone/selectize.min.js" integrity="sha512-pF+DNRwavWMukUv/LyzDyDMn8U2uvqYQdJN0Zvilr6DDo/56xPDZdDoyPDYZRSL4aOKO/FGKXTpzDyQJ8je8Qw==" crossorigin="anonymous"></script>
+{% endblock %}

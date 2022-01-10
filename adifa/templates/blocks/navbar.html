@@ -1,0 +1,20 @@
+{% import 'macros/menus.html' as menus %}
+<nav class="navbar align-items-stretch navbar-light flex-md-nowrap p-0">
+  <div class="w-100 d-none d-md-flex d-lg-flex">
+    &nbsp
+  </div>
+  <ul class="navbar-nav border-left flex-row ">
+    <li class="nav-item nav-logo border-right d-sm-block d-md-none">
+      <a class="nav-link nav-link-logo text-nowrap p-3" href="{{ url_for('datasets.index') }}">
+        <img class="align-middle m-auto img-fluid" src="/images/logo.svg" alt="Haniffa Lab">
+      </a>
+    </li>  
+    {% block navitems %}
+    {% endblock navitems %}
+  </ul>
+  <nav class="nav">
+    <a href="#" class="nav-link nav-link-icon toggle-sidebar d-md-inline d-lg-none text-center border-left" data-toggle="collapse" data-target=".header-navbar" aria-expanded="false" aria-controls="header-navbar">
+      <i class="fas fa-bars"></i>
+    </a>
+  </nav>
+</nav>

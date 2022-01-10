@@ -1,17 +1,25 @@
 import os
 
-from flask import Flask
+import click
+from flask import Flask, render_template
+from flask_sqlalchemy import SQLAlchemy
+from flask.cli import with_appcontext
 
+from config import Config
+
+# init globally accessible libraries
+db = SQLAlchemy()
 
 def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
-    app = Flask(__name__, instance_relative_config=True)
-    app.config.from_mapping(
-        # a default secret that should be overridden by instance config
-        SECRET_KEY="dev",
-        # store the database in the instance folder
-        DATABASE=os.path.join(app.instance_path, "adifa.sqlite"),
-    )
+    app = Flask(__name__,
+        instance_relative_config=True,
+        static_url_path='', 
+        static_folder='static',
+        template_folder='templates')
+
+    # load the default config
+    app.config.from_object(Config)
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -29,22 +37,49 @@ def create_app(test_config=None):
     @app.route("/hello")
     def hello():
         return "Hello, World!"
-
-    # register the database commands
-    from adifa import db
+        
+    @app.route("/privacy")
+    def privacy():
+        return render_template('privacy.html')
 
     db.init_app(app)
 
+    # perform setup checks
+    with app.app_context():
+        from .utils import dataset_utils
+        dataset_utils.load_files()
+
+    @app.context_processor
+    def inject_datasets():
+        from adifa import models
+        from sqlalchemy import asc
+        return {'datasets': models.Dataset.query.order_by(asc(models.Dataset.title)).all()}
+
     # apply the blueprints to the app
-    from adifa import auth, blog
+    from adifa import api, datasets 
 
-    app.register_blueprint(auth.bp)
-    app.register_blueprint(blog.bp)
+    app.register_blueprint(datasets.bp)
+    app.register_blueprint(api.bp,
+        url_prefix='{prefix}/v{version}'.format(
+            prefix=app.config['API_PREFIX'],
+            version=app.config['API_VERSION']))
 
-    # make url_for('index') == url_for('blog.index')
-    # in another app, you might define a separate main index here with
-    # app.route, while giving the blog blueprint a url_prefix, but for
-    # the tutorial the blog will be the main index
-    app.add_url_rule("/", endpoint="index")
+
+    @click.command("init-db")
+    @with_appcontext
+    def init_db_command():
+        """Clear existing data and create new tables."""
+        db.create_all()
+        click.echo("Initialized the database.")
+
+    @click.command("autodiscover")
+    @with_appcontext
+    def autodiscover_command():
+        from .utils import dataset_utils
+        dataset_utils.auto_discover()
+        click.echo("Discovered Datasets.")
+
+    app.cli.add_command(init_db_command)
+    app.cli.add_command(autodiscover_command)
 
     return app

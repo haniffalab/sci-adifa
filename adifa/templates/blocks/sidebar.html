@@ -1,0 +1,24 @@
+{% import 'macros/menus.html' as menus %}
+<!-- Main Sidebar -->
+<div class="main-navbar">
+  <nav class="navbar align-items-stretch navbar-light bg-white flex-md-nowrap p-0">
+    <a class="navbar-brand" href="{{ url_for('datasets.index') }}">
+      <img class="align-middle m-auto" src="/images/logo.svg" alt="Haniffa Lab">
+    </a>
+    <a class="navbar-text" href="{{ url_for('datasets.index') }}">
+      <span class="align-middle m-auto">CellAtlas.io</span>
+    </a>  
+    <a class="toggle-sidebar d-sm-inline d-md-none d-lg-none">
+      <i class="material-icons">&#xE5C4;</i>
+    </a>  
+  </nav>
+</div>
+<div class="nav-wrapper">
+  <ul class="nav flex-column">
+    <h6 class="main-sidebar__nav-title">Datasets</h6>
+    {% for n in datasets %}
+      {{ menus.menuitem(n.id, n.title) }}
+    {% endfor %}              
+  </ul>
+</div>
+<!-- End Main Sidebar -->  

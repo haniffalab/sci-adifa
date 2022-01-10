@@ -1,0 +1,97 @@
+
+{% extends 'scatterplot.html' %}
+
+{% block headcss %}
+{{ super() }}
+<style> circle { fill-opacity: 1 }</style>
+{% endblock %}
+{% block visualisation%}
+<div id="dotplot-container" class="card card-small mb-3">
+        <div class="card-body">
+          <div id="dotplot-info">
+            <i class="fas fa-info-circle"></i>
+            <section>Using the dotplot/heatmap:<br />
+            <ul>
+              <li>use the buttons to the right to switch between heatmap and dotplot views, and to swap the axes for the plot</li>
+              <li>If there are too many columns to fit on the page you can use the slider control below the buttons to scroll the plot</li>
+              <li>You can reorder the columns and rows by dragging their labels. The plot will update as you move the label</li>
+              <li>Finally, you can hover over a dot or square to view more information, including the actual gene expression</li>
+            </ul></section>
+          </div>
+        <div id="canvas-controls">
+            <div id="dphm-scale">
+              <div id="dphm-size-scale"><label>Cells expressing marker:</label><svg></svg></div>
+              <div id="dphm-color-scale"><label>Mean expression:</label><svg></svg></div></div>
+            <div class="btn-group btn-group-toggle mb-3" data-toggle="buttons">
+              <label class="btn btn-white active">
+                <input type="radio" id="display-dotplot" name="display-tool" value="dp" checked>dotplot</label>
+              <label class="btn btn-white">
+                <input type="radio" id="display-heatmap" name="display-tool" value="hm">heatmap</label>
+            </div>               
+            <div class="btn-group btn-group-toggle mb-3" data-toggle="buttons">
+              <label class="btn btn-white active">
+                <input type="radio" id="layout-cellxgene" name="display-layout" value="cg" checked>cells x genes</label>
+              <label class="btn btn-white">
+                <input type="radio" id="layout-genexcell" name="display-layout" value="gc">genes x cells</label>
+            </div>               
+          </div>
+          <div id="canvas-scroller"><input type="range" min="0"></div>
+        </div>
+        <svg id="dotplot" data-did="{{did}}"></svg>
+      </div>
+{% endblock %}
+
+{% block geneselector %}
+<div class='card card-small'>
+  <div class="card-body p-0">
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item px-3">
+        <div class="btn-group d-flex" role="group">
+          <a href="{{ url_for('datasets.scatterplot', id=did) }}" class="btn btn-secondary w-100">Scatterplot</a>
+          <a href="{{ url_for('datasets.heatmap', id=did) }}" class="btn btn-secondary active w-100">Heatmap</a>
+        </div>            
+      </li>
+      <li class="list-group-item p-0">
+        <h6 class="main-sidebar-title">Expression levels by gene</h6>        
+      </li>          
+      <li class="list-group-item px-3 pb-2">
+        <gene-selector 
+          multiple autoselect buttons="all" 
+          placeholder="Start typing here..."
+          stylesheet="{{ url_for('static', filename='styles/gene-selector.css') }}" 
+          data-init="{{
+            "CD326,CD235a,CD235ab,CD41,CD61,CD144,CD309,CD13,CD206,CD117,CD131,CD44,CD366,CD1c,CD301,CD303,CD34,CD96,CD18,CD62L,CD15,CD119,CD99,CD9,CD10,CD20,CD268,CD3,CD161,CD169,CD209"
+            if "[PROTEIN]" in dataset.title else 
+              "CD3D,IL7R,LTB,TIGIT,FOXP3,CD8A,CD8B,TRGV9,GNLY,GZMB,FCGR3A,NCAM1,MS4A1,IGHM,IGHG1,IGKC,CD38,CD14,S100A8,FCER1G,CST3,MS4A7,HLA-DQA1,HLA-DQB1,CD1C,LILRA4,IL3RA,IRF7,CD34,SPINK2,HBA2,HBB,PF4,PPBP,TOP2A,MKI67"
+          }}"
+      >
+        <endpoint 
+          name="genes"
+          url="{{ config.API_SERVER }}api/v1/datasets/{{ did }}/genes"
+          parameter="term"
+          mode="list"
+          property="genes"
+        >
+        Search for {{ "proteins" if "[PROTEIN]" in dataset.title else "gene symbols" }}
+        </endpoint>
+        {% if "[PROTEIN]" not in dataset.title %}
+        <endpoint name="diseases" url="{{ config.API_SERVER }}api/v1/datasets/{{ did }}/diseases" parameter="term" mode="groups" property="data" action="replace">
+          Search for diseases
+        </endpoint>
+        {% endif %}
+      </gene-selector>
+    </li>
+  </ul>
+</div>      
+</div>
+{% endblock %}
+
+{% block bodyend %}
+  {{ super() }}
+  <script type="application/javascript" src="https://d3js.org/d3.v6.js"></script>
+  <script type="application/javascript" src="{{ url_for('static', filename='scripts/dotplot.js') }}"></script>
+<script> {% if "[PROTEIN]" in dataset.title or True %}ISPROTEIN = true;{% endif %}</script>
+<script type="module">
+    document.querySelector("gene-selector").addEventListener("update", e => document.dispatchEvent(new Event("genelist:updated")))
+  </script>
+{% endblock %}
