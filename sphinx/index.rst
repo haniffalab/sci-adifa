@@ -41,11 +41,11 @@ If Scanpy is useful for your research, consider citing `Genome Biology (2018)`_.
 
    overview
    installation
+   configuration
    deployment
    citing
-   code
-
-
+   modules
+   
 Search
 ------
 
