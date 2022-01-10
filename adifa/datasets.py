@@ -1,6 +1,6 @@
 import os
 
-from flask import Blueprint, current_app, send_from_directory, redirect, render_template
+from flask import Blueprint, current_app, send_from_directory, redirect, render_template, session
 
 from adifa import models
 
@@ -12,6 +12,8 @@ def index():
   
 @bp.route('/dataset/<int:id>/scatterplot')
 def scatterplot(id):
+    # if session.get("app_password") is None:
+    #     return render_template('password.html')
     dataset = models.Dataset.query.get(id)
 
     from collections import OrderedDict 

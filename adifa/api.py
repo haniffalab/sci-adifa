@@ -36,13 +36,7 @@ class AdifaAPI(Api):
 
 bp = Blueprint('api_v1', __name__)
 api = AdifaAPI(bp)
-
-@api.representation('application/json')
-def output_json(data, code, headers=None):
-    resp = make_response(orjson.dumps(data), code)
-    resp.headers.extend(headers or {})
-    return resp
-    
+   
 api.add_resource(About, '/about')
 api.add_resource(Bounds, '/bounds')
 api.add_resource(CellByGeneAggregates, '/datasets/<id>/cxg')

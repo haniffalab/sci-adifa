@@ -37,7 +37,9 @@ class Dataset(db.Model):
        return {
            'id'  : self.id,
            'filename': self.filename,
-           'title': self.title,
            'size': os.path.getsize(current_app.config.get('DATA_PATH') + self.filename),
+           'data_obs': self.data_obs,
+           'data_obsm': self.data_obsm,
+           'title': self.title,
        }
 

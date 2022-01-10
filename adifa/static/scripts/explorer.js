@@ -204,6 +204,7 @@
 
 
 
+            console.log(active.dataset);
 
             if (colorScaleType == 'categorical') {
                 arr = active.dataset['data_obs'][colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()]['values']
@@ -237,6 +238,11 @@
                 }
       
             } else if (colorScaleType == 'continuous') {
+                console.log(colorScaleType);
+                console.log(active.dataset);
+                arr = active.dataset['data_obs'][colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()]['values']
+
+
                 var myColor = d3.scaleSequential().domain([active.dataset['data_obs'][colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()]['min'], active.dataset['data_obs'][colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()]['max']]).interpolator(d3.interpolateViridis);
                 $( "#continuous-legend" ).empty();
                 createLegend(myColor);
@@ -436,7 +442,10 @@
             $.when(
                 doAjax(API_SERVER + "api/v1/datasets/" + datasetId)).then(function(d1) {
                 // update active dataset
-                active.dataset = d1    
+
+                active.dataset = d1
+                console.log(active.dataset);
+
                 // load cookies  
                 var colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name')
                 var colorScaleType = Cookies.get('ds' + datasetId + '-obs-type') // @TODO 
