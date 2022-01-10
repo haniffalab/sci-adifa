@@ -1,5 +1,0 @@
-Code
-====
-
-.. automodule:: blog
-    :members:
