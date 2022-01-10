@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Code &mdash; Adifa 0.1.0 documentation</title>
+  <title>Modules &mdash; Adifa 0.1.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -40,9 +40,15 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Code</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#adifa-api-py">adifa/api.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adifa-auth-py">adifa/auth.py</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adifa-blog-py">adifa/blog.py</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project Links</span></p>
 <ul>
@@ -66,9 +72,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Code</li>
+      <li>Modules</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/code.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/modules.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -76,59 +82,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-blog">
-<span id="code"></span><h1>Code<a class="headerlink" href="#module-blog" title="Permalink to this headline"></a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="blog.create">
-<span class="sig-prename descclassname"><span class="pre">blog.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blog.create" title="Permalink to this definition"></a></dt>
-<dd><p>Create a new post for the current user.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="blog.delete">
-<span class="sig-prename descclassname"><span class="pre">blog.</span></span><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blog.delete" title="Permalink to this definition"></a></dt>
-<dd><p>Delete a post.</p>
-<p>Ensures that the post exists and that the logged in user is the
-author of the post.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="blog.get_post">
-<span class="sig-prename descclassname"><span class="pre">blog.</span></span><span class="sig-name descname"><span class="pre">get_post</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_author</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blog.get_post" title="Permalink to this definition"></a></dt>
-<dd><p>Get a post and its author by id.</p>
-<p>Checks that the id exists and optionally that the current user is
-the author.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>id</strong> – id of post to get</p></li>
-<li><p><strong>check_author</strong> – require the current user to be the author</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the post with author information</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>404</strong> – if a post with the given id doesn’t exist</p></li>
-<li><p><strong>403</strong> – if the current user isn’t the author</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="blog.index">
-<span class="sig-prename descclassname"><span class="pre">blog.</span></span><span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#blog.index" title="Permalink to this definition"></a></dt>
-<dd><p>Show all the posts, most recent first.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="blog.update">
-<span class="sig-prename descclassname"><span class="pre">blog.</span></span><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#blog.update" title="Permalink to this definition"></a></dt>
-<dd><p>Update a post if the current user is the author.</p>
-</dd></dl>
-
+  <section id="modules">
+<h1>Modules<a class="headerlink" href="#modules" title="Permalink to this headline"></a></h1>
+<section id="adifa-api-py">
+<h2>adifa/api.py<a class="headerlink" href="#adifa-api-py" title="Permalink to this headline"></a></h2>
+</section>
+<section id="adifa-auth-py">
+<h2>adifa/auth.py<a class="headerlink" href="#adifa-auth-py" title="Permalink to this headline"></a></h2>
+</section>
+<section id="adifa-blog-py">
+<h2>adifa/blog.py<a class="headerlink" href="#adifa-blog-py" title="Permalink to this headline"></a></h2>
+</section>
 </section>
 
 
