@@ -69,9 +69,9 @@ def load_files():
     current_app.adata = dict()  
     try:
         datasets = models.Dataset.query.all()
-    except:
-        current_app.logger.error('Failed accessing database')
-        return 
+    except Exception as e:
+        current_app.logger.error(e)
+        return
 
     for dataset in datasets:
         if (os.path.isabs(current_app.config.get('DATA_PATH'))):
