@@ -29,11 +29,18 @@ jobs:
         docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 
     - name: docker build
+      if: $RELEASE_VERSION == 'main'  
       run: |
         docker build . -f ./Dockerfile -t haniffalab/adifa:latest
+      if: $RELEASE_VERSION != 'main'  
+      run: |
         docker build . -f ./Dockerfile -t haniffalab/adifa:$RELEASE_VERSION
 
     - name: docker push
+      if: $RELEASE_VERSION == 'main'  
       run: |
         docker push haniffalab/adifa:latest
+      if: $RELEASE_VERSION != 'main'  
+      run: |
         docker push haniffalab/adifa:$RELEASE_VERSION
+        
