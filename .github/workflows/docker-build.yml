@@ -14,12 +14,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set release
-      run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}"
+    - name: Set env
+      run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
-    - name: Test release
+    - name: Test
       run: |
         echo $RELEASE_VERSION
+        echo ${{ env.RELEASE_VERSION }}
 
     - name: docker login
       env:
@@ -29,21 +30,21 @@ jobs:
         docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 
     - name: docker build latest
-      if: $RELEASE_VERSION == 'main'  
+      if: ${{ env.RELEASE_VERSION }} == 'main'  
       run: |
         docker build . -f ./Dockerfile -t haniffalab/adifa:latest
 
     - name: docker build release
-      if: $RELEASE_VERSION != 'main'  
+      if: ${{ env.RELEASE_VERSION }} != 'main'  
       run: |
-        docker build . -f ./Dockerfile -t haniffalab/adifa:$RELEASE_VERSION
+        docker build . -f ./Dockerfile -t haniffalab/adifa:${{ env.RELEASE_VERSION }}
 
     - name: docker push latest
-      if: $RELEASE_VERSION == 'main'  
+      if: ${{ env.RELEASE_VERSION }} == 'main'  
       run: |
         docker push haniffalab/adifa:latest
 
     - name: docker push release
-      if: $RELEASE_VERSION != 'main'  
+      if: ${{ env.RELEASE_VERSION }} != 'main'  
       run: |
-        docker push haniffalab/adifa:$RELEASE_VERSION
+        docker push haniffalab/adifa:${{ env.RELEASE_VERSION }}
