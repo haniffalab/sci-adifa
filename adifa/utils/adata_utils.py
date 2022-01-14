@@ -171,10 +171,11 @@ def mode(d):
 	return int(mode[0])
 
 def type_category(obs):
-	return { 'type': 'categorical', 'values': dict(enumerate(obs.cat.categories.values.flatten(), 1)) }
+	#return { 'type': 'categorical', 'values': dict(enumerate(obs.cat.categories.values.flatten(), 1)) }
+	return { 'type': 'categorical', 'values': dict(enumerate(obs.to_numpy(str), 1)) }
 
 def type_bool(obs):
-	return { 'type': 'categorical', 'values': ['True','False']}
+	return { 'type': 'categorical', 'values': {0: 'True', 1: 'False'} }
 
 def type_numeric(obs):
 	accuracy = 4

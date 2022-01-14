@@ -16,7 +16,11 @@ def app():
     sql_path = os.path.join(basedir, "data.sql")   
     
     # create the app with common test config
-    app = create_app({"TESTING": True, "SQLALCHEMY_DATABASE_URI": "sqlite:///" + db_path})
+    app = create_app({
+        "TESTING": True, 
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///" + db_path,
+        "DATA_PATH": "./test/data/"
+        })
     
     # create the database and load test data
     with app.app_context():
