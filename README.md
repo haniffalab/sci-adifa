@@ -1,6 +1,7 @@
 
 [![tests](https://github.com/haniffalab/sci-adifa/actions/workflows/test-coverage.yml/badge.svg)](https://github.com/haniffalab/sci-adifa/actions/workflows/test-coverage.yml)
-[![docker](https://github.com/haniffalab/sci-adifa/actions/workflows/docker-build.yml/badge.svg)](https://github.com/haniffalab/sci-adifa/actions/workflows/docker-build.yml)
+[![build](https://github.com/haniffalab/sci-adifa/actions/workflows/docker-release.yml/badge.svg)](https://github.com/haniffalab/sci-adifa/actions/workflows/docker-release.yml)
+[![docker](https://github.com/haniffalab/sci-adifa/actions/workflows/docker-latest.yml/badge.svg)](https://github.com/haniffalab/sci-adifa/actions/workflows/docker-latest.yml)
 [![sphinx](https://github.com/haniffalab/sci-adifa/actions/workflows/sphinx-build.yml/badge.svg)](https://github.com/haniffalab/sci-adifa/actions/workflows/sphinx-build.yml)
 [![codecov](https://codecov.io/gh/haniffalab/sci-adifa/branch/main/graph/badge.svg?token=RQLL0HKQ5W)](https://codecov.io/gh/haniffalab/sci-adifa)
 [![python](https://img.shields.io/badge/python-3.8-blue)](https://python.org)
