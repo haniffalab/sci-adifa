@@ -31,7 +31,9 @@ jobs:
     - name: docker build
       run: |
         docker build . -f ./Dockerfile -t haniffalab/adifa:latest
+        docker build . -f ./Dockerfile -t haniffalab/adifa:$RELEASE_VERSION
 
     - name: docker push
       run: |
         docker push haniffalab/adifa:latest
+        docker push haniffalab/adifa:$RELEASE_VERSION
