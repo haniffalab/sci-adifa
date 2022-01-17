@@ -43,6 +43,7 @@ If Scanpy is useful for your research, consider citing `Genome Biology (2018)`_.
    installation
    configuration
    deployment
+   pipelines
    citing
    modules
    
