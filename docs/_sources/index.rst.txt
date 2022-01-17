@@ -18,21 +18,23 @@
 Adifa - Annotated Data in Flask App
 ===================================
 
-Adifa is a scalable toolkit for analyzing single-cell gene expression data
-built jointly with `anndata <https://anndata.readthedocs.io>`__.  It includes
-preprocessing, visualization, clustering, trajectory inference and differential
-expression testing.  The Python-based implementation efficiently deals with
-datasets of more than one million cells.
+Adifa is a framework for visualising single-cell gene expression data in a web browser. 
+It is built on `Flask`_, a micro web framework, and ingests `Annotated Data`_ objects 
+in the `.h5ad` file format. It includes dimensionality reduction visualisation, heatmaps 
+and dotplots, with the ability to explore gene expression and disease markers. The Python-
+based implementation and usage of the `deck.gl`_ frameworks allows efficient handling of 
+datasets up to one million cells.
 
-Discuss usage on Discourse_. Read the documentation_.
-If you'd like to contribute by opening an issue or creating a pull request,
-please take a look at our `contributing guide`_.
-If Scanpy is useful for your research, consider citing `Genome Biology (2018)`_.
+Discuss usage on `Discourse`_. Read the `documentation`_. If you’d like to contribute by 
+opening an issue or creating a pull request, please take a look at our `contributing guide`_. 
+If Adifa is useful for your research, consider :ref:`citing the software <citing>`.
 
-.. _Discourse: https://scanpy.discourse.group/
-.. _documentation: https://scanpy.readthedocs.io
-.. _contributing guide: CONTRIBUTING.md
-.. _Genome Biology (2018): https://doi.org/10.1186/s13059-017-1382-0
+.. _Discourse: https://discourse.group/
+.. _documentation: https://haniffalab.github.io/sci-adifa
+.. _contributing guide: https://github.com/haniffalab/sci-adifa/blob/master/CONTRIBUTING.md
+.. _Flask: https://flask.palletsprojects.com/
+.. _Annotated Data: https://anndata.readthedocs.io/
+.. _deck.gl: https://deck.gl/
 
 .. toctree::
    :maxdepth: 2
