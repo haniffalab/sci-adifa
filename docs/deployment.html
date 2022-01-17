@@ -18,7 +18,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Citing" href="citing.html" />
+    <link rel="next" title="Pipelines" href="pipelines.html" />
     <link rel="prev" title="Configuration" href="configuration.html" /> 
 </head>
 
@@ -42,7 +42,17 @@
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Deployment</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Deployment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#docker">Docker</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#build">build</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#run">run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compose">compose</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#nginx">Nginx</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pipelines.html">Pipelines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Modules</a></li>
 </ul>
@@ -80,6 +90,64 @@
              
   <section id="deployment">
 <h1>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline"></a></h1>
+<section id="docker">
+<h2>Docker<a class="headerlink" href="#docker" title="Permalink to this headline"></a></h2>
+<section id="build">
+<h3>build<a class="headerlink" href="#build" title="Permalink to this headline"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">build</span> <span class="o">-</span><span class="n">t</span> <span class="n">davehorsfall</span><span class="o">/</span><span class="n">cellatlas</span><span class="o">-</span><span class="n">api</span><span class="p">:</span><span class="n">latest</span> <span class="o">.</span>
+<span class="n">docker</span> <span class="n">push</span> <span class="n">davehorsfall</span><span class="o">/</span><span class="n">cellatlas</span><span class="o">-</span><span class="n">api</span><span class="p">:</span><span class="n">latest</span>
+</pre></div>
+</div>
+</section>
+<section id="run">
+<h3>run<a class="headerlink" href="#run" title="Permalink to this headline"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">pull</span> <span class="n">haniffalab</span><span class="o">/</span><span class="n">adifa</span><span class="p">:</span><span class="n">latest</span>
+<span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">d</span> <span class="o">-</span><span class="n">p</span> <span class="mi">5000</span><span class="p">:</span><span class="mi">5000</span> <span class="n">haniffalab</span><span class="o">/</span><span class="n">adifa</span><span class="p">:</span><span class="n">latest</span>
+</pre></div>
+</div>
+</section>
+<section id="compose">
+<h3>compose<a class="headerlink" href="#compose" title="Permalink to this headline"></a></h3>
+<p>This is then the <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> so we see it.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">version</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span>
+<span class="n">services</span><span class="p">:</span>
+<span class="c1"># Web server</span>
+<span class="n">nginx</span><span class="p">:</span>
+    <span class="n">image</span><span class="p">:</span> <span class="n">nginx</span><span class="p">:</span><span class="n">latest</span>
+    <span class="n">container_name</span><span class="p">:</span> <span class="n">nginx</span>
+    <span class="n">volumes</span><span class="p">:</span>
+    <span class="o">-</span> <span class="o">./</span><span class="n">nginx</span><span class="o">.</span><span class="n">conf</span><span class="p">:</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">nginx</span><span class="o">/</span><span class="n">conf</span><span class="o">.</span><span class="n">d</span><span class="o">/</span><span class="n">default</span><span class="o">.</span><span class="n">conf</span>
+    <span class="n">ports</span><span class="p">:</span>
+    <span class="o">-</span> <span class="mi">80</span><span class="p">:</span><span class="mi">80</span>
+    <span class="o">-</span> <span class="mi">443</span><span class="p">:</span><span class="mi">443</span>
+<span class="c1"># Application</span>
+<span class="n">adex</span><span class="p">:</span>
+    <span class="n">image</span><span class="p">:</span> <span class="n">davehorsfall</span><span class="o">/</span><span class="n">cellatlas</span><span class="o">-</span><span class="n">api</span><span class="p">:</span><span class="n">merge</span>
+    <span class="n">container_name</span><span class="p">:</span> <span class="n">adex</span>
+    <span class="n">volumes</span><span class="p">:</span>
+    <span class="o">-</span> <span class="o">./</span><span class="n">data</span><span class="p">:</span><span class="o">/</span><span class="n">data</span>
+    <span class="n">ports</span><span class="p">:</span>
+    <span class="o">-</span> <span class="mi">5000</span><span class="p">:</span><span class="mi">5000</span>
+    <span class="n">environment</span><span class="p">:</span>
+    <span class="o">-</span> <span class="s2">&quot;DATA_PATH=/data/&quot;</span>
+    <span class="n">links</span><span class="p">:</span>
+    <span class="o">-</span> <span class="n">nginx</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="nginx">
+<h2>Nginx<a class="headerlink" href="#nginx" title="Permalink to this headline"></a></h2>
+<p>This is then the <code class="docutils literal notranslate"><span class="pre">conf.conf</span></code> so we see it.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">version</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span>
+<span class="n">services</span><span class="p">:</span>
+<span class="c1"># Web server</span>
+<span class="n">nginx</span><span class="p">:</span>
+    <span class="n">image</span><span class="p">:</span> <span class="n">nginx</span><span class="p">:</span><span class="n">latest</span>
+    <span class="n">container_name</span><span class="p">:</span> <span class="n">nginx</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 
@@ -87,7 +155,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="configuration.html" class="btn btn-neutral float-left" title="Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="citing.html" class="btn btn-neutral float-right" title="Citing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pipelines.html" class="btn btn-neutral float-right" title="Pipelines" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
