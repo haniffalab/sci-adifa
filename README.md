@@ -13,6 +13,6 @@
 [![docs](https://img.shields.io/badge/Documentation-online-blue)](https://haniffalab.github.io/sci-adifa)
 [![doi](https://zenodo.org/badge/DOI/10.5281/zenodo.5824895.svg)](https://doi.org/10.5281/zenodo.5824895)
 
-Adifa is a scalable toolkit for analyzing single-cell gene expression data built jointly with anndata. It includes preprocessing, visualization, clustering, trajectory inference and differential expression testing. The Python-based implementation efficiently deals with datasets of more than one million cells.
+Adifa is a framework for visualising single-cell gene expression data in a web browser. It is built on [Flask](https://flask.palletsprojects.com/), a micro web framework, and ingests [Annotated Data](https://anndata.readthedocs.io/) objects in the `.h5ad` file format. It includes dimensionality reduction visualisation, heatmap and dotplots, and the ability to explore gene expression and disease markers. The Python-based implementation and usage of [deck.gl](https://deck.gl/) deals efficiently with datasets of up to one million cells.
 
-Discuss usage on Discourse. Read the documentation. If you’d like to contribute by opening an issue or creating a pull request, please take a look at our contributing guide. If Scanpy is useful for your research, consider citing Genome Biology (2018).
+If you'd like to publish your final publication data objects online please [get in touch]. Discuss usage on [Discourse]. Read the [documentation](https://haniffalab.github.io/sci-adifa). If you’d like to contribute by opening an issue or creating a pull request, please take a look at our [contributing guide](CONTRIBUTING.md). If Adifa is useful for your research, consider [citing the software](https://haniffalab.com/sci-adifa/citing.html). 
