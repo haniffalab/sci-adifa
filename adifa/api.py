@@ -4,7 +4,7 @@ from flask import Blueprint, make_response
 from flask_restful import Api
 
 from adifa.resources.about import About
-from adifa.resources.datasets import Datasets, Dataset, Coordinates, Genelist, Genesearch, CellByGeneAggregates, Bounds, Labels, DiseaseGeneList
+from adifa.resources.datasets import Bounds, CellByGeneAggregates, Coordinates, Dataset, Datasets, DiseaseGeneList, Genelist, Genesearch, Labels
 
 
 class AdifaAPI(Api):

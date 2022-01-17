@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import jsonify, request
 from flask_restful import Resource
 
 from adifa import models

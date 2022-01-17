@@ -1,4 +1,5 @@
 import os
+
 from datetime import datetime
 
 from flask import current_app
@@ -27,6 +28,7 @@ class Dataset(db.Model):
     pub_group = db.Column(db.String(120), nullable=True)
     pub_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     download_link = db.Column(db.String(120), nullable=True)
+    password = db.Column(db.String(120), nullable=True)
 
     def __repr__(self):
         return f"Dataset('{self.filename}')"     
