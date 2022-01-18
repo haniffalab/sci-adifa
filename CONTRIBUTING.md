@@ -48,7 +48,7 @@ That's it! You'll be automatically subscribed to receive updates as others revie
 ### Submitting a pull request via Git command line
 
 1. Fork the project by clicking "Fork" in the top right corner of [`haniffalab/sci-adifa`](https://github.com/haniffalab/sci-adifa).
-2. Clone the repository locally `git clone git@github.com:haniffalab/sci-adifa.git`.
+2. Clone the repository locally `git clone git@github.com:<your-username>/sci-adifa.git`.
 3. Create a new, descriptively named branch to contain your change ( `git checkout -b my-awesome-feature` ).
 4. Hack away, add tests. Not necessarily in that order.
 5. Make sure everything still passes by running `pytest` (see the [testing section](https://haniffalab.com/sci-adifa/installation.html#test) in the documentation)
@@ -61,9 +61,7 @@ We want the Adifa documentation to be as helpful as possible. We've open-sourced
 
 ### How to submit changes
 
-You can find the Sphinx source fiels for our documentation in the [sphinx](https://github.com/haniffalab/sci-adifa/tree/main/sphinx) directory. See the section above, [submitting a pull request](#submitting-a-pull-request) for information on how to propose a change.
-
-One gotcha, all pull requests should be directed at the `main` branch (the default branch).
+You can find the Sphinx source files for our documentation in the [sphinx](https://github.com/haniffalab/sci-adifa/tree/main/sphinx) directory. See the section above, [submitting a pull request](#submitting-a-pull-request) for information on how to propose a change. All pull requests should be directed at the `main` branch (the default branch).
 
 ## A thank you
 
