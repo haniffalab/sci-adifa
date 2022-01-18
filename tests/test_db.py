@@ -32,13 +32,10 @@ def test_post_dataset(session):
 
     assert post.id > 0
 
-def test_get_close_db(app):
-    return True
-    with app.app_context():
-        assert db is get_db()
-
+def test_get_close_db(db):
     with pytest.raises(sqlite3.ProgrammingError) as e:
         db.execute("SELECT 1")
+        current_app.logger.error(e)
 
     assert "closed" in str(e.value)
 
