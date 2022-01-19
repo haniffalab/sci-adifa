@@ -22,7 +22,7 @@ Adifa is a framework for visualising single-cell gene expression data in a web b
 It is built on `Flask`_, a micro web framework, and ingests `Annotated Data`_ objects 
 in the `.h5ad` file format. It includes dimensionality reduction visualisation, heatmaps 
 and dotplots, with the ability to explore gene expression and disease markers. The Python-
-based implementation and usage of the `deck.gl`_ frameworks allows efficient handling of 
+based implementation and usage of the `deck.gl`_ framework allows efficient handling of 
 datasets up to one million cells.
 
 Discuss usage on `Discourse`_. Read the `documentation`_. If you’d like to contribute by 

@@ -1,37 +1,45 @@
 Installation
 ============
 
-The basic blog app built in the Flask `tutorial`_.
-
-.. _tutorial: https://flask.palletsprojects.com/tutorial/
-
 
 Prerequisites
 -------------
-Python 3.8
+
+Before you begin using Adifa, make sure you have installed the following libraries:
+
+- Python (>=3.8)
+
 
 Install
 -------
 
 **Be sure to use the same version of the code as the version of the docs
 you're reading.** You probably want the latest tagged version, but the
-default Git version is the main branch. ::
+default Git version is the main branch. 
+
+::
 
     # clone the repository
     $ git clone git@github.com:haniffalab/sci-adifa.git
     $ cd sci-adifa
 
-Create a virtualenv and activate it::
+Create a virtualenv and activate it
+
+::
 
     $ python -m venv venv
     $ . venv/bin/activate
 
-Or on Windows cmd::
+Or on Windows cmd
+
+::
 
     $ python -m venv venv
     $ venv\Scripts\activate.bat
 
-Install adifa::
+Install Adifa and the requirements
+
+::
 
     $ pip install -e .
     $ pip install -r requirements.txt
