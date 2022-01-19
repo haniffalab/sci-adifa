@@ -13,7 +13,7 @@ RUN pip install -r requirements.txt
 RUN pip install gunicorn
 
 ADD . /app
-ADD https://www.digicert.com/CACerts/BaltimoreCyberTrustRoot.crt.pem /BaltimoreCyberTrustRoot.crt.pem
+ADD https://www.digicert.com/CACerts/BaltimoreCyberTrustRoot.crt.pem /app/BaltimoreCyberTrustRoot.crt.pem
 
 EXPOSE 5000
 
