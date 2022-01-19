@@ -31,7 +31,7 @@ If Adifa is useful for your research, consider :ref:`citing the software <citing
 
 .. _Discourse: https://discourse.group/
 .. _documentation: https://haniffalab.github.io/sci-adifa
-.. _contributing guide: https://github.com/haniffalab/sci-adifa/blob/master/CONTRIBUTING.md
+.. _contributing guide: https://github.com/haniffalab/sci-adifa/blob/main/CONTRIBUTING.md
 .. _Flask: https://flask.palletsprojects.com/
 .. _Annotated Data: https://anndata.readthedocs.io/
 .. _deck.gl: https://deck.gl/
