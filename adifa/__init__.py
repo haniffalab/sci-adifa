@@ -28,6 +28,11 @@ def create_app(test_config=None):
         # load the test config if passed in
         app.config.update(test_config)
 
+    if os.environ.get('SQLALCHEMY_AZURE_MYSQL_HOST') is not None:
+        app.config.update(
+            SQLALCHEMY_DATABASE_URI = 'mysql://' + os.environ.get('SQLALCHEMY_AZURE_MYSQL_USER') + ':' + os.environ.get('SQLALCHEMY_AZURE_MYSQL_PASS') + '@' + os.environ.get('SQLALCHEMY_AZURE_MYSQL_HOST') + ':3306/' + os.environ.get('SQLALCHEMY_AZURE_MYSQL_DB') + '?ssl_ca=BaltimoreCyberTrustRoot.crt.pem'
+        )
+
     # ensure the instance folder exists
     try:
         os.makedirs(app.instance_path)
