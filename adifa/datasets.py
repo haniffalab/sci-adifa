@@ -15,6 +15,11 @@ def index():
 def scatterplot(id):
     dataset = models.Dataset.query.get(id)
 
+    # Check protected status
+    authenticated = session.get("auth_dataset_" + str(id), False)
+    if dataset.password and not authenticated:
+        return redirect(url_for('datasets.password', id=id))
+        
     from collections import OrderedDict 
     from operator import getitem 
     obs = OrderedDict(sorted(dataset.data_obs.items(), key = lambda x: getitem(x[1], 'name'))) 
