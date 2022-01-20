@@ -9,17 +9,19 @@
     <div class="card card-small card-post mb-4">
       <div class="card-body">
         <a href="{{ url_for('datasets.scatterplot', id=n.id) }}"><h5 class="card-title">{{n.title}}</h5></a>
-        {% if n.desc is defined %}<p class="card-text text-muted">{{n.desc}}</p>{% endif %}
+        {% if n.desc %}<p class="card-text text-muted">{{n.desc}}</p>{% endif %}
       </div>
       <div class="card-footer border-top d-flex">
         <div class="card-post__author d-flex">
           <div class="d-flex flex-column justify-content-center">
-            <span class="card-post__author-name"><a href="{{n.pub_link}}">{{n.pub_doi}}</a></span>
-            <small class="text-muted">{{n.pub_author}}, {{n.pub_group}}</small>
+            {% if n.pub_doi %}<span class="card-post__author-name"><a href="{{n.pub_link}}">{{n.pub_doi}}</a></span>{% endif %}
+            {% if n.pub_author or n.pub_group %}
+              <small class="text-muted">{{n.pub_author}}, {{n.pub_group}}</small>
+            {% endif %}
           </div>
         </div>
         <div class="my-auto ml-auto">
-          <div class="btn-group" role="group" aria-label="Basic example">
+          <div class="btn-group" role="group">
             <a class="btn btn-secondary" href="{{ url_for('datasets.scatterplot', id=n.id) }}">
               Open </a>                       
           </div>
