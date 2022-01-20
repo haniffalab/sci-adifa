@@ -2,7 +2,6 @@ from flask import jsonify, request
 from flask_restful import Resource
 
 from adifa import models
-from adifa.resources.errors import SqlAlchemyError
 from adifa.utils import adata_utils
 
 

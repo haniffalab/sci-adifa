@@ -1,14 +1,11 @@
-import hashlib
 import re
 
-from flask import current_app, Response, request, jsonify
-from math import isnan
-import numpy as np
-import scanpy as sc
-from scipy import stats
+from flask import current_app
 from scipy.sparse import find
 
 from adifa import models
+from adifa.resources.errors import InvalidDatasetIdError, InternalServerError, DatasetNotExistsError
+
 
 def get_annotations(adata):
 	annotations = {'obs': {}, 'obsm': {}}
@@ -36,10 +33,20 @@ def get_annotations(adata):
 	return annotations
 
 def get_bounds(datasetId, obsm):
-	dataset = models.Dataset.query.get(datasetId)
-	adata = current_app.adata[dataset.filename]
-	#adata = current_app.adata
-	#adata = sc.read(current_app.config.get('DATA_PATH') + 'covid_portal.h5ad')      
+	if not datasetId > 0 :
+		raise InvalidDatasetIdError
+
+	try:
+		dataset = models.Dataset.query.get(datasetId)
+	except Exception as e:
+		raise InternalServerError
+
+	try:
+		adata = current_app.adata[dataset.filename]		
+	except (ValueError, AttributeError) as e:
+		raise DatasetNotExistsError		
+	except Exception as e:
+		raise InternalServerError
 
 	# Embedded coordinate bounds
 	output = {

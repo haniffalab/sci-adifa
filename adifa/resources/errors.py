@@ -1,44 +1,37 @@
-from werkzeug.exceptions import HTTPException
-
-
-class ApiException(HTTPException):
-    code = 500
-    description = 'Internal Server Error'
-    def __init__(self, e, description=None, response=None):
-        if description is not None:
-            self.description = description        
-        self.errors = e
-
-
-class InternalServerError(ApiException):
+class InternalServerError(Exception):
     pass
 
+class SchemaValidationError(Exception):
+    pass
 
-class SqlAlchemyError(ApiException):
-    code = 500
-    description = 'Database Error'
+class InvalidDatasetIdError(Exception):
+    pass
 
+class DatasetNotExistsError(Exception):
+    pass
 
-class SchemaValidationError(ApiException):
-    code = 400
-    description = 'Request is missing required fields'
+class UnauthorizedError(Exception):
+    pass
 
-
-class EmailAlreadyExistsError(ApiException):
-    code = 400
-    description = 'User with given email address already exists'
-
-
-class UnauthorizedError(ApiException):
-    code = 401
-    description = 'Invalid username or password'
-
-
-class EmailDoesnotExistsError(ApiException):
-    code = 400
-    description = 'Couldn\'t find the user with given email address'
-
-
-class BadTokenError(ApiException):
-    code = 403
-    description = 'Invalid token'
+errors = {
+    "InternalServerError": {
+        "message": "Something went wrong",
+        "status": 500
+    },
+     "SchemaValidationError": {
+         "message": "Request is missing required fields",
+         "status": 400
+     },
+     "InvalidDatasetIdError": {
+         "message": "Invalid Dataset ID passed in request",
+         "status": 400
+     },
+     "DatasetNotExistsError": {
+         "message": "Dataset with given id doesn't exist",
+         "status": 400
+     },
+     "UnauthorizedError": {
+         "message": "Invalid username or password",
+         "status": 401
+     }
+}
