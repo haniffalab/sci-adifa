@@ -58,7 +58,7 @@ def create_app(test_config=None):
     def inject_datasets():
         from adifa import models
         from sqlalchemy import asc
-        return {'datasets': models.Dataset.query.order_by(asc(models.Dataset.title)).all()}
+        return {'datasets': models.Dataset.query.filter_by(published=1).order_by(asc(models.Dataset.title)).all()}
 
     # apply the blueprints to the app
     from adifa import api, datasets 
