@@ -2,9 +2,10 @@ import re
 
 from flask import current_app
 from scipy.sparse import find
+from sqlalchemy import exc
 
 from adifa import models
-from adifa.resources.errors import InvalidDatasetIdError, InternalServerError, DatasetNotExistsError
+from adifa.resources.errors import InvalidDatasetIdError, DatabaseOperationError, InternalServerError, DatasetNotExistsError
 
 
 def get_annotations(adata):
@@ -38,15 +39,13 @@ def get_bounds(datasetId, obsm):
 
 	try:
 		dataset = models.Dataset.query.get(datasetId)
-	except Exception as e:
-		raise InternalServerError
+	except exc.SQLAlchemyError as e:
+		raise DatabaseOperationError
 
 	try:
 		adata = current_app.adata[dataset.filename]		
 	except (ValueError, AttributeError) as e:
-		raise DatasetNotExistsError		
-	except Exception as e:
-		raise InternalServerError
+		raise DatasetNotExistsError
 
 	# Embedded coordinate bounds
 	output = {

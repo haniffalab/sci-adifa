@@ -4,6 +4,9 @@ class InternalServerError(Exception):
 class SchemaValidationError(Exception):
     pass
 
+class DatabaseOperationError(Exception):
+    pass
+
 class InvalidDatasetIdError(Exception):
     pass
 
@@ -20,6 +23,10 @@ errors = {
     },
      "SchemaValidationError": {
          "message": "Request is missing required fields",
+         "status": 400
+     },
+     "DatabaseOperationError": {
+         "message": "DatabaseOperationError",
          "status": 400
      },
      "InvalidDatasetIdError": {

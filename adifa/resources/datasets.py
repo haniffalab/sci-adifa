@@ -7,10 +7,7 @@ from adifa.utils import adata_utils
 
 class Datasets(Resource):
     def get(self):
-        try:
-            return jsonify(datasets=[i.serialize for i in models.Dataset.query.all()])
-        except Exception as e:
-            raise SqlAlchemyError(e)
+        return jsonify(datasets=[i.serialize for i in models.Dataset.query.all()])
         
 
 class Dataset(Resource):
