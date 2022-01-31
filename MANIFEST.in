@@ -1,6 +1,9 @@
-include LICENSE.rst
-include adifa/schema.sql
+include LICENSE
+include requirements-extra.txt
+include requirements.txt
+graft adifa/resources
 graft adifa/static
 graft adifa/templates
+graft adifa/utils
 graft tests
 global-exclude *.pyc
