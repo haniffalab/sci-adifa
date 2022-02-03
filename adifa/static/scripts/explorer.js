@@ -505,16 +505,21 @@
             return this;
         };
         this.colorize = function(el) {
-            console.log(el)
             if ($(el).hasClass('active')) {
                 decolorize();
             } else {
                 $(".colourise").removeClass('active');
+                $(".btn-gene-select").removeClass("active");
 
                 if (el.id === 'genes'){
                     var colorScaleKey = el.selectedItems[0];
                     var colorScaleId = 0;
                     var colorScaleType = 'gene';                
+                } else if ($(el).hasClass('btn-gene-select')) {
+                    var colorScaleKey = $(el).text();
+                    var colorScaleId = 0;
+                    var colorScaleType = 'gene';  
+                    $(el).addClass('active');
                 } else {
                     var colorScaleKey = $(el).data('name');
                     var colorScaleId = $(el).data('id');

@@ -41,17 +41,56 @@ class Bounds(Resource):
         return adata_utils.get_bounds(datasetId, obsm)
 
 
-class Genelist(Resource):
+class SearchGenes(Resource):
     def get(self, id):
-        searchterm = request.args.get('term', '', type=str)
+        q = request.args.get('search', '', type=str)
 
-        return { "searchterm": searchterm, "genes": adata_utils.search_genes(id, searchterm) }
+        output = []
+        for gene in adata_utils.search_genes(id, q):
+            sample = {
+                "id": gene,
+                "text": gene
+            }
+            output.append(sample)
 
-class Genesearch(Resource):
+        return { "results": output[:30] }
+
+class SearchDiseases(Resource):
     def get(self, id):
-        q = request.args.get('q', '', type=str)
+        q = request.args.get('search', '', type=str)
 
-        return { "searchterm": q, "genes": adata_utils.gene_search(id, q) }
+        output = {}
+        disease = 'Haematological abnormality'
+        gene = 'Gene mutation'
+        datafile = adata_utils.disease_filename()
+
+        #open csv file;
+        from csv import DictReader
+
+        with open(datafile, newline='', errors='ignore') as f:
+            reader = DictReader(f)
+            
+            #grab diseases that match search + related genes
+            for row in reader:
+                if q.lower() in row[disease].lower(): #should also check gene is in dataset here
+                    if row[disease] not in output:
+                        output[row[disease]] = []
+                    
+                    output[row[disease]].append(row[gene])
+        
+
+        #return output
+        results = []
+        for key, value in output.items():
+            sample = {
+                "id": ",".join(value),
+                "text": key
+            }
+            results.append(sample)
+
+        return { "results": results }
+
+
 
 
 class CellByGeneAggregates(Resource):

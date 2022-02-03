@@ -33,6 +33,9 @@
       $("#genes").on("update", function(event) {
         if (this.selectedItems[0] && this.selectedItems[0] != $("#color-scale-value").text() && explorer) explorer.colorize(this);
       });
+      $(document.body).on('click', '.btn-gene-select', function(event){
+        if ($(this).text() != $("#color-scale-value").text() && explorer) explorer.colorize(this);
+      });      
       $('.obs_value_cb').click(function(event) {
         setTimeout(function(){ explorer.redraw(); }, 100); // Defer to improve UX
       });
@@ -60,5 +63,64 @@
         explorer.zoomOut(this) 
       });      
     } 
+
+    $('.js-data-example-ajax').select2({
+      placeholder: "Search for genes",
+      closeOnSelect: false,
+      sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
+      ajax: {
+        url: 'http://127.0.0.1:5000/api/v1/datasets/1/search/genes',
+        data: function (params) {
+          var query = {
+            search: params.term,
+            type: 'public'
+          }
+
+          // Query parameters will be ?search=[term]&type=public
+          return query;
+        }
+      }
+    }).on('select2:select', function (e) {
+      var data = e.params.data;
+      console.log(data.id);
+      $('#search-genes-selected').append(
+        $('<button/>')
+          .attr("type", "button")
+          .attr("id", "'gene-deg-" + data.id)
+          .addClass("btn-gene-select btn btn-outline-info btn-sm")
+            .text(data.id)
+      );
+    });
+
+    $('.js-data-disease-ajax').select2({
+      placeholder: "Search for diseases",
+      sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
+      ajax: {
+        url: 'http://127.0.0.1:5000/api/v1/datasets/1/search/diseases',
+        data: function (params) {
+          var query = {
+            search: params.term,
+            type: 'public'
+          }
+
+          // Query parameters will be ?search=[term]&type=public
+          return query;
+        }
+      }
+    }).on('select2:select', function (e) {
+      var data = e.params.data;
+      console.log(data.id);
+      var genes = data.id.split(",");
+      $.each(genes,function(i){
+        $('#search-genes-disease-set').append(
+          $('<button/>')
+            .attr("type", "button")
+            .attr("id", "'gene-deg-" + genes[i])
+            .addClass("btn-gene-select btn btn-outline-info btn-sm")
+              .text(genes[i])
+        );
+      });
+    });
+
   });
 })(jQuery);

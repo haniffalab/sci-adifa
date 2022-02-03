@@ -3,6 +3,7 @@ import re
 from flask import current_app
 from scipy.sparse import find
 from sqlalchemy import exc
+import scanpy as sc
 
 from adifa import models
 from adifa.resources.errors import InvalidDatasetIdError, DatabaseOperationError, InternalServerError, DatasetNotExistsError
@@ -32,6 +33,15 @@ def get_annotations(adata):
 	annotations['obsm'] = [ value for value in adata.obsm ]
 
 	return annotations
+
+def get_degs(adata):
+	sc.pp.normalize_total(adata, target_sum=1e4)
+	sc.pp.log1p(adata)	
+	sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+	adata.var.sort_values(by=['means'], ascending=False)
+	df = adata.var[adata.var['highly_variable']==True].sort_values(by=['means'], ascending=False).head(10)
+
+	return df.index.tolist()
 
 def get_bounds(datasetId, obsm):
 	if not datasetId > 0 :
@@ -221,4 +231,4 @@ def series_median(s):
 		return s.median().item()
 
 def disease_filename():
-	return current_app.config.get('DATA_PATH') + 'fbm_disease_data.csv'
+	return current_app.config.get('DATA_PATH') + 'disease_data.csv'

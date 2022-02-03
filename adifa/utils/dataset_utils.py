@@ -42,6 +42,7 @@ def auto_discover():
                 new.hash = hash
                 new.data_obs = annotations.get('obs')
                 new.data_obsm = annotations.get('obsm')
+                new.genes_deg = adata_utils.get_degs(adata) 
                 new.title = filename
                 try:
                     db.session.add(new)
@@ -55,6 +56,7 @@ def auto_discover():
                 record.published = 1
                 record.data_obs = annotations.get('obs')
                 record.data_obsm = annotations.get('obsm')
+                record.genes_deg = adata_utils.get_degs(adata) 
                 try:
                     db.session.commit()    
                 except Exception as e:

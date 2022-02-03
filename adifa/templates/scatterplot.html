@@ -65,14 +65,18 @@
     </div>      
     <div id="collapseDataset" class="collapse">
       <dl class="row mt-2">
-        <dd class="col-sm-12">{{dataset.desc}}</dd>
+        {% if dataset.desc %}<dd class="col-sm-12">{{dataset.desc}}</dd>{% endif %}
 
-        <dt class="col-sm-12">Author</dt>
-        <dd class="col-sm-12">{{dataset.pub_author}}, {{dataset.pub_group}}</dd>
+        {% if dataset.pub_author %}
+          <dt class="col-sm-12">Author</dt>
+          <dd class="col-sm-12">{{dataset.pub_author}}, {{dataset.pub_group}}</dd>
+        {% endif %}
       
-        <dt class="col-sm-12">DOI</dt>
-        <dd class="col-sm-12"><a href="{{dataset.pub_link}}">{{dataset.pub_doi}}</a></dd>
-      
+        {% if dataset.pub_doi %}
+          <dt class="col-sm-12">DOI</dt>
+          <dd class="col-sm-12"><a href="{{dataset.pub_link}}">{{dataset.pub_doi}}</a></dd>
+        {% endif %}
+
         <dt class="col-sm-12">Filename</dt>
         <dd class="col-sm-12">
           <a href="{{ url_for('datasets.download', id=did) }}">{{dataset.filename}}</a><br />
@@ -94,18 +98,19 @@
             </h4>
           </div>
           <div id="collapse{{loop.index}}" class="collapse m-4 obs-values" aria-labelledby="heading{{loop.index}}" data-parent="#obs-accordion" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}">
-            <div class="list-group">
+            
               {% if dataset.data_obs[ob]['type'] == "categorical" %}
                 <div class="btn-group btn-group-toggle mb-4" role="group">
                   <a class="btn btn-sm btn-white checkall" data-id="{{loop.index}}"><i class="far fa-2x fa-check-square"></i></a>
                   <a class="btn btn-sm btn-white uncheckall" data-id="{{loop.index}}"><i class="far fa-2x fa-square"></i></a>
                   <a class="btn btn-sm btn-white colourise" id="colourise{{loop.index}}" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}"><i class="fa fa-2x fa-tint"></i></a>
                 </div>   
+                <div class="list-group list-group-flush">
                 {% for key, value in dataset.data_obs[ob]['values'].items()|sort(attribute=1) %}
-                <div class="list-group-item px-0 py-1">
+                <div class="list-group-item p-1">
                   <div id="obs-list-{{ob}}" class="row">
                     <div class="col-9">
-                      <label class="container-checkbox">{{dataset.data_obs[ob]['values'][key]}}
+                      <label class="label-checkbox">{{dataset.data_obs[ob]['values'][key]}}
                         <input class="obs_value_cb" id="obs-{{loop.index}}-value-{{key}}" type="checkbox" name="obs-{{value}}" value="{{value}}" checked="checked">
                         <span class="checkmark"></span>
                       </label>    
@@ -119,11 +124,13 @@
                   </div>
                 </div>
                 {% endfor %}
+              </div>
               {% elif dataset.data_obs[ob]['type'] == "continuous" %}
               <div class="btn-group btn-group-toggle mb-4" role="group">
                 <a class="btn btn-sm btn-white colourise" id="colourise{{loop.index}}" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}"><i class="fa fa-2x fa-tint"></i></a>
-              </div>               
-              <div class="list-group-item px-0 py-1">
+              </div>   
+              <div class="list-group list-group-flush">         
+              <div class="list-group-item p-1">
                 <div class="row">
                   <div class="col-6">
                     Minimum
@@ -133,7 +140,7 @@
                   </div>
                 </div>
               </div>
-              <div class="list-group-item px-0 py-1">
+              <div class="list-group-item p-1">
                 <div class="row">
                   <div class="col-6">
                     Maximum
@@ -143,7 +150,7 @@
                   </div>
                 </div>
               </div>
-              <div class="list-group-item px-0 py-1">
+              <div class="list-group-item p-1">
                 <div class="row">
                   <div class="col-6">
                     Mean
@@ -153,7 +160,7 @@
                   </div>
                 </div>
               </div>
-              <div class="list-group-item px-0 py-1">
+              <div class="list-group-item p-1">
                 <div class="row">
                   <div class="col-6">
                     Median
@@ -163,9 +170,9 @@
                   </div>
                 </div>
               </div>
+            </div>   
               {% else %}
               {% endif %}    
-            </div>                                                           
           </div>                          
         {% endfor %}
       </div>  
@@ -187,52 +194,60 @@
     {% endblock %}
   </div>
   <div class="col-lg-3 col-md-12">
-    <!-- Gene selector -->
-    {% block geneselector %}
-    <div class='card card-small'>
-      <div class="card-body p-0">
-        <ul class="list-group list-group-flush">
-          <li class="list-group-item px-3">
-            <div class="btn-group d-flex" role="group">
-              <a href="{{ url_for('datasets.scatterplot', id=did) }}" class="btn btn-secondary w-100 active">Scatterplot</a>
-              <a href="{{ url_for('datasets.heatmap', id=did) }}" class="btn btn-secondary w-100">Heatmap</a>
-            </div>            
-          </li>
-          <li class="list-group-item p-0">
-            <h6 class="main-sidebar-title">Expression levels by gene</h6>        
-          </li>          
-          <li class="list-group-item px-3 pb-2">
-            <gene-selector 
-            id="genes"
-            stylesheet="{{ url_for('static', filename='styles/gene-selector.css') }}" 
-            placeholder="Start typing here..."
-            data-init="{{
-              "CD326,CD235a,CD235ab,CD41,CD61,CD144,CD309,CD13,CD206,CD117,CD131,CD44,CD366,CD1c,CD301,CD303,CD34,CD96,CD18,CD62L,CD15,CD119,CD99,CD9,CD10,CD20,CD268,CD3,CD161,CD169,CD209"
-              if "[PROTEIN]" in dataset.title else 
-                "CD3D,IL7R,LTB,TIGIT,FOXP3,CD8A,CD8B,TRGV9,GNLY,GZMB,FCGR3A,NCAM1,MS4A1,IGHM,IGHG1,IGKC,CD38,CD14,S100A8,FCER1G,CST3,MS4A7,HLA-DQA1,HLA-DQB1,CD1C,LILRA4,IL3RA,IRF7,CD34,SPINK2,HBA2,HBB,PF4,PPBP,TOP2A,MKI67"
-            }}">
-              <endpoint 
-                name="genes"
-                url="{{ config.API_SERVER }}api/v1/datasets/{{ did }}/genes"
-                parameter="term"
-                mode="list"
-                property="genes"
-              >
-              Search by {{ "protein" if "[PROTEIN]" in dataset.title else "gene" }}
-              </endpoint>
-              {% if "[PROTEIN]" not in dataset.title %}
-              <endpoint name="diseases" url="{{ config.API_SERVER }}api/v1/datasets/{{ did }}/diseases" parameter="term" mode="groups" property="data">
-                Search by disease
-              </endpoint>
-              {% endif %}
-            </gene-selector>
-          </li>
-        </ul>
-      </div>      
+    <div class='gene-sidebar'>
+      {% block geneselector %}
+      <!-- Gene selector -->
+      <div class='card card-small'>
+        <div class="card-body p-0">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item px-3">
+              <div class="btn-group d-flex" role="group">
+                <a href="{{ url_for('datasets.scatterplot', id=did) }}" class="btn btn-secondary w-100 active">Scatterplot</a>
+                <a href="{{ url_for('datasets.heatmap', id=did) }}" class="btn btn-secondary w-100">Heatmap</a>
+              </div>            
+            </li>                
+            <li class="list-group-item p-0">
+              <h6 class="gene-sidebar-title">Explore gene expression</h6>        
+            </li>          
+            <li class="list-group-item">
+              <select class="js-data-example-ajax"></select>
+              <div id="search-genes-selected" class="mt-2"></div>
+            </li>               
+            <li class="list-group-item p-0">
+              <h6 class="gene-sidebar-title">Genes implicated with diseases</h6>        
+            </li>          
+            <li class="list-group-item">
+              <select class="js-data-disease-ajax form-control"></select>
+              <div id="search-genes-disease-set" class="mt-2"></div>
+            </li>
+            <!--<li class="list-group-item p-0">
+              <h6 class="gene-sidebar-title">Disease marker genes</h6>
+            </li>-->
+            {% if dataset.genes_deg %}
+            <li class="list-group-item p-0">
+              <h6 class="gene-sidebar-title">Differentially expressed genes</h6>        
+            </li>                        
+            <li class="list-group-item">
+              {% for gene in dataset.genes_deg %}
+              <button type="button" id="gene-deg-{{ gene }}" class="btn-gene-select btn btn-outline-info btn-sm">{{ gene }}</button>
+              {% endfor %}
+            </li>  
+            {% endif %}
+            {% if dataset.genes_curated %}   
+            <li class="list-group-item p-0">
+              <h6 class="gene-sidebar-title">Author curated genes</h6>              
+            </li>        
+            <li class="list-group-item">
+              {% for gene in dataset.genes_deg %}
+              <button type="button" id="gene-deg-{{ gene }}" class="btn-gene-select btn btn-outline-info btn-sm">{{ gene }}</button>
+              {% endfor %}
+            </li>   
+            {% endif %}
+          </ul>
+        </div>      
+      </div>
+      {% endblock %}
     </div>
-    {% endblock %}
-    <!-- End Observations -->
-  </div>
 </div>
 {% endblock %}
 
