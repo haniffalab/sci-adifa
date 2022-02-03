@@ -586,7 +586,63 @@
             startLoader();
             abort();
             loadData();
-        }        
+        }
+        $('.select2-gene-search').select2({
+            placeholder: "Search for genes",
+            closeOnSelect: false,
+            sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
+            ajax: {
+                url: API_SERVER + "api/v1/datasets/" + datasetId + "/search/genes",
+                data: function (params) {
+                var query = {
+                    search: params.term,
+                    type: 'public'
+                }
+
+                // Query parameters will be ?search=[term]&type=public
+                return query;
+                }
+            }
+        }).on('select2:select', function (e) {
+            var data = e.params.data;
+            console.log(data.id);
+            $('#search-genes-selected').append(
+                $('<button/>')
+                .attr("type", "button")
+                .attr("id", "'gene-deg-" + data.id)
+                .addClass("btn-gene-select btn btn-outline-info btn-sm")
+                    .text(data.id)
+            );
+        });
+        $('.select2-disease-search').select2({
+            placeholder: "Search for diseases",
+            sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
+            ajax: {
+                url:  API_SERVER + "api/v1/datasets/" + datasetId + "/search/diseases",
+                data: function (params) {
+                var query = {
+                    search: params.term,
+                    type: 'public'
+                }
+
+                // Query parameters will be ?search=[term]&type=public
+                return query;
+                }
+            }
+        }).on('select2:select', function (e) {
+            var data = e.params.data;
+            console.log(data.id);
+            var genes = data.id.split(",");
+            $.each(genes,function(i){
+                $('#search-genes-disease-set').append(
+                $('<button/>')
+                    .attr("type", "button")
+                    .attr("id", "'gene-deg-" + genes[i])
+                    .addClass("btn-gene-select btn btn-outline-info btn-sm")
+                    .text(genes[i])
+                );
+            });
+        });
         return this.initialize();
     }
 })(jQuery);
