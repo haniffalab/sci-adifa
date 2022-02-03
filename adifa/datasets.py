@@ -1,6 +1,8 @@
 import os
+from signal import SIG_DFL
 
-from flask import Blueprint, current_app, flash, redirect, render_template, send_from_directory, session, request, url_for
+from flask import abort, Blueprint, current_app, flash, redirect, render_template, send_from_directory, session, request, url_for
+from sqlalchemy import exc
 
 from adifa import models
 
@@ -13,18 +15,22 @@ def index():
   
 @bp.route('/dataset/<int:id>/scatterplot')
 def scatterplot(id):
-    dataset = models.Dataset.query.get(id)
+    try:
+        dataset = models.Dataset.query.get(id)
+        if not dataset:
+            abort(404)
+    except exc.SQLAlchemyError as e:
+        abort(500)
 
-    # Check protected status
     authenticated = session.get("auth_dataset_" + str(id), False)
     if dataset.password and not authenticated:
         return redirect(url_for('datasets.password', id=id))
-        
+
     from collections import OrderedDict 
     from operator import getitem 
     obs = OrderedDict(sorted(dataset.data_obs.items(), key = lambda x: getitem(x[1], 'name'))) 
     return render_template('scatterplot.html', did=id, dataset=dataset, obs=obs)    
-  
+
 @bp.route('/dataset/<int:id>/heatmap')
 def heatmap(id):
     dataset = models.Dataset.query.get(id)
