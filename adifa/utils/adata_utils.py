@@ -1,3 +1,4 @@
+import os
 import re
 
 from flask import current_app
@@ -35,13 +36,15 @@ def get_annotations(adata):
 	return annotations
 
 def get_degs(adata):
-	sc.pp.normalize_total(adata, target_sum=1e4)
-	sc.pp.log1p(adata)	
-	sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
-	adata.var.sort_values(by=['means'], ascending=False)
-	df = adata.var[adata.var['highly_variable']==True].sort_values(by=['means'], ascending=False).head(10)
-
-	return df.index.tolist()
+	try:
+		sc.pp.normalize_total(adata, target_sum=1e4)
+		sc.pp.log1p(adata)	
+		sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+		adata.var.sort_values(by=['means'], ascending=False)
+		df = adata.var[adata.var['highly_variable']==True].sort_values(by=['means'], ascending=False).head(10)
+		return df.index.tolist()
+	except Exception as e:
+		return False
 
 def get_bounds(datasetId, obsm):
 	if not datasetId > 0 :
@@ -231,4 +234,30 @@ def series_median(s):
 		return s.median().item()
 
 def disease_filename():
-	return current_app.config.get('DATA_PATH') + 'disease_data.csv'
+	return os.path.join(current_app.root_path, 'data', 'disease.csv')
+
+def get_scanpy_plot_dotplot(datasetId, obsm):
+	if not datasetId > 0 :
+		raise InvalidDatasetIdError
+
+	try:
+		dataset = models.Dataset.query.get(datasetId)
+	except exc.SQLAlchemyError as e:
+		raise DatabaseOperationError
+
+	try:
+		adata = current_app.adata[dataset.filename]		
+	except (ValueError, AttributeError) as e:
+		raise DatasetNotExistsError
+
+	markers = {'T-cell': 'CD3D', 'B-cell': 'CD79A', 'R-cell': 'CD14'}
+	dp = sc.pl.matrixplot(adata, markers, 'cell.labels', return_fig=True)
+
+	output = {
+		"categories": list(dp.categories),
+		"var_names": dp.var_names,
+		"values_df": dp.values_df.to_dict(),
+		"min_value": str(dp.values_df.min().min()),
+		"max_value": str(dp.values_df.max().max())
+	}
+	return output
