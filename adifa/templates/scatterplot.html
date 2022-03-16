@@ -187,8 +187,8 @@
 <script src="https://unpkg.com/@deck.gl/core@^8.0.0/debug.min.js"></script>
 <div class="row">
   <div class="col-lg-9 col-md-12">
-    <!-- Visualisation -->
     {% block visualisation %}
+    <!-- Visualisation -->
     <div id="canvas-container" class="card card-small" data-datasetId="{{did}}"></div>
     <!-- End Visualisation -->
     {% endblock %}
@@ -203,7 +203,7 @@
             <li class="list-group-item px-3">
               <div class="btn-group d-flex" role="group">
                 <a href="{{ url_for('datasets.scatterplot', id=did) }}" class="btn btn-secondary w-100 active">Scatterplot</a>
-                <a href="{{ url_for('datasets.heatmap', id=did) }}" class="btn btn-secondary w-100">Heatmap</a>
+                <a href="{{ url_for('datasets.heatmap', id=did) }}" class="btn btn-secondary w-100 disabled">Heatmap</a>
               </div>            
             </li>                
             <li class="list-group-item p-0">
@@ -238,7 +238,7 @@
               <h6 class="gene-sidebar-title">Author curated genes</h6>              
             </li>        
             <li class="list-group-item">
-              {% for gene in dataset.genes_deg %}
+              {% for gene in dataset.genes_curated %}
               <button type="button" id="gene-deg-{{ gene }}" class="btn-gene-select btn btn-outline-info btn-sm">{{ gene }}</button>
               {% endfor %}
             </li>   
@@ -255,5 +255,6 @@
 {{ super() }}
 <!-- Load d3 -->
 <script src="https://d3js.org/d3.v6.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.13.3/js/standalone/selectize.min.js" integrity="sha512-pF+DNRwavWMukUv/LyzDyDMn8U2uvqYQdJN0Zvilr6DDo/56xPDZdDoyPDYZRSL4aOKO/FGKXTpzDyQJ8je8Qw==" crossorigin="anonymous"></script>
 {% endblock %}

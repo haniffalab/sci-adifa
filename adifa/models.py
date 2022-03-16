@@ -30,7 +30,7 @@ class Dataset(db.Model):
     download_link = db.Column(db.String(120), nullable=True)
     password = db.Column(db.String(120), nullable=True)
     genes_deg = db.Column(db.JSON, default={})
-    genes_currated = db.Column(db.JSON, default={})
+    genes_curated = db.Column(db.JSON, default={})
 
     def __repr__(self):
         return f"Dataset('{self.filename}')"     
