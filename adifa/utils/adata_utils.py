@@ -236,7 +236,7 @@ def series_median(s):
 def disease_filename():
 	return os.path.join(current_app.root_path, 'data', 'disease.csv')
 
-def get_scanpy_plot_dotplot(datasetId, obsm):
+def get_scanpy_plot_dotplot(datasetId, obs, markers):
 	if not datasetId > 0 :
 		raise InvalidDatasetIdError
 
@@ -250,9 +250,8 @@ def get_scanpy_plot_dotplot(datasetId, obsm):
 	except (ValueError, AttributeError) as e:
 		raise DatasetNotExistsError
 
-	markers = {'T-cell': 'CD3D', 'B-cell': 'CD79A', 'R-cell': 'CD14'}
-	dp = sc.pl.matrixplot(adata, markers, 'cell.labels', return_fig=True)
-
+	dp = sc.pl.matrixplot(adata, markers, obs, return_fig=True)
+	
 	output = {
 		"categories": list(dp.categories),
 		"var_names": dp.var_names,

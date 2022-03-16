@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask_restful import Api
 
 from adifa.resources.about import About
-from adifa.resources.datasets import Bounds, CellByGeneAggregates, Coordinates, Dataset, Datasets, DiseaseGeneList, Labels, SearchGenes, SearchDiseases
+from adifa.resources.datasets import Bounds, CellByGeneAggregates, Coordinates, Dataset, Datasets, DiseaseGeneList, Labels, SearchGenes, SearchDiseases, PlotDotplot
 from adifa.resources.errors import errors
 
 
@@ -19,3 +19,5 @@ api.add_resource(DiseaseGeneList, '/datasets/<id>/diseases')
 api.add_resource(Labels, '/labels')
 api.add_resource(SearchGenes, '/datasets/<id>/search/genes')
 api.add_resource(SearchDiseases, '/datasets/<id>/search/diseases')
+api.add_resource(PlotDotplot, '/datasets/<int:id>/plot/dotplot')
+

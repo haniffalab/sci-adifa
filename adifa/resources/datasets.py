@@ -131,3 +131,11 @@ class DiseaseGeneList(Resource):
 
         # return resources
         return { 'data': output }
+
+class PlotDotplot(Resource):
+    def get(self, id):
+        obs = request.args.get('obs', '', type=str)
+        markers = request.args.get('markers', '', type=str)
+
+        return adata_utils.get_scanpy_plot_dotplot(id, obs, markers)
+

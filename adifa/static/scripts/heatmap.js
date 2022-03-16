@@ -1,5 +1,5 @@
 (function($) {
-    $.fn.explorer = function(options) {
+    $.fn.heatmap = function(options) {
         var defaults = {
             backgroundColor: "white",                // the canvas background color
             containerId: "canvas-container",         // the data point transparency
@@ -371,137 +371,88 @@
         };
         // public methods 
         this.initialize = function() {
-            // create the explorer tool.
-            $('#' + this.attr('id')).append(
-                $('<div/>')
-                    .addClass("card-body")
-                    .append(
-                        $('<div/>')
-                            .attr("id", "continuous-legend"))
-                    .append(
-                        $('<div/>')
-                            .attr("id", "loader"))
-                    .append(
-                        $('<div/>')
-                            .attr("id", "canvas-loader"))
-                    .append(
-                        $('<div/>')
-                            .attr("id", "canvas-controls")
-                            .append(
-                                $('<div/>')
-                                    .addClass("btn-group mb-3 mr-1")
-                                    .append(
-                                        $('<a/>')
-                                            .attr("id", "canvas-zoom-plus")
-                                            .addClass("btn btn-white")
-                                            .append(
-                                                $('<i/>')
-                                                .addClass("fa fa-search-plus")))
-                                    .append(
-                                        $('<a/>')
-                                            .attr("id", "canvas-zoom-minus")
-                                            .addClass("btn btn-white")
-                                            .append(
-                                                $('<i/>')
-                                                .addClass("fa fa-search-minus")))
-                                    .append(
-                                        $('<a/>')
-                                            .attr("id", "canvas-zoom-reset")
-                                            .addClass("btn btn-white")
-                                            .append(
-                                                $('<i/>')
-                                                .addClass("fa fa-expand"))))
-                            .append(
-                                $('<div/>')
-                                    .addClass("btn-group mb-3 dropdown")
-                                    .append(
-                                        $('<button/>')
-                                            .attr("id", "canvas-obsm-key")
-                                            .attr("type", "button")
-                                            .attr("data-toggle", "dropdown")
-                                            .attr("aria-haspopup", "true")
-                                            .attr("aria-expanded", "false")
-                                            .addClass("btn btn-white dropdown-toggle")
-                                            .text("Embedding"))
-                                    .append(
-                                        $('<div/>')
-                                            .attr("id", "canvas-obsm-dropdown")
-                                            .attr("aria-labelledby", "canvas-obsm-key")
-                                            .addClass("dropdown-menu")                                                                                             
-                                            .css("z-index","10000"))))                                                                                             
-                    .append(
-                        $('<div/>')
-                            .attr("id", "canvas_plot"))                            
-            );
-            // set container size
-            $('#' + this.attr('id')).parent().height(height)
-            $('#' + this.attr('id')).height(height)
-            $('#' + this.attr('id')).width(width)
-            // load dataset
-            startLoader()
-            $.when(
-                doAjax(API_SERVER + "api/v1/datasets/" + datasetId)).then(function(d1) {
-                // update active dataset
+            // load cookies  
+            var obsmKey = Cookies.get('ds' + datasetId + '-obsm-key');
+            var colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name');
+            var colorScaleType = Cookies.get('ds' + datasetId + '-obs-type');
 
-                active.dataset = d1
-                console.log(active.dataset);
+            //Read the data
+            d3.json(API_SERVER + "api/v1/datasets/" + datasetId + "/plot/dotplot?obs=" + colorScaleKey + "&markers=ALB,AFP,C3,HP,SAA1,RARRES2,LRP1,NR1H4,NNMT,HPD,CES2,C1R,AOX1,GLUL,CCYP4B1")
+            .then(function(data){
 
-                // load cookies  
-                var colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name')
-                var colorScaleType = Cookies.get('ds' + datasetId + '-obs-type') // @TODO 
-                // populate embedding options
-                $.each(d1.obsm, function(key, obsm) {
-                    $('#canvas-obsm-dropdown').append(
-                        $('<a/>')
-                            .attr("id", "canvas-obsm-key-" + obsm)
-                            .attr("href", "#")
-                            .attr("data-name", obsm)
-                            .addClass("dropdown-item canvas-obsm-key")
-                            .text(obsm))
-                });                
-                // process embedding option
-                var obsmKey = (typeof Cookies.get('ds' + datasetId + '-obsm-key') === 'undefined') ? 'X_umap' : Cookies.get('ds' + datasetId + '-obsm-key');
-                Cookies.set('ds' + datasetId + '-obsm-key', obsmKey, {
-                    expires: 30
-                })
-                // get data
-                loadData();
-            }, showError);
-            // init deck
-            const {DeckGL,WebMercatorViewport} = deck;
-            const viewport = new WebMercatorViewport({
-                width: width,
-                height: height,
-                longitude: 0,
-                latitude: 0,
-                zoom: 0
-            })
-            deck.log.enable()
-            deck.log.level = 3
-            currentYear = null // @TODO refactor
-            // create deck
-            cellDeck = new DeckGL({
-                container: 'canvas_plot',
-                width: width,
-                height: height,
-                initialViewState: viewport,
-                controller: true,
-                getTooltip: ({
-                    object
-                }) => object && object[2],
-                onViewStateChange: ({
-                    viewState
-                }) => {
-                    // we can manipulate the viewState here
-                    currentViewState = viewState;
-                    console.log(viewState);
-                }
+                // Labels of row and columns
+                var myGroups = data.categories
+                var myVars = data.var_names
+
+                // set the dimensions and margins of the graph
+                var margin = {top: 30, right: 30, bottom: 100, left: 100},
+                width = (myVars.length * 20),
+                height = (myGroups.length * 20);
+
+                // append the svg object to the body of the page
+                var svg = d3.select("#my_dataviz")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform",
+                        "translate(" + margin.left + "," + margin.top + ")");
+
+                // Build X scales and axis:
+                var x = d3.scaleBand()
+                    .range([ 0, width ])
+                    .domain(myVars)
+                    .padding(0.02);
+                svg.append("g")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(d3.axisBottom(x).tickSizeOuter(0))
+                    .selectAll("text")  
+                    .style("text-anchor", "end")
+                    .attr("dx", "-.8em")
+                    .attr("dy", ".15em")
+                    .attr("transform", "rotate(-65)")
+
+                // Build X scales and axis:
+                var y = d3.scaleBand()
+                    .range([ height, 0 ])
+                    .domain(myGroups)
+                    .padding(0.02);
+                svg.append("g")
+                    .call(d3.axisLeft(y).tickSizeOuter(0));
+
+                // Build color scale
+                const max = Math.max(Object.values(data.values_df));
+                const min = Math.min(Object.values(data.values_df));
+                console.log(max)
+                var myColor = d3.scaleSequential()
+                    .domain([data.min_value,data.max_value]).interpolator(d3.interpolateViridis);
+
+
+                    
+                svg.selectAll()
+                    .data(Object.entries(data.values_df), function(d) { return d[1] })
+                    .enter()
+                    .selectAll()
+                    .data(function(d, i) { 
+                        var ownProps = Object.keys( d[1] ),
+                        i = ownProps.length,
+                        resArray = new Array(i); // preallocate the Array
+                        while (i--)
+                        resArray[i] = [d[0], ownProps[i], d[1][ownProps[i]]];
+                        
+                        return resArray })
+                    .enter()
+                    .append("rect")
+                    .attr("x", function(d) { return x(d[0]) })
+                    .attr("y", function(d) { console.log(d[1]);  return y(d[1]) })
+                    .attr("width", x.bandwidth() )
+                    .attr("height", y.bandwidth() )
+                    .style("fill", function(d) { return myColor(d[2])} )
+
+                createLegend(myColor);
+
             });
-            // convert filesize
-            const size = $('#ds-size').html()
-            var i = Math.floor( Math.log(size) / Math.log(1024) );
-            $('#ds-size').html(( size / Math.pow(1024, i) ).toFixed(2) * 1 + ' ' + ['B', 'kB', 'MB', 'GB', 'TB'][i]);
-
+                        
             return this;
         };
         this.colorize = function(el) {
