@@ -713,10 +713,11 @@
                 $('<button/>')
                 .attr("type", "button")
                 .attr("id", "gene-deg-" + data.id)
+                .attr("data-gene", data.id)
                 .addClass("btn-gene-select btn btn-outline-info btn-sm")
                     .text(data.id)
             );
-            $( "#gene-deg-" + data.id ).trigger( "click" );    
+            $("button[data-gene='" + data.id + "']").trigger( "click" );
         });
         $('.select2-disease-search').select2({
             placeholder: "Search for diseases",
@@ -741,6 +742,7 @@
                 $('<button/>')
                     .attr("type", "button")
                     .attr("id", "'gene-deg-" + genes[i])
+                    .attr("data-gene", genes[i])
                     .addClass("btn-gene-select btn btn-outline-info btn-sm")
                     .text(genes[i])
                 );
