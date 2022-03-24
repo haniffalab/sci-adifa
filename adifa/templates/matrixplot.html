@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% import 'macros/content.html' as content %}
+{% import 'macros/sidebar.html' as sidebar %}
+{% block title %}Matrixplot - {{dataset.title}}{% endblock %}
+
+{% block sidebar %}
+  {{ sidebar.menu(dataset, obs, 'matrixplot') }}
+{% endblock %}
+
+{% block bodyend %}
+{{ super() }}
+<script src="{{ url_for('static', filename='scripts/matrixplot.js') }}"></script>
+<script src="https://d3js.org/d3.v6.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+{% endblock %}
+
+{% block content %}
+  {{ content.header(
+    title="Heatmap of the mean expression values", 
+    breadcrumbs=dataset.title,
+    dataset=dataset) }}
+<div class="row">
+  <div class="col-lg-9 col-md-12 mb-4">
+    {% block visualisation %}
+    <div id="matrixplot-container" data-datasetId="{{ dataset.id }}" class="card card-small"></div>
+    {% endblock %}
+  </div>
+  <div class="col-lg-3 col-md-12">
+    {% block geneselector %}
+      {% include 'blocks/geneselector.html' %}
+    {% endblock %}
+  </div>
+</div>
+{% endblock %}
+

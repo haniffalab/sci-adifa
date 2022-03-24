@@ -1,5 +1,5 @@
 (function($) {
-    $.fn.explorer = function(options) {
+    $.fn.scatterplot = function(options) {
         var defaults = {
             backgroundColor: "white",                // the canvas background color
             containerId: "canvas-container",         // the data point transparency
@@ -12,7 +12,7 @@
         }
         // private variables
         var width = $('#' + settings.containerId).parent().width();
-        var height = $(window).height() - 106;
+        var height = $(window).height() - 116;
         var datasetId = this.attr('data-datasetId');
         var xhrPool = [];
         var active = {
@@ -270,7 +270,7 @@
             // create data layer
             const layer = new ScatterplotLayer({
               data: active.samples,
-              radiusScale: 6,
+              radiusScale: 200000/active.samples.length, // 6,
               radiusMinPixels: 1,
               radiusMaxPixels: 50,
               getPosition: function(d) {
@@ -294,84 +294,156 @@
               initialViewState: viewport,
             });             
         }
+
         // create continuous color legend
-        var createLegend = function(colorscale) {
-            var margin = {
-                top: 10,
-                right: 10,
-                bottom: 30,
-                left: 10
-            };
-            var legendheight = 50,
-                legendwidth = $('#canvas-controls').width() + margin.right + margin.left,
-                selector_id = '#continuous-legend';
+        function createLegend(colorscale) {
+            selector_id = '#continuous-legend';
 
+            var legendheight = 200,
+                legendwidth = 80,
+                margin = {top: 10, right: 60, bottom: 10, left: 0};
+        
             var canvas = d3.select(selector_id)
-                .style("height", legendheight + "px")
-                .style("width", legendwidth + "px")
-                .style("position", "absolute")
-                .style("top", "60px")
-                .style("right", (30 - margin.left) + "px")
-                .style("position", "absolute")
-                .append("canvas")
-                .attr("height", 1)
-                .attr("width", legendwidth - margin.left - margin.right)
-                .style("height", (legendheight - margin.top - margin.bottom) + "px")
-                .style("width", (legendwidth - margin.left - margin.right) + "px")
-                .style("border", "1px solid #3d5170")
-                .style("position", "absolute")
-                .style("top", (margin.top) + "px")
-                .style("left", (margin.left) + "px")
-                .node();
-
+            .style("height", legendheight + "px")
+            .style("width", legendwidth + "px")
+            .style("position", "absolute")
+            .style("bottom", "10px")
+            .style("left", "20px")            
+            .append("canvas")
+            .attr("height", legendheight - margin.top - margin.bottom)
+            .attr("width", 1)
+            .style("height", (legendheight - margin.top - margin.bottom) + "px")
+            .style("width", (legendwidth - margin.left - margin.right) + "px")
+            .style("border", "1px solid #000")
+            .style("position", "absolute")
+            .style("top", (margin.top) + "px")
+            .style("left", (margin.left) + "px")
+            .node();
+        
             var ctx = canvas.getContext("2d");
-
+        
             var legendscale = d3.scaleLinear()
-                .range([1, legendwidth - margin.left - margin.right])
-                .domain(colorscale.domain());
-
+            .range([legendheight - margin.top - margin.bottom, 1])
+            .domain(colorscale.domain());
+        
             // image data hackery based on http://bl.ocks.org/mbostock/048d21cf747371b11884f75ad896e5a5
-            var image = ctx.createImageData(legendwidth, 1);
-            d3.range(legendwidth).forEach(function(i) {
-                var c = d3.rgb(colorscale(legendscale.invert(i)));
-                image.data[4 * i] = c.r;
-                image.data[4 * i + 1] = c.g;
-                image.data[4 * i + 2] = c.b;
-                image.data[4 * i + 3] = 255;
+            var image = ctx.createImageData(1, legendheight);
+            d3.range(legendheight).forEach(function(i) {
+            var c = d3.rgb(colorscale(legendscale.invert(i)));
+            image.data[4*i] = c.r;
+            image.data[4*i + 1] = c.g;
+            image.data[4*i + 2] = c.b;
+            image.data[4*i + 3] = 255;
             });
             ctx.putImageData(image, 0, 0);
-
-            // A simpler way to do the above, but possibly slower. Keep in mind the legend width is stretched because the width attr of the canvas is 1
+        
+            // A simpler way to do the above, but possibly slower. keep in mind the legend width is stretched because the width attr of the canvas is 1
             // See http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
             /*
             d3.range(legendheight).forEach(function(i) {
-                ctx.fillStyle = colorscale(legendscale.invert(i));
-                ctx.fillRect(0,i,1,1);
+            ctx.fillStyle = colorscale(legendscale.invert(i));
+            ctx.fillRect(0,i,1,1);
             });
             */
-
-            var legendaxis = d3.axisBottom()
-                .scale(legendscale)
-                .tickSize(6)
-                .ticks(4);
-
+        
+            var legendaxis = d3.axisRight()
+            .scale(legendscale)
+            .tickSize(6)
+            .ticks(6);
+        
             var svg = d3.select(selector_id)
-                .append("svg")
-                .attr("height", (legendheight) + "px")
-                .attr("width", (legendwidth) + "px")
-                .style("position", "absolute")
-                .style("left", "-1px")
-                .style("top", "-1px")
-
+            .append("svg")
+            .attr("height", (legendheight) + "px")
+            .attr("width", (legendwidth) + "px")
+            .style("position", "absolute")
+            .style("left", "0px")
+            .style("top", "0px")
+        
             svg
-                .append("g")
-                .attr("class", "axis")
-                .attr("transform", "translate(" + margin.left + ",20)") // Axis positioning
-                .call(legendaxis);
+            .append("g")
+            .attr("class", "axis")
+            .attr("transform", "translate(" + (legendwidth - margin.left - margin.right - 1) + "," + (margin.top - 1) + ")")
+            .call(legendaxis);
         };
+
+        // // create continuous color legend
+        // var createLegend = function(colorscale) {
+        //     var margin = {
+        //         top: 10,
+        //         right: 10,
+        //         bottom: 30,
+        //         left: 10
+        //     };
+        //     var legendheight = 50,
+        //         legendwidth = $('#canvas-controls').width() + margin.right + margin.left,
+        //         selector_id = '#continuous-legend';
+
+        //     var canvas = d3.select(selector_id)
+        //         .style("height", legendheight + "px")
+        //         .style("width", legendwidth + "px")
+        //         .style("position", "absolute")
+        //         .style("top", "60px")
+        //         .style("right", (30 - margin.left) + "px")
+        //         .style("position", "absolute")
+        //         .append("canvas")
+        //         .attr("height", 1)
+        //         .attr("width", legendwidth - margin.left - margin.right)
+        //         .style("height", (legendheight - margin.top - margin.bottom) + "px")
+        //         .style("width", (legendwidth - margin.left - margin.right) + "px")
+        //         .style("border", "1px solid #3d5170")
+        //         .style("position", "absolute")
+        //         .style("top", (margin.top) + "px")
+        //         .style("left", (margin.left) + "px")
+        //         .node();
+
+        //     var ctx = canvas.getContext("2d");
+
+        //     var legendscale = d3.scaleLinear()
+        //         .range([1, legendwidth - margin.left - margin.right])
+        //         .domain(colorscale.domain());
+
+        //     // image data hackery based on http://bl.ocks.org/mbostock/048d21cf747371b11884f75ad896e5a5
+        //     var image = ctx.createImageData(legendwidth, 1);
+        //     d3.range(legendwidth).forEach(function(i) {
+        //         var c = d3.rgb(colorscale(legendscale.invert(i)));
+        //         image.data[4 * i] = c.r;
+        //         image.data[4 * i + 1] = c.g;
+        //         image.data[4 * i + 2] = c.b;
+        //         image.data[4 * i + 3] = 255;
+        //     });
+        //     ctx.putImageData(image, 0, 0);
+
+        //     // A simpler way to do the above, but possibly slower. Keep in mind the legend width is stretched because the width attr of the canvas is 1
+        //     // See http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
+        //     /*
+        //     d3.range(legendheight).forEach(function(i) {
+        //         ctx.fillStyle = colorscale(legendscale.invert(i));
+        //         ctx.fillRect(0,i,1,1);
+        //     });
+        //     */
+
+        //     var legendaxis = d3.axisLeft()
+        //         .scale(legendscale)
+        //         .tickSize(6)
+        //         .ticks(4);
+
+        //     var svg = d3.select(selector_id)
+        //         .append("svg")
+        //         .attr("height", (legendheight) + "px")
+        //         .attr("width", (legendwidth) + "px")
+        //         .style("position", "absolute")
+        //         .style("left", "-1px")
+        //         .style("top", "-1px")
+
+        //     svg
+        //         .append("g")
+        //         .attr("class", "axis")
+        //         .attr("transform", "translate(" + margin.left + ",20)") // Axis positioning
+        //         .call(legendaxis);
+        // };
         // public methods 
         this.initialize = function() {
-            // create the explorer tool.
+            // create the scatterplot tool.
             $('#' + this.attr('id')).append(
                 $('<div/>')
                     .addClass("card-body")
@@ -413,6 +485,41 @@
                                                 .addClass("fa fa-expand"))))
                             .append(
                                 $('<div/>')
+                                    .addClass("btn-group mb-3 mr-1")
+                                    .append(
+                                        $('<a/>')
+                                            .attr("id", "color-scale")
+                                            .addClass("btn btn-white text-nowrap")
+                                            .append(
+                                                $('<i/>')
+                                                .addClass("fas fa-tint"))
+                                            .append(
+                                                $('<span/>')
+                                                .attr("id", "color-scale-value")
+                                                .addClass("d-none")))                                                      
+                                    .append(
+                                        $('<a/>')
+                                            .attr("id", "color-scale-remove")
+                                            .addClass("btn btn-white text-nowrap d-none")
+                                            .append(
+                                                $('<i/>')
+                                                .addClass("fa fa-times"))))
+                            .append(
+                                $('<div/>')
+                                    .addClass("btn-group mb-3 mr-1")
+                                    .append(
+                                        $('<a/>')
+                                            .attr("id", "color-scale")
+                                            .addClass("btn btn-white text-nowrap")
+                                            .append(
+                                                $('<i/>')
+                                                .addClass("fas fa-draw-polygon"))
+                                            .append(
+                                                $('<span/>')
+                                                .attr("id", "cell-count-value")
+                                                .text(0))))
+                            .append(
+                                $('<div/>')
                                     .addClass("btn-group mb-3 dropdown")
                                     .append(
                                         $('<button/>')
@@ -442,15 +549,12 @@
             $.when(
                 doAjax(API_SERVER + "api/v1/datasets/" + datasetId)).then(function(d1) {
                 // update active dataset
-
                 active.dataset = d1
-                console.log(active.dataset);
-
                 // load cookies  
                 var colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name')
                 var colorScaleType = Cookies.get('ds' + datasetId + '-obs-type') // @TODO 
                 // populate embedding options
-                $.each(d1.obsm, function(key, obsm) {
+                $.each(d1.data_obsm, function(key, obsm) {
                     $('#canvas-obsm-dropdown').append(
                         $('<a/>')
                             .attr("id", "canvas-obsm-key-" + obsm)
@@ -589,7 +693,7 @@
         }
         $('.select2-gene-search').select2({
             placeholder: "Search for genes",
-            closeOnSelect: false,
+            //closeOnSelect: false,
             sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
             ajax: {
                 url: API_SERVER + "api/v1/datasets/" + datasetId + "/search/genes",
@@ -605,14 +709,15 @@
             }
         }).on('select2:select', function (e) {
             var data = e.params.data;
-            console.log(data.id);
             $('#search-genes-selected').append(
                 $('<button/>')
                 .attr("type", "button")
-                .attr("id", "'gene-deg-" + data.id)
+                .attr("id", "gene-deg-" + data.id)
+                .attr("data-gene", data.id)
                 .addClass("btn-gene-select btn btn-outline-info btn-sm")
                     .text(data.id)
             );
+            $("button[data-gene='" + data.id + "']").trigger( "click" );
         });
         $('.select2-disease-search').select2({
             placeholder: "Search for diseases",
@@ -631,13 +736,13 @@
             }
         }).on('select2:select', function (e) {
             var data = e.params.data;
-            console.log(data.id);
             var genes = data.id.split(",");
             $.each(genes,function(i){
                 $('#search-genes-disease-set').append(
                 $('<button/>')
                     .attr("type", "button")
                     .attr("id", "'gene-deg-" + genes[i])
+                    .attr("data-gene", genes[i])
                     .addClass("btn-gene-select btn btn-outline-info btn-sm")
                     .text(genes[i])
                 );

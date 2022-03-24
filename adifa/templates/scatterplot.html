@@ -1,265 +1,36 @@
-
 {% extends 'base.html' %}
-
-{% block headscripts %}
-<script type="module">
-  import { ValueSelector } from '{{ url_for("static", filename="scripts/ValueSelector.js" ) }}';
-  customElements.define('gene-selector', ValueSelector);
-</script>
-{% endblock %}
-
-{% block navbar %}
-<nav class="navbar align-items-stretch navbar-light flex-md-nowrap p-0">
-  <div class="w-100 d-none d-md-flex d-lg-flex">
-    &nbsp
-  </div>
-  <ul class="navbar-nav border-left flex-row ">
-    <li class="nav-item nav-logo border-right d-sm-block d-md-none">
-      <a class="nav-link nav-link-logo text-nowrap p-3" href="{{ url_for('datasets.index') }}">
-        <img class="align-middle m-auto img-fluid" src="/images/logo.svg" alt="Haniffa Lab">
-      </a>
-    </li>  
-    <li class="nav-item nav-color-scale border-right d-none d-md-block">
-      <div class="btn-group btn-group-toggle">
-        <a id="color-scale" class="text-nowrap btn btn-sm btn-white disabled"><i class="fas fa-tint"></i><span id="color-scale-value" class="d-none"></span> </a>
-        <a id="color-scale-remove" class="text-nowrap btn btn-sm btn-white d-none"><i class="fa fa-times"></i></a>
-      </div>   
-    </li>   
-    <li class="nav-item nav-cell-count border-right d-none d-md-block">
-      <div class="btn-group btn-group-toggle">
-        <a class="text-nowrap btn btn-sm btn-white"><i class="fas fa-draw-polygon"></i><span id="cell-count-value">0</span> cells </a>
-      </div>   
-    </li> 
-  </ul>
-  <nav class="nav">
-    <a href="#" class="nav-link nav-link-icon toggle-sidebar d-md-inline d-lg-none text-center border-left" data-toggle="collapse" data-target=".header-navbar" aria-expanded="false" aria-controls="header-navbar">
-      <i class="fas fa-bars"></i>
-    </a>
-  </nav>
-</nav>
-{% endblock %} 
+{% import 'macros/content.html' as content %}
+{% import 'macros/sidebar.html' as sidebar %}
+{% block title %}Scatterplot - {{dataset.title}}{% endblock %}
 
 {% block sidebar %}
-<!-- Main Sidebar -->
-<div class="main-navbar">
-  <nav class="navbar align-items-stretch navbar-light bg-white flex-md-nowrap p-0">
-    <a class="navbar-brand" href="{{ url_for('datasets.index') }}">
-      <img class="align-middle m-auto" src="/images/logo.svg" alt="Haniffa Lab">
-    </a>
-    <a class="navbar-text" href="{{ url_for('datasets.index') }}">
-      <span class="align-middle m-auto">CellAtlas.io</span>
-    </a> 
-    <a class="toggle-sidebar d-sm-inline d-md-none d-lg-none">
-      <i class="fas fa-arrow-left"></i>
-    </a>     
-  </nav>
-</div>
-<div class="nav-wrapper">
-  <h6 class="main-sidebar__nav-title">Dataset</h6>
-  <div class="dataset-info-item border-bottom">
-    <h4 class="ds-title mb-2">
-      {% block title %}{{dataset.title}}{% endblock %}
-    </h4>
-    <div class="btn-group btn-group-toggle">
-      <a href="#" class="btn btn-secondary" data-toggle="collapse" data-target="#collapseDataset" aria-controls="collapseDataset">Dataset&nbsp;&nbsp;&nbsp;<i class="fa fa-caret-down" style="color:white"></i></a>
-    </div>      
-    <div id="collapseDataset" class="collapse">
-      <dl class="row mt-2">
-        {% if dataset.desc %}<dd class="col-sm-12">{{dataset.desc}}</dd>{% endif %}
-
-        {% if dataset.pub_author %}
-          <dt class="col-sm-12">Author</dt>
-          <dd class="col-sm-12">{{dataset.pub_author}}, {{dataset.pub_group}}</dd>
-        {% endif %}
-      
-        {% if dataset.pub_doi %}
-          <dt class="col-sm-12">DOI</dt>
-          <dd class="col-sm-12"><a href="{{dataset.pub_link}}">{{dataset.pub_doi}}</a></dd>
-        {% endif %}
-
-        <dt class="col-sm-12">Filename</dt>
-        <dd class="col-sm-12">
-          <a href="{{ url_for('datasets.download', id=did) }}">{{dataset.filename}}</a><br />
-        </dd>  
-        <dd class="col-sm-12">
-          <a href="{{ url_for('datasets.download', id=did) }}" class="badge badge-secondary"><i class="fa fa-download"></i> Download</a>
-        </dd>              
-      </dl>
-    </div>                          
-  </div>
-  <h6 class="main-sidebar__nav-title">Observations</h6>
-  <ul class="nav flex-column">
-    <div id="obs-accordion">
-      <div class="list-group list-group-flush">                                                              
-        {% for ob in obs %}
-          <div class="list-group-item justify-content-between align-items-center" data-toggle="collapse" data-target="#collapse{{loop.index}}" aria-controls="collapse{{loop.index}}">
-            <h4>
-              <i class="fa fa-plus-square"></i>&nbsp;&nbsp;{{ dataset.data_obs[ob]['name'] }}
-            </h4>
-          </div>
-          <div id="collapse{{loop.index}}" class="collapse m-4 obs-values" aria-labelledby="heading{{loop.index}}" data-parent="#obs-accordion" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}">
-            
-              {% if dataset.data_obs[ob]['type'] == "categorical" %}
-                {% if dataset.data_obs[ob]['is_truncated'] == true %}
-                <div class="alert alert-warning" role="alert">
-                  This observation has more than 100 values, and has been truncated to improve performance. 
-                </div>
-                {% endif %}              
-                <div class="btn-group btn-group-toggle mb-4" role="group">
-                  <a class="btn btn-sm btn-white checkall" data-id="{{loop.index}}"><i class="far fa-2x fa-check-square"></i></a>
-                  <a class="btn btn-sm btn-white uncheckall" data-id="{{loop.index}}"><i class="far fa-2x fa-square"></i></a>
-                  <a class="btn btn-sm btn-white colourise" id="colourise{{loop.index}}" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}"><i class="fa fa-2x fa-tint"></i></a>
-                </div>   
-                <div class="list-group list-group-flush">
-                {% for key, value in dataset.data_obs[ob]['values'].items()|sort(attribute=1) %}
-                <div class="list-group-item p-1">
-                  <div id="obs-list-{{ob}}" class="row">
-                    <div class="col-9">
-                      <label class="label-checkbox">{{dataset.data_obs[ob]['values'][key]}}
-                        <input class="obs_value_cb" id="obs-{{loop.index}}-value-{{key}}" type="checkbox" name="obs-{{value}}" value="{{value}}" checked="checked">
-                        <span class="checkmark"></span>
-                      </label>    
-                    </div>
-                    <!--<div class="col-3">
-                      <div class="progress-circle progress-10"></div>
-                    </div>-->
-                    <div class="col-3">
-                      <div id="{{ob}}-{{key}}" class="legend-box-color"></div>
-                    </div>
-                  </div>
-                </div>
-                {% endfor %}
-              </div>
-              {% elif dataset.data_obs[ob]['type'] == "continuous" %}
-              <div class="btn-group btn-group-toggle mb-4" role="group">
-                <a class="btn btn-sm btn-white colourise" id="colourise{{loop.index}}" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}"><i class="fa fa-2x fa-tint"></i></a>
-              </div>   
-              <div class="list-group list-group-flush">         
-              <div class="list-group-item p-1">
-                <div class="row">
-                  <div class="col-6">
-                    Minimum
-                  </div>
-                  <div class="col-6 text-right">
-                    {{ dataset.data_obs[ob]['min'] }}
-                  </div>
-                </div>
-              </div>
-              <div class="list-group-item p-1">
-                <div class="row">
-                  <div class="col-6">
-                    Maximum
-                  </div>
-                  <div class="col-6 text-right">
-                    {{ dataset.data_obs[ob]['max'] }}
-                  </div>
-                </div>
-              </div>
-              <div class="list-group-item p-1">
-                <div class="row">
-                  <div class="col-6">
-                    Mean
-                  </div>
-                  <div class="col-6 text-right">
-                    {{ dataset.data_obs[ob]['mean'] }}
-                  </div>
-                </div>
-              </div>
-              <div class="list-group-item p-1">
-                <div class="row">
-                  <div class="col-6">
-                    Median
-                  </div>
-                  <div class="col-6 text-right">
-                    {{ dataset.data_obs[ob]['median'] }}
-                  </div>
-                </div>
-              </div>
-            </div>   
-              {% else %}
-              {% endif %}    
-          </div>                          
-        {% endfor %}
-      </div>  
-    </div>           
-  </ul>
-</div>
-<!-- End Main Sidebar -->  
-{% endblock %}
-
-{% block content %}
-<script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
-<script src="https://unpkg.com/@deck.gl/core@^8.0.0/debug.min.js"></script>
-<div class="row">
-  <div class="col-lg-9 col-md-12">
-    {% block visualisation %}
-    <!-- Visualisation -->
-    <div id="canvas-container" class="card card-small" data-datasetId="{{did}}"></div>
-    <!-- End Visualisation -->
-    {% endblock %}
-  </div>
-  <div class="col-lg-3 col-md-12">
-    <div class='gene-sidebar'>
-      {% block geneselector %}
-      <!-- Gene selector -->
-      <div class='card card-small'>
-        <div class="card-body p-0">
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item px-3">
-              <div class="btn-group d-flex" role="group">
-                <a href="{{ url_for('datasets.scatterplot', id=did) }}" class="btn btn-secondary w-100 active">Scatterplot</a>
-                <a href="{{ url_for('datasets.heatmap', id=did) }}" class="btn btn-secondary w-100 disabled">Heatmap</a>
-              </div>            
-            </li>                
-            <li class="list-group-item p-0">
-              <h6 class="gene-sidebar-title">Gene expression</h6>        
-            </li>          
-            <li class="list-group-item">
-              <select class="select2-gene-search"></select>
-              <div id="search-genes-selected" class="mt-2"></div>
-            </li>               
-            <li class="list-group-item p-0">
-              <h6 class="gene-sidebar-title">Genes implicated with diseases</h6>        
-            </li>          
-            <li class="list-group-item">
-              <select class="select2-disease-search"></select>
-              <div id="search-genes-disease-set" class="mt-2"></div>
-            </li>
-            <!--<li class="list-group-item p-0">
-              <h6 class="gene-sidebar-title">Disease marker genes</h6>
-            </li>-->
-            {% if dataset.genes_deg %}
-            <li class="list-group-item p-0">
-              <h6 class="gene-sidebar-title">Differentially expressed genes</h6>        
-            </li>                        
-            <li class="list-group-item">
-              {% for gene in dataset.genes_deg %}
-              <button type="button" id="gene-deg-{{ gene }}" class="btn-gene-select btn btn-outline-info btn-sm">{{ gene }}</button>
-              {% endfor %}
-            </li>  
-            {% endif %}
-            {% if dataset.genes_curated %}   
-            <li class="list-group-item p-0">
-              <h6 class="gene-sidebar-title">Author curated genes</h6>              
-            </li>        
-            <li class="list-group-item">
-              {% for gene in dataset.genes_curated %}
-              <button type="button" id="gene-deg-{{ gene }}" class="btn-gene-select btn btn-outline-info btn-sm">{{ gene }}</button>
-              {% endfor %}
-            </li>   
-            {% endif %}
-          </ul>
-        </div>      
-      </div>
-      {% endblock %}
-    </div>
-</div>
+    {{ sidebar.menu(dataset, obs, 'scatterplot') }}
 {% endblock %}
 
 {% block bodyend %}
 {{ super() }}
-<!-- Load d3 -->
+<script src="{{ url_for('static', filename='scripts/scatterplot.js') }}"></script>
+<script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
+<script src="https://unpkg.com/@deck.gl/core@^8.0.0/debug.min.js"></script>
 <script src="https://d3js.org/d3.v6.js"></script>
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.13.3/js/standalone/selectize.min.js" integrity="sha512-pF+DNRwavWMukUv/LyzDyDMn8U2uvqYQdJN0Zvilr6DDo/56xPDZdDoyPDYZRSL4aOKO/FGKXTpzDyQJ8je8Qw==" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block content %}
+  {{ content.header(
+    title="Scatterplot in embedding basis", 
+    breadcrumbs=dataset.title,
+    dataset=dataset) }}
+  <div class="row">
+    <div class="col-lg-9 col-md-12">
+      {% block visualisation %}
+      <div id="canvas-container" data-datasetId="{{ dataset.id }}" class="card card-small"></div>
+      {% endblock %}
+    </div>
+    <div class="col-lg-3 col-md-12">
+      {% block geneselector %}
+        {% include 'blocks/geneselector.html' %}
+      {% endblock %}
+    </div>
+  </div>
 {% endblock %}

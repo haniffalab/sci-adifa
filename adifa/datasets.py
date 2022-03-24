@@ -29,11 +29,16 @@ def scatterplot(id):
     from collections import OrderedDict 
     from operator import getitem 
     obs = OrderedDict(sorted(dataset.data_obs.items(), key = lambda x: getitem(x[1], 'name'))) 
-    return render_template('scatterplot.html', did=id, dataset=dataset, obs=obs)    
+    return render_template('scatterplot.html', dataset=dataset, obs=obs)    
 
-@bp.route('/dataset/<int:id>/heatmap')
-def heatmap(id):
-    dataset = models.Dataset.query.get(id)
+@bp.route('/dataset/<int:id>/matrixplot')
+def matrixplot(id):
+    try:
+        dataset = models.Dataset.query.get(id)
+        if not dataset:
+            abort(404)
+    except exc.SQLAlchemyError as e:
+        abort(500)
 
     # Check protected status
     authenticated = session.get("auth_dataset_" + str(id), False)
@@ -43,11 +48,16 @@ def heatmap(id):
     from collections import OrderedDict 
     from operator import getitem 
     obs = OrderedDict(sorted(dataset.data_obs.items(), key = lambda x: getitem(x[1], 'name'))) 
-    return render_template('heatmap.html', did=id, dataset=dataset, obs=obs)    
+    return render_template('matrixplot.html', dataset=dataset, obs=obs)    
 
 @bp.route('/dataset/<int:id>/download', methods=['GET'])
 def download(id):
-    dataset = models.Dataset.query.get(id)
+    try:
+        dataset = models.Dataset.query.get(id)
+        if not dataset:
+            abort(404)
+    except exc.SQLAlchemyError as e:
+        abort(500)
 
     # Check protected status
     authenticated = session.get("auth_dataset_" + str(id), False)
@@ -68,11 +78,16 @@ def download(id):
 
 @bp.route('/dataset/<int:id>/password', methods=['GET', 'POST'])
 def password(id):
-    dataset = models.Dataset.query.get(id)
+    try:
+        dataset = models.Dataset.query.get(id)
+        if not dataset:
+            abort(404)
+    except exc.SQLAlchemyError as e:
+        abort(500)
 
     authenticated = session.get("auth_dataset_" + str(id), False)
     if dataset.password and authenticated:
-        return redirect(url_for('datasets.password', id=id))
+        return redirect(url_for('datasets.scatterplot', id=id))
 
     # Handle the POST request
     if request.method == 'POST':
@@ -84,4 +99,4 @@ def password(id):
             flash('The password you entered is not correct')
 
     # Otherwise handle the GET request
-    return render_template('password.html', did=id, dataset=dataset)    
+    return render_template('password.html', dataset=dataset)    
