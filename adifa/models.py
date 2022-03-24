@@ -1,5 +1,4 @@
 import os
-
 from datetime import datetime
 
 from flask import current_app

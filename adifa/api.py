@@ -9,7 +9,7 @@ from adifa.resources.errors import errors
 
 bp = Blueprint('api_v1', __name__)
 api = Api(bp, errors=errors)
-   
+
 api.add_resource(About, '/about')
 api.add_resource(Bounds, '/bounds')
 api.add_resource(CellByGeneAggregates, '/datasets/<id>/cxg')
@@ -20,6 +20,5 @@ api.add_resource(DiseaseGeneList, '/datasets/<id>/diseases')
 api.add_resource(Labels, '/labels')
 api.add_resource(SearchGenes, '/datasets/<id>/search/genes')
 api.add_resource(SearchDiseases, '/datasets/<id>/search/diseases')
-
 api.add_resource(Matrixplot, '/datasets/<int:id>/plotting/matrixplot')
 
