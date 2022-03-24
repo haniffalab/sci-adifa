@@ -1,0 +1,39 @@
+{% macro header(title, breadcrumbs, dataset) %}
+<div class="page-header row no-gutters pb-4">
+  <div class="col-12 text-center text-sm-left mb-0">
+    {% if dataset %}
+    {% include 'blocks/datasetmodal.html' %}
+    <div style="float:right">
+      <div class="btn-group">
+        <a class="btn btn-white" data-toggle="modal" data-target="#exampleModal">
+          <i class="fa fa-download"></i>
+        </a>   
+        <a class="btn btn-white" data-toggle="modal" data-target="#exampleModal">
+          Dataset
+        </a> 
+      </div>
+      <div class="btn-group dropdown">
+        <a class="btn btn-white">
+          <i class="fas fa-project-diagram"></i>
+        </a>        
+        <button class="btn btn-white dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          {% if request.endpoint.endswith('scatterplot') %}
+            Scatterplot
+          {% elif request.endpoint.endswith('matrixplot') %}
+            Matrixplot
+          {% else %}
+            dsfdfg
+          {% endif %}
+        </button>
+        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+          <a class="dropdown-item" href="{{ url_for('datasets.matrixplot', id=dataset.id) }}">Matrixplot</a>
+          <a class="dropdown-item" href="{{ url_for('datasets.scatterplot', id=dataset.id) }}">Scatterplot</a>
+        </div>
+      </div>      
+    </div>
+    {% endif %}
+    <span class="text-uppercase page-subtitle"><a href="{{ url_for('datasets.index') }}">Home</a> &#187; {{ breadcrumbs }}</span>
+    <h3 class="page-title my-1">{{ title }}</h3>
+  </div>
+</div>
+{% endmacro %}

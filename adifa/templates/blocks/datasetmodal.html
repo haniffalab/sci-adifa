@@ -1,0 +1,32 @@
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title " style="word-break: break-all;" id="exampleModalLongTitle">{{dataset.title}}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                {% if dataset.desc %}{{dataset.desc}}{% endif %}
+                <h5 class="text-muted mb-4">Downloads and resources</h5>
+                <table class="table table-sm table-hover">
+                    <tbody>
+                        <tr>
+                        <td>H5AD file <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="" 
+                            data-original-title="AnnData is a commonly used Python package for keeping track of data and learned annotations, and can 
+                            be used to read from and write to the h5ad file format"></i></td>
+                        <td>
+                            <a href="{{ url_for('datasets.download', id=dataset.id) }}" class="btn btn-dark btn-squared btn-sm float-right" target="_blank"><i class="fas fa-download"></i>&nbsp;&nbsp;Download</a>
+                        </td>
+                        </tr>                 
+                    </tbody>
+                </table>                  
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div> 

@@ -1,8 +1,11 @@
 {% extends 'base.html' %}
-
+{% import 'macros/content.html' as content %}
 {% block title %}Datasets{% endblock %}
 
 {% block content %}
+{{ content.header(
+  title="Datasets for visualisation", 
+  breadcrumbs="Datasets") }}
 <div class="row">
   {% for n in datasets %}
   <div class="col-lg-4">
