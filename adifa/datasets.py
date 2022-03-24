@@ -72,7 +72,7 @@ def password(id):
 
     authenticated = session.get("auth_dataset_" + str(id), False)
     if dataset.password and authenticated:
-        return redirect(url_for('datasets.password', id=id))
+        return redirect(url_for('datasets.scatterplot', id=id))
 
     # Handle the POST request
     if request.method == 'POST':
