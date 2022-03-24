@@ -7,7 +7,7 @@ from sqlalchemy import exc
 import scanpy as sc
 
 from adifa import models
-from adifa.resources.errors import InvalidDatasetIdError, DatabaseOperationError, InternalServerError, DatasetNotExistsError
+from adifa.resources.errors import InvalidDatasetIdError, DatabaseOperationError, DatasetNotExistsError
 
 
 def get_annotations(adata):
@@ -235,28 +235,3 @@ def series_median(s):
 
 def disease_filename():
 	return os.path.join(current_app.root_path, 'data', 'disease.csv')
-
-def get_scanpy_plot_dotplot(datasetId, obs, markers):
-	if not datasetId > 0 :
-		raise InvalidDatasetIdError
-
-	try:
-		dataset = models.Dataset.query.get(datasetId)
-	except exc.SQLAlchemyError as e:
-		raise DatabaseOperationError
-
-	try:
-		adata = current_app.adata[dataset.filename]		
-	except (ValueError, AttributeError) as e:
-		raise DatasetNotExistsError
-
-	dp = sc.pl.matrixplot(adata, markers, obs, return_fig=True)
-	
-	output = {
-		"categories": list(dp.categories),
-		"var_names": dp.var_names,
-		"values_df": dp.values_df.to_dict(),
-		"min_value": str(dp.values_df.min().min()),
-		"max_value": str(dp.values_df.max().max())
-	}
-	return output
