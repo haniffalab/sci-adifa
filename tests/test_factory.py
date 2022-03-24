@@ -18,8 +18,8 @@ def test_scatterplot(client):
     response = client.get("/dataset/1/scatterplot")
     assert b"<!-- Visualisation -->" in response.data
 
-def test_heatmap(client):
-    response = client.get("/dataset/1/heatmap")
+def test_matrixplot(client):
+    response = client.get("/dataset/1/matrixplot")
     assert b"scripts/dotplot.js" in response.data    
 
 def test_password(client):

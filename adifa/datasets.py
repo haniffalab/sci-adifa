@@ -31,8 +31,8 @@ def scatterplot(id):
     obs = OrderedDict(sorted(dataset.data_obs.items(), key = lambda x: getitem(x[1], 'name'))) 
     return render_template('scatterplot.html', did=id, dataset=dataset, obs=obs)    
 
-@bp.route('/dataset/<int:id>/heatmap')
-def heatmap(id):
+@bp.route('/dataset/<int:id>/matrixplot')
+def matrixplot(id):
     dataset = models.Dataset.query.get(id)
 
     # Check protected status
@@ -43,7 +43,7 @@ def heatmap(id):
     from collections import OrderedDict 
     from operator import getitem 
     obs = OrderedDict(sorted(dataset.data_obs.items(), key = lambda x: getitem(x[1], 'name'))) 
-    return render_template('heatmap.html', did=id, dataset=dataset, obs=obs)    
+    return render_template('matrixplot.html', did=id, dataset=dataset, obs=obs)    
 
 @bp.route('/dataset/<int:id>/download', methods=['GET'])
 def download(id):
