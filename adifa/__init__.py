@@ -2,7 +2,7 @@ import os
 
 import click
 from flask import Flask, render_template
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy, inspect
 from flask.cli import with_appcontext
 
 from config import Config
@@ -51,8 +51,11 @@ def create_app(test_config=None):
 
     # perform setup checks
     with app.app_context():
+        from flask_sqlalchemy import SQLAlchemy, inspect
         from .utils import dataset_utils
-        dataset_utils.load_files()
+        inspector = inspect(db.engine)
+        if inspector.has_table("datasets"):
+            dataset_utils.load_files()
 
     @app.context_processor
     def inject_datasets():
