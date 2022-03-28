@@ -96,9 +96,14 @@
         }
         var loadData = function() {
             // load cookies  
-            var obsmKey = Cookies.get('ds' + datasetId + '-obsm-key');
-            var colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name');
-            var colorScaleType = Cookies.get('ds' + datasetId + '-obs-type');
+            if(jQuery.inArray("X_umap", active.dataset.data_obsm) !== -1) {
+                defaultKey = "X_umap"
+            } else {
+                defaultKey = Object.values(active.dataset.data_obsm)[0]
+            }
+            var obsmKey = (typeof Cookies.get('ds' + datasetId + '-obsm-key') === 'undefined') ? defaultKey : Cookies.get('ds' + datasetId + '-obsm-key');
+            var colorScaleKey = (typeof Cookies.get('ds' + datasetId + '-obs-name') === 'undefined') ? null : Cookies.get('ds' + datasetId + '-obs-name');
+            var colorScaleType = (typeof Cookies.get('ds' + datasetId + '-obs-type') === 'undefined') ? null : Cookies.get('ds' + datasetId + '-obs-type');
             $.when(
                 doAjax(API_SERVER + "api/v1/coordinates?embedding=" + obsmKey + "&datasetId=" + datasetId),
                 doAjax(API_SERVER + "api/v1/bounds?embedding=" + obsmKey + "&datasetId=" + datasetId)).then(function(a1, a2) {
@@ -162,6 +167,7 @@
                     right: 10
                 }
             });
+
             // update viewport
             // @TODO: This is causing zoom 0 on init
             // if (typeof currentViewState !== 'undefined') {
@@ -177,7 +183,12 @@
             currentYear++
 
             // get cookie data
-            var obsmKey = (typeof Cookies.get('ds' + datasetId + '-obsm-key') === 'undefined') ? 'X_umap' : Cookies.get('ds' + datasetId + '-obsm-key');
+            if(jQuery.inArray("X_umap", active.dataset.data_obsm) !== -1) {
+                defaultKey = "X_umap"
+            } else {
+                defaultKey = Object.values(active.dataset.data_obsm)[0]
+            }
+            var obsmKey = (typeof Cookies.get('ds' + datasetId + '-obsm-key') === 'undefined') ? defaultKey : Cookies.get('ds' + datasetId + '-obsm-key');
             var colorScaleKey = (typeof Cookies.get('ds' + datasetId + '-obs-name') === 'undefined') ? null : Cookies.get('ds' + datasetId + '-obs-name');
             var colorScaleId = (typeof Cookies.get('ds' + datasetId + '-obs-id') === 'undefined') ? 0 : Cookies.get('ds' + datasetId + '-obs-id');
             var colorScaleType = (typeof Cookies.get('ds' + datasetId + '-obs-type') === 'undefined') ? null : Cookies.get('ds' + datasetId + '-obs-type');
@@ -201,10 +212,6 @@
                 $('#collapse' + colorScaleId).collapse("show");
                 $('#colourise' + colorScaleId).addClass('active');
             }
-
-
-
-            console.log(active.dataset);
 
             if (colorScaleType == 'categorical') {
                 arr = active.dataset['data_obs'][colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()]['values']
@@ -238,11 +245,9 @@
                 }
       
             } else if (colorScaleType == 'continuous') {
-                console.log(colorScaleType);
-                console.log(active.dataset);
+                // console.log(colorScaleType);
+                // console.log(active.dataset);
                 arr = active.dataset['data_obs'][colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()]['values']
-
-
                 var myColor = d3.scaleSequential().domain([active.dataset['data_obs'][colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()]['min'], active.dataset['data_obs'][colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()]['max']]).interpolator(d3.interpolateViridis);
                 $( "#continuous-legend" ).empty();
                 createLegend(myColor);
@@ -267,10 +272,22 @@
                     return 100
                 }
             }
+
+            // calculate inverse scale value
+            var radiusMin = 1;
+            var radiusMax = 8;
+            var countMin = 1;
+            var countMax = 90000;
+            var countInput = active.samples.length;
+            var inverseScaled = radiusMin;
+            if(countInput <= countMax) {
+                inverseScaled = radiusMax - ((((countInput - countMin) * (radiusMax - radiusMin)) / (countMax - countMin)) + radiusMin)
+            }
+
             // create data layer
             const layer = new ScatterplotLayer({
               data: active.samples,
-              radiusScale: 200000/active.samples.length, // 6,
+              radiusScale: inverseScaled, // 6,
               radiusMinPixels: 1,
               radiusMaxPixels: 50,
               getPosition: function(d) {
@@ -564,7 +581,12 @@
                             .text(obsm))
                 });                
                 // process embedding option
-                var obsmKey = (typeof Cookies.get('ds' + datasetId + '-obsm-key') === 'undefined') ? 'X_umap' : Cookies.get('ds' + datasetId + '-obsm-key');
+                if(jQuery.inArray("X_umap", active.dataset.data_obsm) !== -1) {
+                    defaultKey = "X_umap"
+                } else {
+                    defaultKey = Object.values(active.dataset.data_obsm)[0]
+                }
+                var obsmKey = (typeof Cookies.get('ds' + datasetId + '-obsm-key') === 'undefined') ? defaultKey : Cookies.get('ds' + datasetId + '-obsm-key');
                 Cookies.set('ds' + datasetId + '-obsm-key', obsmKey, {
                     expires: 30
                 })
@@ -598,7 +620,7 @@
                 }) => {
                     // we can manipulate the viewState here
                     currentViewState = viewState;
-                    console.log(viewState);
+                    //console.log(viewState);
                 }
             });
             // convert filesize

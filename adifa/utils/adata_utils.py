@@ -5,6 +5,7 @@ from flask import current_app
 from scipy.sparse import find
 from sqlalchemy import exc
 import scanpy as sc
+import numpy as np
 
 from adifa import models
 from adifa.resources.errors import InvalidDatasetIdError, DatabaseOperationError, DatasetNotExistsError
@@ -60,6 +61,9 @@ def get_bounds(datasetId, obsm):
 	except (ValueError, AttributeError) as e:
 		raise DatasetNotExistsError
 
+	# Normalised [-1,1] @TODO
+	adata.obsm[obsm] = 2.*(adata.obsm[obsm] - np.min(adata.obsm[obsm]))/np.ptp(adata.obsm[obsm])-1
+
 	# Embedded coordinate bounds
 	output = {
 		'x': {
@@ -75,10 +79,21 @@ def get_bounds(datasetId, obsm):
 	return output
 
 def get_coordinates(datasetId, obsm):
-	dataset = models.Dataset.query.get(datasetId)
-	adata = current_app.adata[dataset.filename]
-	#adata = current_app.adata
-	#adata = sc.read(current_app.config.get('DATA_PATH') + 'covid_portal.h5ad')      
+	if not datasetId > 0 :
+		raise InvalidDatasetIdError
+
+	try:
+		dataset = models.Dataset.query.get(datasetId)
+	except exc.SQLAlchemyError as e:
+		raise DatabaseOperationError
+
+	try:
+		adata = current_app.adata[dataset.filename]		
+	except (ValueError, AttributeError) as e:
+		raise DatasetNotExistsError
+
+	# Normalised [-1,1] @TODO
+	adata.obsm[obsm] = 2.*(adata.obsm[obsm] - np.min(adata.obsm[obsm]))/np.ptp(adata.obsm[obsm])-1
 
 	# True resolution sample generation
 	output = []
@@ -96,7 +111,7 @@ def get_labels(datasetId, obsm, gene="", obs=""):
 
 	if (gene):
 		try:
-			output = [0] * len(adata.obsm[obsm])
+			output = [0] * len(adata.obs.index)
 			#expression = adata[:,gene].X/max(1,adata[:,gene].X.max())
 			expression = adata[:,gene].X
 			(x,y,v) = find(expression)
@@ -104,13 +119,13 @@ def get_labels(datasetId, obsm, gene="", obs=""):
 				output[i] = str(round(v[index], 4))	
 		except KeyError:
 			# @todo HANDLE ERROR
-			output = [0] * len(adata.obsm[obsm])
+			output = [0] * len(adata.obs.index)
 		except IndexError:
 			# @todo HANDLE ERROR
-			output = [0] * len(adata.obsm[obsm])
+			output = [0] * len(adata.obs.index)
 	elif (obs):
 		output = []
-		for index, x in enumerate(adata.obsm[obsm]):
+		for index, x in enumerate(adata.obs.index):
 			try:	
 				output.append(str(adata.obs[obs][index]))
 			except KeyError:

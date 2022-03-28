@@ -24,7 +24,17 @@
   <div class="row">
     <div class="col-lg-9 col-md-12">
       {% block visualisation %}
-      <div id="canvas-container" data-datasetId="{{ dataset.id }}" class="card card-small"></div>
+        {% if dataset.data_obsm|length > 0 %}
+          <div id="canvas-container" data-datasetId="{{ dataset.id }}" class="card card-small"></div>
+        {% else %}
+          <div class="card card-small">
+            <div class="card-body">
+              <div class="alert alert-info" role="alert">
+                This dataset has no embeddings and can not be visualised as a scatterplot. Please select a different type of plot. 
+              </div>
+            </div>            
+          </div>
+        {% endif %}
       {% endblock %}
     </div>
     <div class="col-lg-3 col-md-12">

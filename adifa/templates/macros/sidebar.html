@@ -10,15 +10,19 @@
           </h4>
         </div>
         <div id="collapse{{loop.index}}" class="collapse m-4 obs-values" aria-labelledby="heading{{loop.index}}" data-parent="#obs-accordion" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}">
-          
-            {% if dataset.data_obs[ob]['type'] == "categorical" %}
-              <div class="btn-group btn-group-toggle mb-4" role="group">
-                <a class="btn btn-sm btn-white checkall" data-id="{{loop.index}}"><i class="far fa-2x fa-check-square"></i></a>
-                <a class="btn btn-sm btn-white uncheckall" data-id="{{loop.index}}"><i class="far fa-2x fa-square"></i></a>
-                <a class="btn btn-sm btn-white colourise" id="colourise{{loop.index}}" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}"><i class="fa fa-2x fa-tint"></i></a>
-              </div>   
-              <div class="list-group list-group-flush">
-              {% for key, value in dataset.data_obs[ob]['values'].items()|sort(attribute=1) %}
+          {% if dataset.data_obs[ob]['type'] == "categorical" %}
+            {% if dataset.data_obs[ob]['is_truncated'] %}
+              <div class="alert alert-warning" role="alert">
+                This observation has more than 100 values, and has been truncated to improve performance.
+              </div>
+            {% endif %}    
+            <div class="btn-group btn-group-toggle mb-4" role="group">
+              <a class="btn btn-sm btn-white checkall" data-id="{{loop.index}}"><i class="far fa-2x fa-check-square"></i></a>
+              <a class="btn btn-sm btn-white uncheckall" data-id="{{loop.index}}"><i class="far fa-2x fa-square"></i></a>
+              <a class="btn btn-sm btn-white colourise" id="colourise{{loop.index}}" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}"><i class="fa fa-2x fa-tint"></i></a>
+            </div>   
+            <div class="list-group list-group-flush">
+            {% for key, value in dataset.data_obs[ob]['values'].items()|sort(attribute=1) %}
               <div class="list-group-item p-1">
                 <div id="obs-list-{{ob}}" class="row">
                   <div class="col-9">
@@ -27,9 +31,6 @@
                       <span class="checkmark"></span>
                     </label>    
                   </div>
-                  <!--<div class="col-3">
-                    <div class="progress-circle progress-10"></div>
-                  </div>-->
                   <div class="col-3">
                     <div id="{{ob}}-{{key}}" class="legend-box-color"></div>
                   </div>
@@ -37,54 +38,53 @@
               </div>
               {% endfor %}
             </div>
-            {% elif dataset.data_obs[ob]['type'] == "continuous" %}
+          {% elif dataset.data_obs[ob]['type'] == "continuous" %}
             <div class="btn-group btn-group-toggle mb-4" role="group">
               <a class="btn btn-sm btn-white colourise" id="colourise{{loop.index}}" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}"><i class="fa fa-2x fa-tint"></i></a>
             </div>   
             <div class="list-group list-group-flush">         
-            <div class="list-group-item p-1">
-              <div class="row">
-                <div class="col-6">
-                  Minimum
-                </div>
-                <div class="col-6 text-right">
-                  {{ dataset.data_obs[ob]['min'] }}
-                </div>
-              </div>
-            </div>
-            <div class="list-group-item p-1">
-              <div class="row">
-                <div class="col-6">
-                  Maximum
-                </div>
-                <div class="col-6 text-right">
-                  {{ dataset.data_obs[ob]['max'] }}
+              <div class="list-group-item p-1">
+                <div class="row">
+                  <div class="col-6">
+                    Minimum
+                  </div>
+                  <div class="col-6 text-right">
+                    {{ dataset.data_obs[ob]['min'] }}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="list-group-item p-1">
-              <div class="row">
-                <div class="col-6">
-                  Mean
-                </div>
-                <div class="col-6 text-right">
-                  {{ dataset.data_obs[ob]['mean'] }}
-                </div>
-              </div>
-            </div>
-            <div class="list-group-item p-1">
-              <div class="row">
-                <div class="col-6">
-                  Median
-                </div>
-                <div class="col-6 text-right">
-                  {{ dataset.data_obs[ob]['median'] }}
+              <div class="list-group-item p-1">
+                <div class="row">
+                  <div class="col-6">
+                    Maximum
+                  </div>
+                  <div class="col-6 text-right">
+                    {{ dataset.data_obs[ob]['max'] }}
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>   
-            {% else %}
-            {% endif %}    
+              <div class="list-group-item p-1">
+                <div class="row">
+                  <div class="col-6">
+                    Mean
+                  </div>
+                  <div class="col-6 text-right">
+                    {{ dataset.data_obs[ob]['mean'] }}
+                  </div>
+                </div>
+              </div>
+              <div class="list-group-item p-1">
+                <div class="row">
+                  <div class="col-6">
+                    Median
+                  </div>
+                  <div class="col-6 text-right">
+                    {{ dataset.data_obs[ob]['median'] }}
+                  </div>
+                </div>
+              </div>
+            </div>   
+          {% endif %}    
         </div>                          
       {% endfor %}
     </div>  
