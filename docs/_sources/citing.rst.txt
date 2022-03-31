@@ -10,7 +10,7 @@ If you use Adifa in a scientific publication, we would appreciate citations to t
 
 .. raw:: html
 
-   <p><b><i>Dave Horsfall, Jim McGrath. (2022). Adifa software for Single Cell Insights. Zenodo. https://doi.org/10.5281/zenodo.5824896</i></b></p>
+   <p><b><i>Dave Horsfall, Jim McGrath, Issac Goh. (2022). Adifa software for Single Cell Insights. Zenodo. https://doi.org/10.5281/zenodo.5824896</i></b></p>
 
 
 The importance of citing software
