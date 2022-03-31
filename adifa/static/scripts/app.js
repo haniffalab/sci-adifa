@@ -64,9 +64,12 @@
       });      
     } 
     // Init matrixplot
-    if ($("#matrixplot-container").length) {
+    if ($("#matrixplot-container").length) {  
       var scatterplot = $("#matrixplot-container").matrixplot();
       // Add events
+      $(document.body).on('change', '#palette', function(event){
+        scatterplot.changePalette($(this).val())
+      });         
       // Accordion animations
       $(".obs-values").on('show.bs.collapse', function() {
         $(this).prev(".list-group-item").find(".fa").removeClass("fa-plus-square").addClass("fa-caret-square-up");
@@ -89,6 +92,9 @@
         $('#collapse' + $(this).data('id')).find('input[type=checkbox]').prop('checked', false);
         setTimeout(function(){ scatterplot.redraw(); }, 100); // Defer to improve UX
       });   
+      $("#canvas-gene-reset").click(function(event) {
+        scatterplot.resetGenes(this) 
+      });      
       $(document.body).on('click', '.btn-gene-select', function(event){
         if ($(this).text() != $("#color-scale-value").text() && scatterplot) scatterplot.genes(this);
       });               

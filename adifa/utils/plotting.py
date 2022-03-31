@@ -1,6 +1,6 @@
 import json
 
-from flask import current_app
+from flask import current_app, flash
 from sqlalchemy import exc
 import scanpy as sc
 import pandas as pd
@@ -50,7 +50,9 @@ def get_matrixplot(
 	except (ValueError, AttributeError) as e:
 		raise DatasetNotExistsError
 
-	plot = sc.pl.matrixplot(adata, var_names, groupby, use_raw, log, num_categories, figsize, dendrogram, title, cmap, colorbar_title, gene_symbols, var_group_positions, var_group_labels, var_group_rotation, layer, standard_scale, values_df, swap_axes, show, save, ax, return_fig, vmin, vmax, vcenter, norm)
+	var_intersection = list(set(adata.var.index) & set(var_names))
+
+	plot = sc.pl.matrixplot(adata, var_intersection, groupby, use_raw, log, num_categories, figsize, dendrogram, title, cmap, colorbar_title, gene_symbols, var_group_positions, var_group_labels, var_group_rotation, layer, standard_scale, values_df, swap_axes, show, save, ax, return_fig, vmin, vmax, vcenter, norm)
 
 	if isinstance(plot.categories, pd.IntervalIndex):
 		categories = [ "({}, {}]".format(interval.left, interval.right) for interval in plot.categories.values ]
@@ -62,7 +64,8 @@ def get_matrixplot(
 		"var_names": plot.var_names,
 		"values_df": json.loads(plot.values_df.to_json()),
 		"min_value": str(plot.values_df.min().min()),
-		"max_value": str(plot.values_df.max().max())
+		"max_value": str(plot.values_df.max().max()),
+		"excluded": list(set(var_names).difference(adata.var.index))
 	}
-
+	
 	return output

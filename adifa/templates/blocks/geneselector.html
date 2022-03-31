@@ -18,7 +18,7 @@
         </li>        
         <li class="list-group-item">
           {% for gene in dataset.genes_curated %}
-          <button type="button" id="gene-deg-{{ gene }}" data-id="{{ gene }}" class="btn-gene-select btn btn-outline-info btn-sm">{{ gene }}</button>
+          <button type="button" id="gene-deg-{{ gene }}" data-gene="{{ gene }}" class="btn-gene-select btn btn-outline-info btn-sm">{{ gene }}</button>
           {% endfor %}
         </li>   
         {% endif %}                      
@@ -35,7 +35,7 @@
         </li>                        
         <li class="list-group-item">
           {% for gene in dataset.genes_deg %}
-          <button type="button" id="gene-deg-{{ gene }}" data-id="{{ gene }}" class="btn-gene-select btn btn-outline-info btn-sm">{{ gene }}</button>
+          <button type="button" id="gene-deg-{{ gene }}" data-gene="{{ gene }}" class="btn-gene-select btn btn-outline-info btn-sm">{{ gene }}</button>
           {% endfor %}
         </li>  
         {% endif %}
