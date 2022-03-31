@@ -16,12 +16,12 @@ def test_privacy(client):
 
 def test_scatterplot(client):
     response = client.get("/dataset/1/scatterplot")
-    assert b"<!-- Visualisation -->" in response.data
+    assert b"Scatterplot in embedding basis" in response.data
 
 def test_matrixplot(client):
     response = client.get("/dataset/1/matrixplot")
-    assert b"scripts/dotplot.js" in response.data    
+    assert b"Heatmap of the mean expression values" in response.data
 
 def test_password(client):
     response = client.get("/dataset/1/password")
-    assert b"This dataset is password protected" in response.data            
+    assert b"This dataset is protected" in response.data
