@@ -20,9 +20,6 @@
             bounds: {},
             samples: {},
         };
-        var loaded = {
-            genes: {}
-        };  
         var resources = {};        
         // attach a function to be executed before an Ajax request is sent.
         $(document).ajaxSend(function(e, jqXHR, options){
@@ -48,6 +45,11 @@
             $("#canvas-controls").hide()
             $("#loader").removeClass().empty()
         }
+        var abort = function() {
+            $.each(xhrPool, function(idx, jqXHR) {
+              jqXHR.abort();
+            });
+          };          
         var decolorize = function() {
             Cookies.remove('ds' + datasetId + '-obs-name')
             Cookies.remove('ds' + datasetId + '-obs-id')
@@ -56,11 +58,6 @@
             render()
             endLoader() 
         } 
-        var abort = function() {
-            $.each(xhrPool, function(idx, jqXHR) {
-              jqXHR.abort();
-            });
-          };  
         var getMax = function(arr) {
             let len = arr.length;
             let max = -Infinity;

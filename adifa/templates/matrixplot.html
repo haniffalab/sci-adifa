@@ -22,7 +22,8 @@
 <div class="row">
   <div class="col-lg-9 col-md-12 mb-4">
     {% block visualisation %}
-    <div id="matrixplot-container" data-datasetId="{{ dataset.id }}" class="card card-small"></div>
+      <div id="matrixplot-alert" class="d-none"></div>
+      <div id="matrixplot-container" data-datasetId="{{ dataset.id }}" class="card card-small"></div>
     {% endblock %}
   </div>
   <div class="col-lg-3 col-md-12">
