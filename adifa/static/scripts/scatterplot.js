@@ -711,7 +711,7 @@
             loadData();
         }
         $('.select2-gene-search').select2({
-            placeholder: "Search for genes",
+            placeholder: "Search by name",
             //closeOnSelect: false,
             sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
             ajax: {
