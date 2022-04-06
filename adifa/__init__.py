@@ -1,4 +1,5 @@
 import os
+import sys
 
 import click
 from flask import Flask, render_template
@@ -51,10 +52,14 @@ def create_app(test_config=None):
 
     # perform setup checks
     with app.app_context():
-        from flask_sqlalchemy import SQLAlchemy, inspect
+        # detect if we are running the app
+        command_line = ' '.join(sys.argv)
+        is_running_server = ('flask run' in command_line) or ('gunicorn' in command_line)
+        # detect if dataset table exists
         from .utils import dataset_utils
         inspector = inspect(db.engine)
-        if inspector.has_table("datasets"):
+        # load datasets files
+        if is_running_server and inspector.has_table("datasets"):
             dataset_utils.load_files()
 
     @app.context_processor
