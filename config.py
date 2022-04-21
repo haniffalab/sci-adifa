@@ -8,5 +8,7 @@ class Config(object):
     API_PREFIX = os.environ.get('API_PREFIX') or '/api'
     API_SERVER = os.environ.get('API_SERVER') or '/'
     DATA_PATH = os.environ.get('DATA_PATH') or './instance/'
+    HOME_URL = os.environ.get('HOME_URL') or False
+    KEEP_OBS_ORDER = os.environ.get('KEEP_OBS_ORDER','False').lower() in ('1','true')
     JSONIFY_PRETTYPRINT_REGULAR = False
     JSON_SORT_KEYS = False

@@ -28,7 +28,10 @@ def scatterplot(id):
 
     from collections import OrderedDict 
     from operator import getitem 
-    obs = OrderedDict(sorted(dataset.data_obs.items(), key = lambda x: getitem(x[1], 'name'))) 
+    if current_app.config.get('KEEP_OBS_ORDER'):
+        obs = OrderedDict(dataset.data_obs.items())
+    else:
+        obs = OrderedDict(sorted(dataset.data_obs.items(), key = lambda x: getitem(x[1], 'name'))) 
     return render_template('scatterplot.html', dataset=dataset, obs=obs)    
 
 @bp.route('/dataset/<int:id>/matrixplot')
@@ -47,7 +50,10 @@ def matrixplot(id):
 
     from collections import OrderedDict 
     from operator import getitem 
-    obs = OrderedDict(sorted(dataset.data_obs.items(), key = lambda x: getitem(x[1], 'name'))) 
+    if current_app.config.get('KEEP_OBS_ORDER'):
+        obs = OrderedDict(dataset.data_obs.items())
+    else:
+        obs = OrderedDict(sorted(dataset.data_obs.items(), key = lambda x: getitem(x[1], 'name')))
     return render_template('matrixplot.html', dataset=dataset, obs=obs)    
 
 @bp.route('/dataset/<int:id>/download', methods=['GET'])

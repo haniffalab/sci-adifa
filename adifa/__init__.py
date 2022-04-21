@@ -2,7 +2,7 @@ import os
 import sys
 
 import click
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect
 from flask_sqlalchemy import SQLAlchemy, inspect
 from flask.cli import with_appcontext
 
@@ -39,6 +39,13 @@ def create_app(test_config=None):
         os.makedirs(app.instance_path)
     except OSError:
         pass
+
+    @app.route('/')
+    def home():
+        if app.config["HOME_URL"]:
+            return redirect(app.config["HOME_URL"])
+        else:
+            return render_template('index.html')
 
     @app.route("/hello")
     def hello():

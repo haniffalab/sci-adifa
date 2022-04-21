@@ -39,7 +39,9 @@
     </div>
     <div class="col-lg-3 col-md-12">
       {% block selector %}
-        {% if 'cite_seq' in dataset.title %}
+        {% if 'hstack' in dataset.title %}
+          {% include 'blocks/selector/combined.html' %}
+        {% elif 'cite_seq' in dataset.title %}
           {% include 'blocks/selector/proteins.html' %}
         {% else %}
           {% include 'blocks/selector/genes.html' %}
