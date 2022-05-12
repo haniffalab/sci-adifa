@@ -2,6 +2,7 @@ import os
 
 class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'best-password-here'
+    APPLICATION_ROOT = os.environ.get('APPLICATION_ROOT') or ''
     SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') or 'sqlite:///../instance/adifa.sqlite'
     SQLALCHEMY_TRACK_MODIFICATIONS = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS') or False
     API_VERSION = os.environ.get('API_VERSION') or 1
