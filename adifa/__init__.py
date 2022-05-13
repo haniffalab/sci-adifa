@@ -15,7 +15,7 @@ def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
     app = Flask(__name__,
         instance_relative_config=True,
-        static_url_path='', 
+        static_url_path=os.environ.get('STATIC_URL_PATH'), 
         static_folder='static',
         template_folder='templates')
 
