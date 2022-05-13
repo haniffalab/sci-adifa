@@ -19,6 +19,9 @@ def create_app(test_config=None):
         static_folder='static',
         template_folder='templates')
 
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app)
+
     # load the default config
     app.config.from_object(Config)
 
