@@ -32,9 +32,23 @@ def create_app(test_config=None):
         # load the test config if passed in
         app.config.update(test_config)
 
+    # Microsoft Azure MySQL
     if os.environ.get('SQLALCHEMY_AZURE_MYSQL_HOST') is not None:
         app.config.update(
             SQLALCHEMY_DATABASE_URI = 'mysql://' + os.environ.get('SQLALCHEMY_AZURE_MYSQL_USER') + ':' + os.environ.get('SQLALCHEMY_AZURE_MYSQL_PASS') + '@' + os.environ.get('SQLALCHEMY_AZURE_MYSQL_HOST') + ':3306/' + os.environ.get('SQLALCHEMY_AZURE_MYSQL_DB') + '?ssl_ca=BaltimoreCyberTrustRoot.crt.pem'
+        )
+
+    # Google Cloud MySQL
+    if os.environ.get('SQLALCHEMY_GCP_HOST') is not None:
+        app.config.update(
+            SQLALCHEMY_DATABASE_URI = (
+                'mysql://{usr}:{pas}@{hst}:3306/{dbn}?unix_socket=/cloudsql/{con}').format(
+                usr=os.environ.get('SQLALCHEMY_GCP_USER'),
+                pas=os.environ.get('SQLALCHEMY_GCP_PASS'),
+                hst=os.environ.get('SQLALCHEMY_GCP_HOST'),
+                dbn=os.environ.get('SQLALCHEMY_GCP_DB_NAME'),
+                con=os.environ.get('SQLALCHEMY_GCP_CONNECTION'),
+            )
         )
 
     # ensure the instance folder exists
