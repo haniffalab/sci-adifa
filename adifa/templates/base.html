@@ -33,7 +33,7 @@
           <div class="main-navbar">
             <nav class="navbar align-items-stretch navbar-light bg-white flex-md-nowrap p-0">
               <a class="navbar-brand" href="{{ url_for('datasets.index') }}">
-                <img class="align-middle m-auto" src="/images/logo.svg" alt="Haniffa Lab">
+                <img class="align-middle m-auto" src="{{ url_for('static', filename='/images/logo.svg') }}" alt="Haniffa Lab">
               </a>
               <a class="navbar-text" href="{{ config.HOME_URL or url_for('datasets.index') }}">
                 <span class="align-middle m-auto">CellAtlas.io</span>
