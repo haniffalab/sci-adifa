@@ -57,12 +57,9 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    @app.route('/')
-    def home():
-        if app.config["HOME_URL"]:
-            return redirect(app.config["HOME_URL"])
-        else:
-            return render_template('index.html')
+    @app.route("/")
+    def index():
+        return render_template('index.html')
 
     @app.route("/hello")
     def hello():

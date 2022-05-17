@@ -15,7 +15,7 @@
     {% endblock %}
     {% block headscripts %}{% endblock %}
     <script>
-      var API_SERVER = '{{ config.APPLICATION_ROOT }}';
+      var API_SERVER = "{{ url_for('index') }}";
     </script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-00ZNHH1B0J"></script>
     <script>
