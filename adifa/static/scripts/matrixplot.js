@@ -64,7 +64,7 @@
                     ? { value: '', children: transform(value) }
                     : { value, children: [] }
                 ));
-        }    
+        }
         var validate = function() {
             // load cookies  
             var varList = (typeof Cookies.get('ds' + datasetId + '-var-list') === 'undefined') ? [] : JSON.parse(Cookies.get('ds' + datasetId + '-var-list'));
@@ -82,7 +82,7 @@
                 return false;
             });
             return markers
-        }  
+        }
         var doAjax = function(url, async=true) {
             let result;
             // return stored resource
@@ -133,8 +133,8 @@
                 render();
             }, showError));
 
-        }            
-        var render = function() {   
+        }
+        var render = function() {
             // load cookies  
             var obsmKey = Cookies.get('ds' + datasetId + '-obsm-key');
             var colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name');

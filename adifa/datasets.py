@@ -9,6 +9,13 @@ from adifa import models
 
 bp = Blueprint('datasets', __name__)
 
+def get_modalities(dataset):
+    try:
+        datasets = models.Dataset.query.where(models.Dataset.filename == dataset.filename, models.Dataset.modality != dataset.modality).all()
+    except exc.SQLAlchemyError as e:
+        abort(500)
+    return { d.modality: d.id for d in datasets } if datasets else None
+
 @bp.route("/")
 def index():
     return render_template('index.html')
@@ -33,6 +40,9 @@ def scatterplot(id):
         obs = OrderedDict(dataset.data_obs.items())
     else:
         obs = OrderedDict(sorted(dataset.data_obs.items(), key = lambda x: getitem(x[1], 'name'))) 
+    
+    dataset.other_modalities = get_modalities(dataset)
+
     return render_template('scatterplot.html', dataset=dataset, obs=obs)    
 
 @bp.route('/dataset/<int:id>/matrixplot')
@@ -56,6 +66,9 @@ def matrixplot(id):
         obs = OrderedDict(dataset.data_obs.items())
     else:
         obs = OrderedDict(sorted(dataset.data_obs.items(), key = lambda x: getitem(x[1], 'name')))
+    
+    dataset.other_modalities = get_modalities(dataset)
+
     return render_template('matrixplot.html', dataset=dataset, obs=obs)    
 
 @bp.route('/dataset/<int:id>/download', methods=['GET'])

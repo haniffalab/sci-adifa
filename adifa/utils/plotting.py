@@ -46,7 +46,7 @@ def get_matrixplot(
 		raise DatabaseOperationError
 
 	try:
-		adata = current_app.adata[dataset.filename]		
+		adata = current_app.adata[(dataset.filename, dataset.modality)]
 	except (ValueError, AttributeError) as e:
 		raise DatasetNotExistsError
 
