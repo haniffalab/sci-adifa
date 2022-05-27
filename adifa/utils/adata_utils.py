@@ -106,11 +106,10 @@ def get_coordinates(datasetId, obsm):
     except (ValueError, AttributeError) as e:
         raise DatasetNotExistsError
 
-    # Normalised [-1,1] @TODO
-    adata.obsm[obsm] = (
-        2.0 * (adata.obsm[obsm] - np.min(adata.obsm[obsm])) / np.ptp(adata.obsm[obsm])
-        - 1
-    )
+    try:
+        adata = current_app.adata[(dataset.filename, dataset.modality)]     
+    except (ValueError, AttributeError) as e:
+        raise DatasetNotExistsError
 
     # True resolution sample generation
     output = []
@@ -123,26 +122,28 @@ def get_coordinates(datasetId, obsm):
 
 def get_labels(datasetId, obsm, gene="", obs=""):
     dataset = models.Dataset.query.get(datasetId)
-    adata = current_app.adata[dataset.filename]
+    adata = current_app.adata[(dataset.filename, dataset.modality)]
+    #adata = current_app.adata
+    #adata = sc.read(current_app.config.get('DATA_PATH') + 'covid_portal.h5ad')      
 
-    if gene:
+    if (gene):
         try:
             output = [0] * len(adata.obs.index)
-            # expression = adata[:,gene].X/max(1,adata[:,gene].X.max())
-            expression = adata[:, gene].X
-            (x, y, v) = find(expression)
+            #expression = adata[:,gene].X/max(1,adata[:,gene].X.max())
+            expression = adata[:,gene].X
+            (x,y,v) = find(expression)
             for index, i in enumerate(x):
-                output[i] = str(round(v[index], 4))
+                output[i] = str(round(v[index], 4)) 
         except KeyError:
             # @todo HANDLE ERROR
             output = [0] * len(adata.obs.index)
         except IndexError:
             # @todo HANDLE ERROR
             output = [0] * len(adata.obs.index)
-    elif obs:
+    elif (obs):
         output = []
         for index, x in enumerate(adata.obs.index):
-            try:
+            try:    
                 output.append(str(adata.obs[obs][index]))
             except KeyError:
                 # @todo HANDLE ERROR
@@ -153,36 +154,25 @@ def get_labels(datasetId, obsm, gene="", obs=""):
 
     return output
 
-
 def search_genes(datasetId, searchterm):
     dataset = models.Dataset.query.get(datasetId)
-    adata = current_app.adata[dataset.filename]
-    # adata = current_app.adata
+    adata = current_app.adata[(dataset.filename, dataset.modality)]
+    #adata = current_app.adata
     output = [g for g in adata.var_names if searchterm.lower() in g.lower()]
-
-    return output
 
 
 def gene_search(datasetId, searchterm):
     dataset = models.Dataset.query.get(datasetId)
-    adata = current_app.adata[dataset.filename]
-    # adata = current_app.adata
+    adata = current_app.adata[(dataset.filename, dataset.modality)]
+    #adata = current_app.adata
     genes = [g for g in adata.var_names if searchterm in g]
-
-    output = []
-    for gene in genes:
-        sample = {"name": gene}
-        output.append(sample)
 
     return output
 
 
 def categorised_expr(datasetId, cat, gene, func="mean"):
     dataset = models.Dataset.query.get(datasetId)
-    adata = current_app.adata[dataset.filename]
-
-    data = adata[:, [gene]].to_df()
-    grouping = data.join(adata.obs[cat]).groupby(cat)
+    adata = current_app.adata[(dataset.filename, dataset.modality)]
 
     if func == "mean":
         expr = grouping.mean()
@@ -203,7 +193,7 @@ def cat_expr_w_counts(datasetId, cat, gene, func="mean"):
     from numpy import NaN
 
     dataset = models.Dataset.query.get(datasetId)
-    adata = current_app.adata[dataset.filename]
+    adata = current_app.adata[(dataset.filename, dataset.modality)]
 
     groupall = adata[:, [gene]].to_df().join(adata.obs[cat]).groupby(cat)
     groupexpr = (

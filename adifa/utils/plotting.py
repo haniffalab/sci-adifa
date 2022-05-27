@@ -56,6 +56,11 @@ def get_matrixplot(
     except (ValueError, AttributeError) as e:
         raise DatasetNotExistsError
 
+    try:
+        adata = current_app.adata[(dataset.filename, dataset.modality)]
+    except (ValueError, AttributeError) as e:
+        raise DatasetNotExistsError
+        
     var_intersection = list(set(adata.var.index) & set(var_names))
 
     plot = sc.pl.matrixplot(

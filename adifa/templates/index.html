@@ -22,6 +22,7 @@
               <small class="text-muted">{{n.pub_author}}, {{n.pub_group}}</small>
             {% endif %}
           </div>
+          <div><h5>{{ "RNA" if n.modality == "rna" else "Protein" if n.modality == "prot" else n.modality }}</h5></div>
         </div>
         <div class="my-auto ml-auto">
           <div class="btn-group" role="group">
