@@ -58,39 +58,35 @@ def get_degs(adata):
 
 
 def get_bounds(datasetId, obsm):
-    if not datasetId > 0:
-        raise InvalidDatasetIdError
+	if not datasetId > 0 :
+		raise InvalidDatasetIdError
 
-    try:
-        dataset = models.Dataset.query.get(datasetId)
-    except exc.SQLAlchemyError as e:
-        raise DatabaseOperationError
+	try:
+		dataset = models.Dataset.query.get(datasetId)
+	except exc.SQLAlchemyError as e:
+		raise DatabaseOperationError
 
-    try:
-        adata = current_app.adata[dataset.filename]
-    except (ValueError, AttributeError) as e:
-        raise DatasetNotExistsError
+	try:
+		adata = current_app.adata[(dataset.filename, dataset.modality)]		
+	except (ValueError, AttributeError) as e:
+		raise DatasetNotExistsError
 
-    # Normalised [-1,1] @TODO
-    adata.obsm[obsm] = (
-        2.0 * (adata.obsm[obsm] - np.min(adata.obsm[obsm])) / np.ptp(adata.obsm[obsm])
-        - 1
-    )
+	# Normalised [-1,1] @TODO
+	adata.obsm[obsm] = 2.*(adata.obsm[obsm] - np.min(adata.obsm[obsm]))/np.ptp(adata.obsm[obsm])-1
 
-    # Embedded coordinate bounds
-    output = {
-        "x": {
-            "min": adata.obsm[obsm][:, 0].min().item(),
-            "max": adata.obsm[obsm][:, 0].max().item(),
-        },
-        "y": {
-            "min": adata.obsm[obsm][:, 1].min().item(),
-            "max": adata.obsm[obsm][:, 1].max().item(),
-        },
-    }
+	# Embedded coordinate bounds
+	output = {
+		'x': {
+			'min': adata.obsm[obsm][:,0].min().item(),
+			'max': adata.obsm[obsm][:,0].max().item()
+		},
+		'y': {
+			'min': adata.obsm[obsm][:,1].min().item(),
+			'max': adata.obsm[obsm][:,1].max().item()
+		}
+	}
 
-    return output
-
+	return output
 
 def get_coordinates(datasetId, obsm):
     if not datasetId > 0:
