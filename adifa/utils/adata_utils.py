@@ -57,7 +57,7 @@ def get_bounds(datasetId, obsm):
 		raise DatabaseOperationError
 
 	try:
-		adata = current_app.adata[dataset.filename]		
+		adata = current_app.adata[(dataset.filename, dataset.modality)]		
 	except (ValueError, AttributeError) as e:
 		raise DatasetNotExistsError
 
@@ -88,7 +88,7 @@ def get_coordinates(datasetId, obsm):
 		raise DatabaseOperationError
 
 	try:
-		adata = current_app.adata[dataset.filename]		
+		adata = current_app.adata[(dataset.filename, dataset.modality)]		
 	except (ValueError, AttributeError) as e:
 		raise DatasetNotExistsError
 
@@ -105,7 +105,7 @@ def get_coordinates(datasetId, obsm):
 
 def get_labels(datasetId, obsm, gene="", obs=""):
 	dataset = models.Dataset.query.get(datasetId)
-	adata = current_app.adata[dataset.filename]
+	adata = current_app.adata[(dataset.filename, dataset.modality)]
 	#adata = current_app.adata
 	#adata = sc.read(current_app.config.get('DATA_PATH') + 'covid_portal.h5ad')      
 
@@ -139,7 +139,7 @@ def get_labels(datasetId, obsm, gene="", obs=""):
 
 def search_genes(datasetId, searchterm):
 	dataset = models.Dataset.query.get(datasetId)
-	adata = current_app.adata[dataset.filename]
+	adata = current_app.adata[(dataset.filename, dataset.modality)]
 	#adata = current_app.adata
 	output = [g for g in adata.var_names if searchterm.lower() in g.lower()]
 
@@ -147,7 +147,7 @@ def search_genes(datasetId, searchterm):
 
 def gene_search(datasetId, searchterm):
 	dataset = models.Dataset.query.get(datasetId)
-	adata = current_app.adata[dataset.filename]
+	adata = current_app.adata[(dataset.filename, dataset.modality)]
 	#adata = current_app.adata
 	genes = [g for g in adata.var_names if searchterm in g]
 
@@ -162,7 +162,7 @@ def gene_search(datasetId, searchterm):
 
 def categorised_expr(datasetId, cat, gene, func="mean"):
 	dataset = models.Dataset.query.get(datasetId)
-	adata = current_app.adata[dataset.filename]
+	adata = current_app.adata[(dataset.filename, dataset.modality)]
 
 	data = adata[:,[gene]].to_df()
 	grouping = data.join(adata.obs[cat]).groupby(cat)
@@ -182,7 +182,7 @@ def cat_expr_w_counts(datasetId, cat, gene, func="mean"):
 	from numpy import NaN
 
 	dataset = models.Dataset.query.get(datasetId)
-	adata = current_app.adata[dataset.filename]
+	adata = current_app.adata[(dataset.filename, dataset.modality)]
 
 	groupall = adata[:,[gene]].to_df().join(adata.obs[cat]).groupby(cat)
 	groupexpr = adata[:,[gene]].to_df().replace(float(adata[:,[gene]].X.min()), NaN).join(adata.obs[cat]).groupby(cat)
