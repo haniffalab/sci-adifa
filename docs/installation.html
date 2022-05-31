@@ -20,7 +20,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Configuration" href="configuration.html" />
-    <link rel="prev" title="Adifa - Annotated Data in Flask App" href="index.html" /> 
+    <link rel="prev" title="Quickstart" href="quickstart.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,6 +41,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#install">Install</a></li>
@@ -88,11 +89,17 @@
              
   <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h1>
+<p>Follow these instructions to install a local installation of the Adifa source code.</p>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>This page is for developers. If you want to use Adifa to visualise your data, please visit the <a class="reference internal" href="quickstart.html#quickstart"><span class="std std-ref">quickstart</span></a> page and follow the instructions there.</p>
+</div>
 <section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h2>
 <p>Before you begin using Adifa, make sure you have installed the following libraries:</p>
 <ul class="simple">
 <li><p>Python (&gt;=3.8)</p></li>
+<li><p>Git</p></li>
 </ul>
 </section>
 <section id="install">
@@ -100,8 +107,8 @@
 <p><strong>Be sure to use the same version of the code as the version of the docs
 you’re reading.</strong> You probably want the latest tagged version, but the
 default Git version is the main branch.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># clone the repository
-$ git clone git@github.com:haniffalab/sci-adifa.git
+<p>Clone the repository</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone git@github.com:haniffalab/sci-adifa.git
 $ cd sci-adifa
 </pre></div>
 </div>
@@ -115,27 +122,22 @@ $ . venv/bin/activate
 $ venv\Scripts\activate.bat
 </pre></div>
 </div>
-<p>Install Adifa and the requirements</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install -e .
-$ pip install -r requirements.txt
+<p>Install the requirements</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install -r requirements.txt
 </pre></div>
 </div>
 </section>
 <section id="run">
 <h2>Run<a class="headerlink" href="#run" title="Permalink to this heading"></a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ export FLASK_APP=adifa
-$ export FLASK_ENV=development
-$ flask init-db
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ flask init-db
 $ flask autodiscover
 $ flask run
 </pre></div>
 </div>
 <p>Or on Windows cmd:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span> <span class="nb">set</span> <span class="n">FLASK_APP</span><span class="o">=</span><span class="n">adifa</span>
-<span class="o">&gt;</span> <span class="nb">set</span> <span class="n">FLASK_ENV</span><span class="o">=</span><span class="n">development</span>
-<span class="o">&gt;</span> <span class="n">flask</span> <span class="n">init</span><span class="o">-</span><span class="n">db</span>
-<span class="o">&gt;</span> <span class="n">flask</span> <span class="n">autodiscover</span>
-<span class="o">&gt;</span> <span class="n">flask</span> <span class="n">run</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ flask init-db
+$ flask autodiscover
+$ flask run
 </pre></div>
 </div>
 <p>Open <a class="reference external" href="http://127.0.0.1:5000">http://127.0.0.1:5000</a> in a browser.</p>
@@ -160,7 +162,7 @@ $ coverage html  # open htmlcov/index.html in a browser
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="Adifa - Annotated Data in Flask App" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quickstart" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="configuration.html" class="btn btn-neutral float-right" title="Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
