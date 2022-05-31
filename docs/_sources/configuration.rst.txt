@@ -51,5 +51,44 @@ Loading new datasets
 Data folder
 ^^^^^^^^^^^
 
+Adifa reads files from the data folder to populate a database which it will query to display their information and generate plots.
+This data folder is specified through the ``DATA_PATH`` environment variable or through the ``config.py`` file.
+You should store your ``.h5ad`` files in this folder.
+
 Autodiscovery
 ^^^^^^^^^^^^^
+
+The autodiscovery tool manages the whole process to add datasets:
+it searches for ``.h5ad`` files within the data folder and reads them to populate the database.
+To run this tool use
+
+::
+
+    $ flask autodiscover
+
+.. highlight:: shell
+
+
+For each file in the data folder you can expect an output like
+
+
+::
+
+    [2022-05-27 21:57:21,711] INFO in dataset_utils: Inspecting file.h5ad
+    [2022-05-27 21:57:22,026] INFO in dataset_utils: Hashing file.h5ad
+    [2022-05-27 21:57:23,149] INFO in dataset_utils: Adding file.h5ad
+
+.. highlight:: shell
+
+
+Whenever you add new files to the data folder you must run the autodiscover tool again for them to be added.
+Files that had already been added will have a slightly different output like
+
+
+::
+
+    [2022-05-27 21:57:21,711] INFO in dataset_utils: Inspecting file.h5ad
+    [2022-05-27 21:57:22,026] INFO in dataset_utils: Hashing file.h5ad
+    [2022-05-27 21:57:23,149] INFO in dataset_utils: Reprocessed file.h5ad
+
+.. highlight:: shell

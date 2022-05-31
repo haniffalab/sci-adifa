@@ -133,9 +133,31 @@ values as needed.</p>
 <h2>Loading new datasets<a class="headerlink" href="#loading-new-datasets" title="Permalink to this heading"></a></h2>
 <section id="data-folder">
 <h3>Data folder<a class="headerlink" href="#data-folder" title="Permalink to this heading"></a></h3>
+<p>Adifa reads files from the data folder to populate a database which it will query to display their information and generate plots.
+This data folder is specified through the <code class="docutils literal notranslate"><span class="pre">DATA_PATH</span></code> environment variable or through the <code class="docutils literal notranslate"><span class="pre">config.py</span></code> file.
+You should store your <code class="docutils literal notranslate"><span class="pre">.h5ad</span></code> files in this folder.</p>
 </section>
 <section id="autodiscovery">
 <h3>Autodiscovery<a class="headerlink" href="#autodiscovery" title="Permalink to this heading"></a></h3>
+<p>The autodiscovery tool manages the whole process to add datasets:
+it searches for <code class="docutils literal notranslate"><span class="pre">.h5ad</span></code> files within the data folder and reads them to populate the database.
+To run this tool use</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ flask autodiscover
+</pre></div>
+</div>
+<p>For each file in the data folder you can expect an output like</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="m">2022</span>-05-27 <span class="m">21</span>:57:21,711<span class="o">]</span> INFO <span class="k">in</span> dataset_utils: Inspecting file.h5ad
+<span class="o">[</span><span class="m">2022</span>-05-27 <span class="m">21</span>:57:22,026<span class="o">]</span> INFO <span class="k">in</span> dataset_utils: Hashing file.h5ad
+<span class="o">[</span><span class="m">2022</span>-05-27 <span class="m">21</span>:57:23,149<span class="o">]</span> INFO <span class="k">in</span> dataset_utils: Adding file.h5ad
+</pre></div>
+</div>
+<p>Whenever you add new files to the data folder you must run the autodiscover tool again for them to be added.
+Files that had already been added will have a slightly different output like</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="m">2022</span>-05-27 <span class="m">21</span>:57:21,711<span class="o">]</span> INFO <span class="k">in</span> dataset_utils: Inspecting file.h5ad
+<span class="o">[</span><span class="m">2022</span>-05-27 <span class="m">21</span>:57:22,026<span class="o">]</span> INFO <span class="k">in</span> dataset_utils: Hashing file.h5ad
+<span class="o">[</span><span class="m">2022</span>-05-27 <span class="m">21</span>:57:23,149<span class="o">]</span> INFO <span class="k">in</span> dataset_utils: Reprocessed file.h5ad
+</pre></div>
+</div>
 </section>
 </section>
 </section>
