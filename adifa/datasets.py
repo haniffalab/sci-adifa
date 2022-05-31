@@ -24,6 +24,7 @@ def scatterplot(id):
 
     authenticated = session.get("auth_dataset_" + str(id), False)
     if dataset.password and not authenticated:
+        session["auth_redirect"] = "datasets.scatterplot"
         return redirect(url_for('datasets.password', id=id))
 
     from collections import OrderedDict 
@@ -46,6 +47,7 @@ def matrixplot(id):
     # Check protected status
     authenticated = session.get("auth_dataset_" + str(id), False)
     if dataset.password and not authenticated:
+        session["auth_redirect"] = "datasets.matrixplot"
         return redirect(url_for('datasets.password', id=id))
 
     from collections import OrderedDict 
@@ -68,6 +70,7 @@ def download(id):
     # Check protected status
     authenticated = session.get("auth_dataset_" + str(id), False)
     if dataset.password and not authenticated:
+        session["auth_redirect"] = "datasets.download"
         return redirect(url_for('datasets.password', id=id))
 
     if dataset.download_link:
@@ -93,14 +96,14 @@ def password(id):
 
     authenticated = session.get("auth_dataset_" + str(id), False)
     if dataset.password and authenticated:
-        return redirect(url_for('datasets.scatterplot', id=id))
+        return redirect(url_for(session.get("auth_redirect", "datasets.scatterplot"), id=id))
 
     # Handle the POST request
     if request.method == 'POST':
         password = request.form.get('password')
         if dataset.password == password:
             session["auth_dataset_" + str(id)] = True
-            return redirect(url_for('datasets.scatterplot', id=id))
+            return redirect(url_for(session.get("auth_redirect", "datasets.scatterplot"), id=id))
         else:
             flash('The password you entered is not correct')
 
