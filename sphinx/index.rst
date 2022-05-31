@@ -41,7 +41,6 @@ If Adifa is useful for your research, consider :ref:`citing the software <citing
    :caption: Documentation
    :glob:
 
-   overview
    installation
    configuration
    deployment
