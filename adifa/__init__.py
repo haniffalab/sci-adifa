@@ -57,6 +57,17 @@ def create_app(test_config=None):
     except OSError:
         pass
 
+    # validate data directory
+    directory = os.path.abspath(app.config.get('DATA_PATH'))
+    if (os.path.exists(directory)):
+        app.config.update(
+            DATA_PATH = directory
+        )
+    else:
+        app.config.update(
+            DATA_PATH = os.path.abspath('./instance')
+        )
+
     @app.route("/")
     def index():
         return render_template('index.html')

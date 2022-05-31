@@ -106,8 +106,6 @@ def get_coordinates(datasetId, obsm):
 def get_labels(datasetId, obsm, gene="", obs=""):
 	dataset = models.Dataset.query.get(datasetId)
 	adata = current_app.adata[dataset.filename]
-	#adata = current_app.adata
-	#adata = sc.read(current_app.config.get('DATA_PATH') + 'covid_portal.h5ad')      
 
 	if (gene):
 		try:

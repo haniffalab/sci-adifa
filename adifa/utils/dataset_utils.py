@@ -13,13 +13,13 @@ def auto_discover():
         if filename.endswith(".h5ad"):
             # process file
             current_app.logger.info('Inspecting ' + filename)    
-            adata = sc.read(current_app.config.get('DATA_PATH') + filename)
+            adata = sc.read(os.path.join(current_app.config.get('DATA_PATH'), filename))
             annotations = adata_utils.get_annotations(adata) 
             # generate hash
             current_app.logger.info('Hashing ' + filename)    
             md5_object = hashlib.md5()
             block_size = 128 * md5_object.block_size
-            a_file = open(current_app.config.get('DATA_PATH') + filename, 'rb')
+            a_file = open(os.path.join(current_app.config.get('DATA_PATH'), filename), 'rb')
             chunk = a_file.read(block_size)
             while chunk:
                 md5_object.update(chunk)
@@ -76,13 +76,9 @@ def load_files():
         return
 
     for dataset in datasets:
-        if (os.path.isabs(current_app.config.get('DATA_PATH'))):
-            file = os.path.realpath(current_app.config.get('DATA_PATH') + dataset.filename)
-        else:
-            file = os.path.realpath(current_app.root_path + '/../' + current_app.config.get('DATA_PATH') + dataset.filename)
-
+        file = os.path.join(current_app.config.get('DATA_PATH'), dataset.filename)
         if (os.path.isfile(file)):
-            current_app.adata[dataset.filename] = sc.read(current_app.config.get('DATA_PATH') + dataset.filename)
+            current_app.adata[dataset.filename] = sc.read(file)
             dataset.published = 1
             db.session.commit()            
             current_app.logger.info('Loading ' + dataset.title)

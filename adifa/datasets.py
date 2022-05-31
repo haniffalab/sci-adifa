@@ -76,13 +76,8 @@ def download(id):
     if dataset.download_link:
         return redirect(dataset.download_link, code=302)
     else:
-        if (os.path.isabs(current_app.config.get('DATA_PATH'))):
-            directory = os.path.realpath(current_app.config.get('DATA_PATH'))
-        else:
-            directory = os.path.realpath(current_app.root_path + '/../' + current_app.config.get('DATA_PATH'))
-
         return send_from_directory(
-            directory, dataset.filename, as_attachment=True
+            current_app.config.get('DATA_PATH'), dataset.filename, as_attachment=True
         )
 
 @bp.route('/dataset/<int:id>/password', methods=['GET', 'POST'])

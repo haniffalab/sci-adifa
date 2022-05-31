@@ -35,12 +35,12 @@ class Dataset(db.Model):
         return f"Dataset('{self.filename}')"     
 
     @property
-    def serialize(self):
+    def serialize(self):      
        """Return object data in easily serializable format"""
        return {
            'id'  : self.id,
            'filename': self.filename,
-           'size': os.path.getsize(current_app.config.get('DATA_PATH') + self.filename),
+           'size': os.path.getsize(os.path.join(current_app.config.get('DATA_PATH'), self.filename)),
            'data_obs': self.data_obs,
            'data_obsm': self.data_obsm,
            'title': self.title,
