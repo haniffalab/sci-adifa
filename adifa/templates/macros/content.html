@@ -29,11 +29,11 @@
       {% if dataset.other_modalities %}
       <div class="btn-group dropdown">
         <button class="btn btn-white dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          {{ "RNA" if dataset.modality == "rna" else "Protein" if dataset.modality == "prot" else dataset.modality }}
+          {{ dataset.modality|modality }}
         </button>
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
           {% for mod,id in dataset.other_modalities.items() %}
-          <a class="dropdown-item" href="{{ url_for('datasets.matrixplot' if request.endpoint.endswith('matrixplot') else 'datasets.scatterplot', id=id) }}">{{ "RNA" if mod == "rna" else "Protein" if mod == "prot" else mod }}</a>
+          <a class="dropdown-item" href="{{ url_for('datasets.matrixplot' if request.endpoint.endswith('matrixplot') else 'datasets.scatterplot', id=id) }}">{{ mod|modality }}</a>
           {% endfor %}
         </div>
       </div>

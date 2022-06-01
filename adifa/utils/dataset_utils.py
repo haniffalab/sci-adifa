@@ -10,11 +10,11 @@ from adifa import db
 from adifa import models
 from adifa.utils import adata_utils
 
-def generate_hash(filename):
-    current_app.logger.info('Hashing ' + filename)
+def generate_hash(file):
+    current_app.logger.info('Hashing ' + os.path.basename(file))
     md5_object = hashlib.md5()
     block_size = 128 * md5_object.block_size
-    a_file = open(current_app.config.get('DATA_PATH') + filename, 'rb')
+    a_file = open(file, 'rb')
     chunk = a_file.read(block_size)
     while chunk:
         md5_object.update(chunk)
@@ -67,10 +67,11 @@ def process_anndata(adata, filename, hash, modality="rna"):
 
 def auto_discover():
     for filename in os.listdir(current_app.config.get('DATA_PATH')):
+        file = os.path.join(current_app.config.get('DATA_PATH'), filename)
         if filename.endswith(".h5mu"):
             current_app.logger.info('Inspecting ' + filename)
-            mudata = mu.read(current_app.config.get('DATA_PATH') + filename)
-            hash = generate_hash(filename)
+            mudata = mu.read(file)
+            hash = generate_hash(file)
 
             for modality in list(mudata.mod.keys()):
                 adata = mudata[modality]
@@ -78,8 +79,8 @@ def auto_discover():
 
         if filename.endswith(".h5ad"):
             current_app.logger.info('Inspecting ' + filename)
-            adata = sc.read(current_app.config.get('DATA_PATH') + filename)
-            hash = generate_hash(filename)
+            adata = sc.read(file)
+            hash = generate_hash(file)
             process_anndata(adata, filename, hash)
 
         else:
@@ -101,10 +102,10 @@ def load_files():
         file = os.path.join(current_app.config.get('DATA_PATH'), dataset.filename)
         if (os.path.isfile(file)):
             if dataset.filename.endswith(".h5ad"):
-                current_app.adata[(dataset.filename, dataset.modality)] = sc.read(current_app.config.get('DATA_PATH') + dataset.filename)
+                current_app.adata[(dataset.filename, dataset.modality)] = sc.read(file)
             if dataset.filename.endswith(".h5mu"):
                 if dataset.filename not in mudata:
-                    mudata[dataset.filename] = mu.read(current_app.config.get('DATA_PATH') + dataset.filename)
+                    mudata[dataset.filename] = mu.read(file)
                 current_app.adata[(dataset.filename, dataset.modality)] = mudata[dataset.filename][dataset.modality]
             dataset.published = 1
             db.session.commit()
