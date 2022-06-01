@@ -10,6 +10,14 @@ import numpy as np
 from adifa import models
 from adifa.resources.errors import InvalidDatasetIdError, DatabaseOperationError, DatasetNotExistsError
 
+@current_app.template_filter('modality')
+def mod_name(mod):
+	if mod == "rna":
+		return "RNA"
+	if mod == "prot":
+		return "Protein"
+	else:
+		return mod
 
 def get_annotations(adata):
 	annotations = {'obs': {}, 'obsm': {}}
