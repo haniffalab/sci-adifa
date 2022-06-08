@@ -75,6 +75,7 @@ def auto_discover():
             for modality in list(mudata.mod.keys()):
                 adata = mudata[modality]
                 process_anndata(adata, filename, hash, modality)
+            process_anndata(mudata, filename, hash, 'multimodal')
 
         if filename.endswith(".h5ad"):
             current_app.logger.info('Inspecting ' + filename)
@@ -89,7 +90,6 @@ def auto_discover():
 def load_files():
     # load data files and populate database
     current_app.adata = dict()  
-    mudata = dict()
     try:
         datasets = models.Dataset.query.all()
     except Exception as e:
@@ -100,11 +100,10 @@ def load_files():
         file = os.path.join(current_app.config.get('DATA_PATH'), dataset.filename)
         if (os.path.isfile(file)):
             if dataset.filename.endswith(".h5ad"):
-                current_app.adata[(dataset.filename, dataset.modality)] = sc.read(file)
+                current_app.adata[dataset.filename] = sc.read(file)
             if dataset.filename.endswith(".h5mu"):
-                if dataset.filename not in mudata:
-                    mudata[dataset.filename] = mu.read(file)
-                current_app.adata[(dataset.filename, dataset.modality)] = mudata[dataset.filename][dataset.modality]
+                if dataset.filename not in current_app.adata:
+                    current_app.adata[dataset.filename] = mu.read(file)
             dataset.published = 1
             db.session.commit()            
             current_app.logger.info('Loading ' + dataset.title)
