@@ -16,12 +16,13 @@ from adifa.resources.errors import (
 
 @current_app.template_filter('modality')
 def mod_name(mod):
-	if mod == "rna":
-		return "RNA"
-	if mod == "prot":
-		return "Protein"
-	else:
-		return mod
+    if mod == "rna":
+        return "RNA"
+    if mod == "prot":
+        return "Protein"
+    #atac-seq
+    else:
+        return mod
 
 def get_annotations(adata):
     annotations = {"obs": {}, "obsm": {}}
@@ -66,35 +67,38 @@ def get_degs(adata):
 
 
 def get_bounds(datasetId, obsm):
-	if not datasetId > 0 :
-		raise InvalidDatasetIdError
+    if not datasetId > 0 :
+        raise InvalidDatasetIdError
 
-	try:
-		dataset = models.Dataset.query.get(datasetId)
-	except exc.SQLAlchemyError as e:
-		raise DatabaseOperationError
+    try:
+        dataset = models.Dataset.query.get(datasetId)
+    except exc.SQLAlchemyError as e:
+        raise DatabaseOperationError
 
-	try:
-		adata = current_app.adata[(dataset.filename, dataset.modality)]		
-	except (ValueError, AttributeError) as e:
-		raise DatasetNotExistsError
+    try:
+        if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+            adata = current_app.adata[dataset.filename]
+        elif dataset.filename.endswith(".h5mu"):
+            adata = current_app.adata[dataset.filename][dataset.modality]
+    except (ValueError, AttributeError) as e:
+        raise DatasetNotExistsError
 
-	# Normalised [-1,1] @TODO
-	adata.obsm[obsm] = 2.*(adata.obsm[obsm] - np.min(adata.obsm[obsm]))/np.ptp(adata.obsm[obsm])-1
+    # Normalised [-1,1] @TODO
+    adata.obsm[obsm] = 2.*(adata.obsm[obsm] - np.min(adata.obsm[obsm]))/np.ptp(adata.obsm[obsm])-1
 
-	# Embedded coordinate bounds
-	output = {
-		'x': {
-			'min': adata.obsm[obsm][:,0].min().item(),
-			'max': adata.obsm[obsm][:,0].max().item()
-		},
-		'y': {
-			'min': adata.obsm[obsm][:,1].min().item(),
-			'max': adata.obsm[obsm][:,1].max().item()
-		}
-	}
+    # Embedded coordinate bounds
+    output = {
+        'x': {
+            'min': adata.obsm[obsm][:,0].min().item(),
+            'max': adata.obsm[obsm][:,0].max().item()
+        },
+        'y': {
+            'min': adata.obsm[obsm][:,1].min().item(),
+            'max': adata.obsm[obsm][:,1].max().item()
+        }
+    }
 
-	return output
+    return output
 
 def get_coordinates(datasetId, obsm):
     if not datasetId > 0:
@@ -106,7 +110,10 @@ def get_coordinates(datasetId, obsm):
         raise DatabaseOperationError
 
     try:
-        adata = current_app.adata[dataset.filename]
+        if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+            adata = current_app.adata[dataset.filename]
+        elif dataset.filename.endswith(".h5mu"):
+            adata = current_app.adata[dataset.filename][dataset.modality]
     except (ValueError, AttributeError) as e:
         raise DatasetNotExistsError
 
@@ -123,11 +130,12 @@ def get_coordinates(datasetId, obsm):
 
     return output
 
-
 def get_labels(datasetId, obsm, gene="", obs=""):
     dataset = models.Dataset.query.get(datasetId)
-    adata = current_app.adata[(dataset.filename, dataset.modality)]
-    #adata = current_app.adata
+    if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+        adata = current_app.adata[dataset.filename]
+    elif dataset.filename.endswith(".h5mu"):
+        adata = current_app.adata[dataset.filename][dataset.modality]   #adata = current_app.adata
     #adata = sc.read(current_app.config.get('DATA_PATH') + 'covid_portal.h5ad')      
 
     if (gene):
@@ -155,33 +163,46 @@ def get_labels(datasetId, obsm, gene="", obs=""):
             except IndexError:
                 # @todo HANDLE ERROR
                 output.append(0)
-
+                
     return output
 
 def search_genes(datasetId, searchterm):
     dataset = models.Dataset.query.get(datasetId)
-    adata = current_app.adata[(dataset.filename, dataset.modality)]
-    #adata = current_app.adata
+    if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+        adata = current_app.adata[dataset.filename]
+    elif dataset.filename.endswith(".h5mu"):
+        adata = current_app.adata[dataset.filename][dataset.modality]   #adata = current_app.adata
     output = [g for g in adata.var_names if searchterm.lower() in g.lower()]
+
+    return output
 
 
 def gene_search(datasetId, searchterm):
     dataset = models.Dataset.query.get(datasetId)
-    adata = current_app.adata[(dataset.filename, dataset.modality)]
-    #adata = current_app.adata
+    if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+        adata = current_app.adata[dataset.filename]
+    elif dataset.filename.endswith(".h5mu"):
+        adata = current_app.adata[dataset.filename][dataset.modality]   #adata = current_app.adata
     genes = [g for g in adata.var_names if searchterm in g]
 
+    output = []
+    for gene in genes:
+        sample = {
+            "name": gene
+        }
+        output.append(sample)
+    
     return output
 
 
 def categorised_expr(datasetId, cat, gene, func="mean"):
     dataset = models.Dataset.query.get(datasetId)
-    adata = current_app.adata[(dataset.filename, dataset.modality)]
-
-    if func == "mean":
-        expr = grouping.mean()
-    elif func == "median":
-        expr = grouping.median()
+    if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+        adata = current_app.adata[dataset.filename]
+    elif dataset.filename.endswith(".h5mu"):
+        adata = current_app.adata[dataset.filename][dataset.modality]
+    data = adata[:,[gene]].to_df()
+    grouping = data.join(adata.obs[cat]).groupby(cat)
 
     # counts = grouping.count()/grouping.count().sum()
     #'count': counts.loc[group,gene]
@@ -197,16 +218,12 @@ def cat_expr_w_counts(datasetId, cat, gene, func="mean"):
     from numpy import NaN
 
     dataset = models.Dataset.query.get(datasetId)
-    adata = current_app.adata[(dataset.filename, dataset.modality)]
-
-    groupall = adata[:, [gene]].to_df().join(adata.obs[cat]).groupby(cat)
-    groupexpr = (
-        adata[:, [gene]]
-        .to_df()
-        .replace(float(adata[:, [gene]].X.min()), NaN)
-        .join(adata.obs[cat])
-        .groupby(cat)
-    )
+    if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+        adata = current_app.adata[dataset.filename]
+    elif dataset.filename.endswith(".h5mu"):
+        adata = current_app.adata[dataset.filename][dataset.modality]
+    groupall = adata[:,[gene]].to_df().join(adata.obs[cat]).groupby(cat)
+    groupexpr = adata[:,[gene]].to_df().replace(float(adata[:,[gene]].X.min()), NaN).join(adata.obs[cat]).groupby(cat)
 
     if func == "mean":
         expr = groupexpr.mean()
