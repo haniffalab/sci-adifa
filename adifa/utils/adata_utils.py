@@ -132,7 +132,7 @@ def get_coordinates(datasetId, obsm):
 
 def get_labels(datasetId, obsm, gene="", obs=""):
     dataset = models.Dataset.query.get(datasetId)
-    if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+    if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
         adata = current_app.adata[dataset.filename]
     elif dataset.filename.endswith(".h5mu"):
         adata = current_app.adata[dataset.filename][dataset.modality]   #adata = current_app.adata
@@ -163,12 +163,12 @@ def get_labels(datasetId, obsm, gene="", obs=""):
             except IndexError:
                 # @todo HANDLE ERROR
                 output.append(0)
-                
+
     return output
 
 def search_genes(datasetId, searchterm):
     dataset = models.Dataset.query.get(datasetId)
-    if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+    if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
         adata = current_app.adata[dataset.filename]
     elif dataset.filename.endswith(".h5mu"):
         adata = current_app.adata[dataset.filename][dataset.modality]   #adata = current_app.adata
@@ -176,10 +176,9 @@ def search_genes(datasetId, searchterm):
 
     return output
 
-
 def gene_search(datasetId, searchterm):
     dataset = models.Dataset.query.get(datasetId)
-    if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+    if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
         adata = current_app.adata[dataset.filename]
     elif dataset.filename.endswith(".h5mu"):
         adata = current_app.adata[dataset.filename][dataset.modality]   #adata = current_app.adata
@@ -191,13 +190,12 @@ def gene_search(datasetId, searchterm):
             "name": gene
         }
         output.append(sample)
-    
-    return output
 
+    return output
 
 def categorised_expr(datasetId, cat, gene, func="mean"):
     dataset = models.Dataset.query.get(datasetId)
-    if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+    if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
         adata = current_app.adata[dataset.filename]
     elif dataset.filename.endswith(".h5mu"):
         adata = current_app.adata[dataset.filename][dataset.modality]
@@ -218,7 +216,7 @@ def cat_expr_w_counts(datasetId, cat, gene, func="mean"):
     from numpy import NaN
 
     dataset = models.Dataset.query.get(datasetId)
-    if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+    if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
         adata = current_app.adata[dataset.filename]
     elif dataset.filename.endswith(".h5mu"):
         adata = current_app.adata[dataset.filename][dataset.modality]
