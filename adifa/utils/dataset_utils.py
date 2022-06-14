@@ -39,7 +39,7 @@ def process_anndata(adata, filename, hash, modality="rna"):
         new.filename = filename
         new.modality = modality
         new.hash = hash
-        new.data_obs = annotations.get('obs')
+        new.data_obs = annotations.get('obs') 
         new.data_obsm = annotations.get('obsm')
         new.genes_deg = adata_utils.get_degs(adata)
         new.title = filename
@@ -75,7 +75,7 @@ def auto_discover():
             for modality in list(mudata.mod.keys()):
                 adata = mudata[modality]
                 process_anndata(adata, filename, hash, modality)
-            process_anndata(mudata, filename, hash, 'multimodal')
+            process_anndata(mudata, filename, hash, 'muon')
 
         if filename.endswith(".h5ad"):
             current_app.logger.info('Inspecting ' + filename)

@@ -43,7 +43,9 @@
           {% include 'blocks/selector/genes.html' %}
         {% elif dataset.modality == "prot" %}
           {% include 'blocks/selector/proteins.html' %}
-        {% else %}
+        {% elif dataset.modality == "muon" %}
+          {% include 'blocks/selector/muon.html' %}
+        {% elif dataset.modality == "combined" %}
           {% include 'blocks/selector/combined.html' %}
         {% endif %}
     {% endblock %}

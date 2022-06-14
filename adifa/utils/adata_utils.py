@@ -66,7 +66,7 @@ def get_bounds(datasetId, obsm):
 		raise DatabaseOperationError
 
 	try:
-		if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+		if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
 			adata = current_app.adata[dataset.filename]
 		elif dataset.filename.endswith(".h5mu"):
 			adata = current_app.adata[dataset.filename][dataset.modality]
@@ -100,7 +100,7 @@ def get_coordinates(datasetId, obsm):
 		raise DatabaseOperationError
 
 	try:
-		if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+		if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
 			adata = current_app.adata[dataset.filename]
 		elif dataset.filename.endswith(".h5mu"):
 			adata = current_app.adata[dataset.filename][dataset.modality]
@@ -120,7 +120,7 @@ def get_coordinates(datasetId, obsm):
 
 def get_labels(datasetId, obsm, gene="", obs=""):
 	dataset = models.Dataset.query.get(datasetId)
-	if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+	if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
 		adata = current_app.adata[dataset.filename]
 	elif dataset.filename.endswith(".h5mu"):
 		adata = current_app.adata[dataset.filename][dataset.modality]	#adata = current_app.adata
@@ -156,7 +156,7 @@ def get_labels(datasetId, obsm, gene="", obs=""):
 
 def search_genes(datasetId, searchterm):
 	dataset = models.Dataset.query.get(datasetId)
-	if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+	if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
 		adata = current_app.adata[dataset.filename]
 	elif dataset.filename.endswith(".h5mu"):
 		adata = current_app.adata[dataset.filename][dataset.modality]	#adata = current_app.adata
@@ -166,7 +166,7 @@ def search_genes(datasetId, searchterm):
 
 def gene_search(datasetId, searchterm):
 	dataset = models.Dataset.query.get(datasetId)
-	if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+	if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
 		adata = current_app.adata[dataset.filename]
 	elif dataset.filename.endswith(".h5mu"):
 		adata = current_app.adata[dataset.filename][dataset.modality]	#adata = current_app.adata
@@ -183,7 +183,7 @@ def gene_search(datasetId, searchterm):
 
 def categorised_expr(datasetId, cat, gene, func="mean"):
 	dataset = models.Dataset.query.get(datasetId)
-	if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+	if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
 		adata = current_app.adata[dataset.filename]
 	elif dataset.filename.endswith(".h5mu"):
 		adata = current_app.adata[dataset.filename][dataset.modality]
@@ -205,7 +205,7 @@ def cat_expr_w_counts(datasetId, cat, gene, func="mean"):
 	from numpy import NaN
 
 	dataset = models.Dataset.query.get(datasetId)
-	if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
+	if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
 		adata = current_app.adata[dataset.filename]
 	elif dataset.filename.endswith(".h5mu"):
 		adata = current_app.adata[dataset.filename][dataset.modality]
@@ -233,17 +233,23 @@ def type_category(obs):
 	categories = [str(i) for i in obs.cat.categories.values.flatten()]
 	
 	if len(categories) > 100:
-		return { 'type': 'categorical', 'is_truncated': True, 'values': dict(enumerate(categories[:99], 1)) }
+		return { 
+			'type': 'categorical', 
+			'group': obs.name.split(':')[0] if len(obs.name.split(':')) > 1 else 'default', 
+			'is_truncated': True, 
+			'values': dict(enumerate(categories[:99], 1)) 
+		}
 
-	return { 'type': 'categorical', 'is_truncated': False, 'values': dict(enumerate(categories, 1)) }
+	return { 'type': 'categorical', 'group': obs.name.split(':')[0] if len(obs.name.split(':')) > 1 else 'default', 'is_truncated': False, 'values': dict(enumerate(categories, 1)) }
 
 def type_bool(obs):
-	return { 'type': 'categorical', 'values': {0: 'True', 1: 'False'} }
+	return { 'type': 'categorical', 'group': obs.name.split(':')[0] if len(obs.name.split(':')) > 1 else 'default', 'values': {0: 'True', 1: 'False'} }
 
 def type_numeric(obs):
 	accuracy = 4
 	return { 
 		'type': 'continuous',
+		'group': obs.name.split(':')[0] if len(obs.name.split(':')) > 1 else 'default', 
 		'min': round(series_min(obs), accuracy),
 		'max': round(series_max(obs), accuracy),
 		'mean': round(series_mean(obs), accuracy),

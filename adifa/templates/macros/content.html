@@ -28,6 +28,9 @@
       </div>
       {% if dataset.other_modalities %}
       <div class="btn-group dropdown">
+        <a class="btn btn-info">
+          Modality
+        </a>         
         <button class="btn btn-white dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           {{ dataset.modality|modality }}
         </button>

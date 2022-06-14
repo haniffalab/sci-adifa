@@ -120,6 +120,9 @@ def create_app(test_config=None):
     @click.command("autodiscover")
     @with_appcontext
     def autodiscover_command():
+        click.echo("############")
+        click.echo("Discovering AnnData (.h5ad) and MuData (.h5mu) objects in " + app.config.get('DATA_PATH'))
+        click.echo("############")
         from .utils import dataset_utils
         dataset_utils.auto_discover()
         click.echo("Discovered Datasets.")

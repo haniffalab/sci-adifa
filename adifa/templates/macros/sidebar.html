@@ -1,5 +1,6 @@
 {% macro menu(dataset, obs, type) %}
-<h6 class="main-sidebar__nav-title">Observations</h6>
+{%for group, obs in obs.items()%}
+<h6 class="main-sidebar__nav-title">Observations {{ group }}</h6>
 <ul class="nav flex-column">
   <div id="obs-accordion">
     <div class="list-group list-group-flush">                                                              
@@ -90,4 +91,5 @@
     </div>  
   </div>           
 </ul>
+{%endfor%}
 {% endmacro %}
