@@ -1,5 +1,6 @@
 import os
 import re
+import hashlib
 
 from flask import current_app
 from scipy.sparse import find
@@ -21,7 +22,7 @@ def mod_name(mod):
 		return mod
 
 def get_annotations(adata):
-	annotations = {'obs': {}, 'obsm': {}}
+	annotations = {'obs': [], 'obsm': {}}
 	
 	switcher = {
 		'category': type_category,
@@ -36,10 +37,13 @@ def get_annotations(adata):
 		dtype = re.sub(r'[^a-zA-Z]', '', adata.obs[name].dtype.name)
 		# Get the function from switcher dictionary
 		func = switcher.get(dtype, type_discrete)
-		# Define an API key safe 
-		slug = re.sub(r'[^a-zA-Z0-9]', '', name).lower()
-		annotations['obs'][slug] = func(adata.obs[name])
-		annotations['obs'][slug]['name'] = name
+		# Define a safe key 
+		key = re.sub(r'[^a-zA-Z0-9]', '', name).lower()
+		obs = func(adata.obs[name])
+		obs['name'] = name
+		obs['id'] = hashlib.md5(name.encode('utf-8')).hexdigest()
+		obs['group'] = name.split(':')[0] if len(name.split(':')) > 1 else 'default'
+		annotations['obs'].append(obs)
 		
 	annotations['obsm'] = [ value for value in adata.obsm ]
 
