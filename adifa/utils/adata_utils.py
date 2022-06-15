@@ -1,5 +1,6 @@
 import os
 import re
+import hashlib
 
 from flask import current_app
 from scipy.sparse import find

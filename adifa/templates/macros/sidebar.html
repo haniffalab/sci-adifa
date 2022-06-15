@@ -5,30 +5,30 @@
   <div id="obs-accordion">
     <div class="list-group list-group-flush">                                                              
       {% for ob in obs %}
-        <div class="list-group-item justify-content-between align-items-center" data-toggle="collapse" data-target="#collapse{{loop.index}}" aria-controls="collapse{{loop.index}}">
+        <div class="list-group-item justify-content-between align-items-center" data-toggle="collapse" data-target="#collapse{{ ob.id }}" aria-controls="collapse{{ ob.id }}">
           <h4>
-            <i class="fa fa-plus-square"></i>&nbsp;&nbsp;{{ dataset.data_obs[ob]['name'] }}
+            <i class="fa fa-plus-square"></i>&nbsp;&nbsp;{{ ob.name }}
           </h4>
         </div>
-        <div id="collapse{{loop.index}}" class="collapse m-4 obs-values" aria-labelledby="heading{{loop.index}}" data-parent="#obs-accordion" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}">
-          {% if dataset.data_obs[ob]['type'] == "categorical" %}
-            {% if dataset.data_obs[ob]['is_truncated'] %}
+        <div id="collapse{{ ob.id }}" class="collapse m-4 obs-values" aria-labelledby="heading{{ ob.id }}" data-parent="#obs-accordion" data-name="{{ ob.name }}" data-id="{{ ob.id }}" data-type="{{ ob.type }}">
+          {% if ob.type == "categorical" %}
+            {% if ob.is_truncated %}
               <div class="alert alert-warning" role="alert">
                 This observation has more than 100 values, and has been truncated to improve performance.
               </div>
             {% endif %}    
             <div class="btn-group btn-group-toggle mb-4" role="group">
-              <a class="btn btn-sm btn-white checkall" data-id="{{loop.index}}"><i class="far fa-2x fa-check-square"></i></a>
-              <a class="btn btn-sm btn-white uncheckall" data-id="{{loop.index}}"><i class="far fa-2x fa-square"></i></a>
-              <a class="btn btn-sm btn-white colourise" id="colourise{{loop.index}}" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}"><i class="fa fa-2x fa-tint"></i></a>
+              <a class="btn btn-sm btn-white checkall" data-id="{{ ob.id }}"><i class="far fa-2x fa-check-square"></i></a>
+              <a class="btn btn-sm btn-white uncheckall" data-id="{{ ob.id }}"><i class="far fa-2x fa-square"></i></a>
+              <a class="btn btn-sm btn-white colourise" id="colourise{{ ob.id }}" data-name="{{ ob.name }}" data-id="{{ ob.id }}" data-type="{{ ob.type }}"><i class="fa fa-2x fa-tint"></i></a>
             </div>   
             <div class="list-group list-group-flush">
-            {% for key, value in dataset.data_obs[ob]['values'].items()|sort(attribute=1) %}
+            {% for key, value in ob['values'].items()|sort(attribute=1) %}
               <div class="list-group-item p-1">
                 <div id="obs-list-{{ob}}" class="row">
                   <div class="col-9">
-                    <label class="label-checkbox">{{dataset.data_obs[ob]['values'][key]}}
-                      <input class="obs_value_cb" id="obs-{{loop.index}}-value-{{key}}" type="checkbox" name="obs-{{value}}" value="{{value}}" checked="checked">
+                    <label class="label-checkbox">{{ob.values[key]}}
+                      <input class="obs_value_cb" id="obs-{{ ob.id }}-value-{{key}}" type="checkbox" name="obs-{{value}}" value="{{value}}" checked="checked">
                       <span class="checkmark"></span>
                     </label>    
                   </div>
@@ -39,9 +39,9 @@
               </div>
               {% endfor %}
             </div>
-          {% elif dataset.data_obs[ob]['type'] == "continuous" %}
+          {% elif ob.type == "continuous" %}
             <div class="btn-group btn-group-toggle mb-4" role="group">
-              <a class="btn btn-sm btn-white colourise" id="colourise{{loop.index}}" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}"><i class="fa fa-2x fa-tint"></i></a>
+              <a class="btn btn-sm btn-white colourise" id="colourise{{ ob.id }}" data-name="{{ ob.name }}" data-id="{{ ob.id }}" data-type="{{ ob.type }}"><i class="fa fa-2x fa-tint"></i></a>
             </div>   
             <div class="list-group list-group-flush">         
               <div class="list-group-item p-1">
@@ -50,7 +50,7 @@
                     Minimum
                   </div>
                   <div class="col-6 text-right">
-                    {{ dataset.data_obs[ob]['min'] }}
+                    {{ ob.min }}
                   </div>
                 </div>
               </div>
@@ -60,7 +60,7 @@
                     Maximum
                   </div>
                   <div class="col-6 text-right">
-                    {{ dataset.data_obs[ob]['max'] }}
+                    {{ ob.max }}
                   </div>
                 </div>
               </div>
@@ -70,7 +70,7 @@
                     Mean
                   </div>
                   <div class="col-6 text-right">
-                    {{ dataset.data_obs[ob]['mean'] }}
+                    {{ ob.mean }}
                   </div>
                 </div>
               </div>
@@ -80,7 +80,7 @@
                     Median
                   </div>
                   <div class="col-6 text-right">
-                    {{ dataset.data_obs[ob]['median'] }}
+                    {{ ob.median }}
                   </div>
                 </div>
               </div>

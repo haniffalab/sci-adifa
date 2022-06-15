@@ -58,9 +58,9 @@ def scatterplot(id):
     from operator import getitem
 
     from collections import defaultdict
-    groups = defaultdict(defaultdict)
-    for key, value in dataset.data_obs.items():
-        groups[value['group']][key] = value
+    groups = defaultdict(list)
+    for value in dataset.data_obs:
+        groups[value['group']].append(value)
 
     # from collections import OrderedDict 
     # from operator import getitem 
