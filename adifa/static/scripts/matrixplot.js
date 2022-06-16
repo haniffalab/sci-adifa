@@ -594,7 +594,7 @@
             closeOnSelect: false,
             sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
             ajax: {
-                url: API_SERVER + "api/v1/datasets/" + datasetId + "/search/genes",
+                url: API_SERVER + "api/v1/datasets/" + datasetId + "/search/features",
                 data: function (params) {
                 var query = {
                     search: params.term,

@@ -27,12 +27,19 @@ class Coordinates(Resource):
 
 class Labels(Resource):
     def get(self):
+<<<<<<< HEAD
         datasetId = request.args.get("datasetId", 0, type=int)
         obsm = request.args.get("embedding", "X_umap", type=str)
         gene = request.args.get("gene", "", type=str)
         obs = request.args.get("obs", "", type=str)
+=======
+        datasetId = request.args.get('datasetId', 0, type=int)
+        feature = request.args.get('gene', '', type=str)
+        obs = request.args.get('obs', '', type=str)
+        modality = request.args.get('modality', 'rna', type=str)
+>>>>>>> stash changes
 
-        return adata_utils.get_labels(datasetId, obsm, gene=gene, obs=obs)
+        return adata_utils.get_labels(datasetId, feature=feature, obs=obs, modality=modality)
 
 
 class Bounds(Resource):
@@ -43,16 +50,29 @@ class Bounds(Resource):
         return adata_utils.get_bounds(datasetId, obsm)
 
 
-class SearchGenes(Resource):
+class SearchFeatures(Resource):
     def get(self, id):
+<<<<<<< HEAD
         q = request.args.get("search", "", type=str)
 
         output = []
         for gene in adata_utils.search_genes(id, q):
             sample = {"id": gene, "text": gene}
+=======
+        q = request.args.get('search', '', type=str)
+        mod = request.args.get('modality', 'rna', type=str)
+
+        output = []
+        for feature in adata_utils.search_features(id, q, mod):
+            sample = {
+                "id": feature,
+                "text": feature
+            }
+>>>>>>> stash changes
             output.append(sample)
 
         return {"results": output[:30]}
+
 
 
 class SearchDiseases(Resource):
