@@ -14,6 +14,7 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -27,7 +28,8 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> Adifa
+            <a href="index.html">
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -39,16 +41,19 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Pipelines</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#testing">Testing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#code-coverage">Code Coverage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#code-quality">Code Quality</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#docker-builds">Docker Builds</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#sphinx">Sphinx</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#github-actions-workflows">Github Actions Workflows</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#testing">Testing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#code-coverage">Code Coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#code-quality">Code Quality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#docker-builds">Docker Builds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sphinx">Sphinx</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
@@ -87,26 +92,29 @@
            <div itemprop="articleBody">
              
   <section id="pipelines">
-<h1>Pipelines<a class="headerlink" href="#pipelines" title="Permalink to this headline"></a></h1>
+<h1>Pipelines<a class="headerlink" href="#pipelines" title="Permalink to this heading"></a></h1>
+<section id="github-actions-workflows">
+<h2>Github Actions Workflows<a class="headerlink" href="#github-actions-workflows" title="Permalink to this heading"></a></h2>
 <section id="testing">
-<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline"></a></h2>
+<h3>Testing<a class="headerlink" href="#testing" title="Permalink to this heading"></a></h3>
 </section>
 <section id="code-coverage">
-<h2>Code Coverage<a class="headerlink" href="#code-coverage" title="Permalink to this headline"></a></h2>
+<h3>Code Coverage<a class="headerlink" href="#code-coverage" title="Permalink to this heading"></a></h3>
 </section>
 <section id="code-quality">
-<h2>Code Quality<a class="headerlink" href="#code-quality" title="Permalink to this headline"></a></h2>
+<h3>Code Quality<a class="headerlink" href="#code-quality" title="Permalink to this heading"></a></h3>
 </section>
 <section id="docker-builds">
-<h2>Docker Builds<a class="headerlink" href="#docker-builds" title="Permalink to this headline"></a></h2>
+<h3>Docker Builds<a class="headerlink" href="#docker-builds" title="Permalink to this heading"></a></h3>
 </section>
 <section id="sphinx">
-<h2>Sphinx<a class="headerlink" href="#sphinx" title="Permalink to this headline"></a></h2>
+<h3>Sphinx<a class="headerlink" href="#sphinx" title="Permalink to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd sphinx
 $ make clean
 $ make html # open _build/html/index.html in a browser
 </pre></div>
 </div>
+</section>
 </section>
 </section>
 

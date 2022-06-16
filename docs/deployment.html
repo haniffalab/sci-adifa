@@ -14,6 +14,7 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -27,7 +28,8 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> Adifa
+            <a href="index.html">
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -39,17 +41,22 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Deployment</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#docker">Docker</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#build">build</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#run">run</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#compose">compose</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#create-a-docker-compose-file">Create a docker-compose file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#start-the-docker-service">Start the docker service</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#offical-docker-images">Offical Docker images</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#building-your-own-custom-docker-images">Building your own custom docker images</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">docker-compose</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#nginx">Nginx</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nginx">Nginx</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pipelines.html">Pipelines</a></li>
@@ -89,25 +96,71 @@
            <div itemprop="articleBody">
              
   <section id="deployment">
-<h1>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline"></a></h1>
+<span id="id1"></span><h1>Deployment<a class="headerlink" href="#deployment" title="Permalink to this heading"></a></h1>
 <section id="docker">
-<h2>Docker<a class="headerlink" href="#docker" title="Permalink to this headline"></a></h2>
-<section id="build">
-<h3>build<a class="headerlink" href="#build" title="Permalink to this headline"></a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">build</span> <span class="o">-</span><span class="n">t</span> <span class="n">davehorsfall</span><span class="o">/</span><span class="n">cellatlas</span><span class="o">-</span><span class="n">api</span><span class="p">:</span><span class="n">latest</span> <span class="o">.</span>
-<span class="n">docker</span> <span class="n">push</span> <span class="n">davehorsfall</span><span class="o">/</span><span class="n">cellatlas</span><span class="o">-</span><span class="n">api</span><span class="p">:</span><span class="n">latest</span>
+<h2>Docker<a class="headerlink" href="#docker" title="Permalink to this heading"></a></h2>
+<section id="prerequisites">
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h3>
+<p>Before you begin, make sure you have installed the following tools:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://docs.docker.com/get-docker/">docker</a> (&gt;=20.10)</p></li>
+<li><p><a class="reference external" href="https://docs.docker.com/compose/install/">docker-compose</a> (&gt;=1.27)</p></li>
+</ul>
+</section>
+<section id="create-a-docker-compose-file">
+<h3>Create a docker-compose file<a class="headerlink" href="#create-a-docker-compose-file" title="Permalink to this heading"></a></h3>
+<p>Create an empty file called <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code>, and copy the following code into file.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">version</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span>
+<span class="n">services</span><span class="p">:</span>
+    <span class="n">adifa</span><span class="p">:</span>
+        <span class="n">image</span><span class="p">:</span> <span class="n">haniffalab</span><span class="o">/</span><span class="n">adifa</span><span class="p">:</span><span class="n">latest</span>
+        <span class="n">container_name</span><span class="p">:</span> <span class="n">adifa</span>
+        <span class="n">entrypoint</span><span class="p">:</span> <span class="n">sh</span>
+        <span class="n">command</span><span class="p">:</span> <span class="o">./</span><span class="n">boot</span><span class="o">-</span><span class="n">autodiscover</span><span class="o">.</span><span class="n">sh</span>
+        <span class="n">ports</span><span class="p">:</span>
+        <span class="o">-</span> <span class="mi">5000</span><span class="p">:</span><span class="mi">5000</span>
+        <span class="n">volumes</span><span class="p">:</span>
+        <span class="o">-</span> <span class="o">./</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">your</span><span class="o">/</span><span class="n">h5ad</span><span class="p">:</span><span class="o">/</span><span class="n">data</span>
+        <span class="n">environment</span><span class="p">:</span>
+        <span class="o">-</span> <span class="s2">&quot;DATA_PATH=/data&quot;</span>
 </pre></div>
 </div>
+<ul class="simple">
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">haniffalab/adifa:latest</span></code> with your preferred image tag (see below)</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">/path/to/your/h5ad</span></code> with the path to the directory where your <code class="docutils literal notranslate"><span class="pre">.h5ad</span></code> files are located</p></li>
+<li><p>Remove the <code class="docutils literal notranslate"><span class="pre">entrypoint</span></code> and <code class="docutils literal notranslate"><span class="pre">command</span></code> directives to prevent autodiscovery during the service boot</p></li>
+<li><p>Map the service to a different port on the host machine, for example <code class="docutils literal notranslate"><span class="pre">-</span> <span class="pre">5000:80</span></code> to serve on port 80</p></li>
+</ul>
 </section>
-<section id="run">
-<h3>run<a class="headerlink" href="#run" title="Permalink to this headline"></a></h3>
+<section id="start-the-docker-service">
+<h3>Start the docker service<a class="headerlink" href="#start-the-docker-service" title="Permalink to this heading"></a></h3>
+<p>Run the following command in the same directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span><span class="o">-</span><span class="n">compose</span> <span class="n">up</span>
+</pre></div>
+</div>
+<p>This command will load the Adifa application, read your <code class="docutils literal notranslate"><span class="pre">.h5ad</span></code> files and start the web server. Depending on the size of your data files, the application may take several minutes to load.</p>
+<p>To access the application, open <a class="reference external" href="http://localhost:5000">http://localhost:5000</a> in a browser.</p>
+<section id="offical-docker-images">
+<h4>Offical Docker images<a class="headerlink" href="#offical-docker-images" title="Permalink to this heading"></a></h4>
+<p>You can pull the official Adifa Docker images from the DockerHub Haniffa Lab</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">latest</span></code> tag can be used for the most recent</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">pull</span> <span class="n">haniffalab</span><span class="o">/</span><span class="n">adifa</span><span class="p">:</span><span class="n">latest</span>
-<span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">d</span> <span class="o">-</span><span class="n">p</span> <span class="mi">5000</span><span class="p">:</span><span class="mi">5000</span> <span class="n">haniffalab</span><span class="o">/</span><span class="n">adifa</span><span class="p">:</span><span class="n">latest</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">dev</span></code> tag can be used for the most recent</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">pull</span> <span class="n">haniffalab</span><span class="o">/</span><span class="n">adifa</span><span class="p">:</span><span class="n">dev</span>
 </pre></div>
 </div>
 </section>
-<section id="compose">
-<h3>compose<a class="headerlink" href="#compose" title="Permalink to this headline"></a></h3>
+<section id="building-your-own-custom-docker-images">
+<h4>Building your own custom docker images<a class="headerlink" href="#building-your-own-custom-docker-images" title="Permalink to this heading"></a></h4>
+<p>You can build a custom image from the root of the sc-afida repositry</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">build</span> <span class="o">-</span><span class="n">t</span> <span class="n">davehorsfall</span><span class="o">/</span><span class="n">adifa</span><span class="o">-</span><span class="n">custom</span><span class="p">:</span><span class="n">latest</span> <span class="o">.</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h4>docker-compose<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h4>
 <p>This is then the <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> so we see it.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">version</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span>
 <span class="n">services</span><span class="p">:</span>
@@ -129,7 +182,7 @@
     <span class="n">ports</span><span class="p">:</span>
     <span class="o">-</span> <span class="mi">5000</span><span class="p">:</span><span class="mi">5000</span>
     <span class="n">environment</span><span class="p">:</span>
-    <span class="o">-</span> <span class="s2">&quot;DATA_PATH=/data/&quot;</span>
+    <span class="o">-</span> <span class="s2">&quot;DATA_PATH=/data&quot;</span>
     <span class="n">links</span><span class="p">:</span>
     <span class="o">-</span> <span class="n">nginx</span>
 </pre></div>
@@ -137,7 +190,7 @@
 </section>
 </section>
 <section id="nginx">
-<h2>Nginx<a class="headerlink" href="#nginx" title="Permalink to this headline"></a></h2>
+<h3>Nginx<a class="headerlink" href="#nginx" title="Permalink to this heading"></a></h3>
 <p>This is then the <code class="docutils literal notranslate"><span class="pre">conf.conf</span></code> so we see it.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">version</span><span class="p">:</span> <span class="s1">&#39;2&#39;</span>
 <span class="n">services</span><span class="p">:</span>
@@ -147,6 +200,7 @@
     <span class="n">container_name</span><span class="p">:</span> <span class="n">nginx</span>
 </pre></div>
 </div>
+</section>
 </section>
 </section>
 

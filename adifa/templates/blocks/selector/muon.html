@@ -1,5 +1,5 @@
 <div class="feature-sidebar">
-  <div class="card card-small">
+  <div class="card card-small mb-3">
     <div class="card-header border-bottom">
       <h6 class="m-0">Gene Expression</h6>
     </div>        
@@ -9,7 +9,7 @@
           <h6 class="feature-sidebar-title">Search for genes</h6>        
         </li>            
         <li class="list-group-item">
-          <select class="select2-gene-search form-control" data-placeholder="Search by name"></select>
+          <select class="select2-gene-search form-control"></select>
           <div id="search-genes-selected" class="mt-2"></div>
         </li>       
         {% if dataset.genes_curated %}   
@@ -42,4 +42,40 @@
       </ul>
     </div>      
   </div>
+  <div class="card card-small">
+    <div class="card-header border-bottom">
+      <h6 class="m-0">Protein Expression</h6>
+    </div>        
+    <div class="card-body p-0">
+      <ul class="list-group list-group-flush">               
+        <li class="list-group-item p-0">
+          <h6 class="feature-sidebar-title">Search for proteins</h6>        
+        </li>            
+        <li class="list-group-item">
+          <select class="select2-protein-search form-control"></select>
+          <div id="search-protein-selected" class="mt-2"></div>
+        </li>       
+        {% if dataset.genes_curated %}   
+        <li class="list-group-item p-0">
+          <h6 class="feature-sidebar-title">Author curated genes</h6>              
+        </li>        
+        <li class="list-group-item">
+          {% for gene in dataset.genes_curated %}
+          <button type="button" id="gene-deg-{{ gene }}" data-gene="{{ gene }}" class="btn-gene-select btn btn-outline-info btn-sm">{{ gene }}</button>
+          {% endfor %}
+        </li>   
+        {% endif %}                      
+        {% if dataset.genes_deg %}
+        <li class="list-group-item p-0">
+          <h6 class="feature-sidebar-title">Differentially expressed genes</h6>        
+        </li>                        
+        <li class="list-group-item">
+          {% for gene in dataset.genes_deg %}
+          <button type="button" id="gene-deg-{{ gene }}" data-gene="{{ gene }}" class="btn-gene-select btn btn-outline-info btn-sm">{{ gene }}</button>
+          {% endfor %}
+        </li>  
+        {% endif %}
+      </ul>
+    </div>      
+  </div>  
 </div>

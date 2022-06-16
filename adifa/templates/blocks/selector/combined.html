@@ -1,4 +1,4 @@
-<div class="gene-sidebar">
+<div class="feature-sidebar">
     <div class="card card-small">
       <div class="card-header border-bottom">
         <h6 class="m-0">Gene/Protein Expression</h6>
@@ -6,8 +6,8 @@
       <div class="card-body p-0">
         <ul class="list-group list-group-flush">               
           <li class="list-group-item p-0">
-            <h6 class="gene-sidebar-title">Search for genes/proteins</h6>   
-            <p class="gene-sidebar-info">Protein names are followed by "_protein"</p>     
+            <h6 class="feature-sidebar-title">Search for genes/proteins</h6>   
+            <p class="feature-sidebar-info">Protein names are followed by "_protein"</p>     
           </li>            
           <li class="list-group-item">
             <select class="select2-gene-search form-control"></select>
@@ -15,7 +15,7 @@
           </li>       
           {% if dataset.genes_curated %}   
           <li class="list-group-item p-0">
-            <h6 class="gene-sidebar-title">Author curated genes</h6>              
+            <h6 class="feature-sidebar-title">Author curated genes</h6>              
           </li>        
           <li class="list-group-item">
             {% for gene in dataset.genes_curated %}
@@ -24,7 +24,7 @@
           </li>   
           {% endif %}                      
           <li class="list-group-item p-0">
-            <h6 class="gene-sidebar-title">Genes implicated with diseases</h6>        
+            <h6 class="feature-sidebar-title">Genes implicated with diseases</h6>        
           </li>          
           <li class="list-group-item">
             <select class="select2-disease-search form-control"></select>
@@ -32,7 +32,7 @@
           </li>    
           {% if dataset.genes_deg %}
           <li class="list-group-item p-0">
-            <h6 class="gene-sidebar-title">Differentially expressed genes</h6>        
+            <h6 class="feature-sidebar-title">Differentially expressed genes</h6>        
           </li>                        
           <li class="list-group-item">
             {% for gene in dataset.genes_deg %}

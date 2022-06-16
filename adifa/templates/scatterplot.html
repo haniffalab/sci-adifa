@@ -39,14 +39,16 @@
     </div>
     <div class="col-lg-3 col-md-12">
       {% block selector %}
-        {% if 'hstack' in dataset.title %}
-          {% include 'blocks/selector/combined.html' %}
-        {% elif 'cite_seq' in dataset.title %}
-          {% include 'blocks/selector/proteins.html' %}
-        {% else %}
+        {% if dataset.modality == "rna" %}
           {% include 'blocks/selector/genes.html' %}
+        {% elif dataset.modality == "prot" %}
+          {% include 'blocks/selector/proteins.html' %}
+        {% elif dataset.modality == "muon" %}
+          {% include 'blocks/selector/muon.html' %}
+        {% elif dataset.modality == "combined" %}
+          {% include 'blocks/selector/combined.html' %}
         {% endif %}
-      {% endblock %}
+    {% endblock %}
     </div>
   </div>
 {% endblock %}

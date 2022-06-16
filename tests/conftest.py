@@ -19,7 +19,7 @@ def app():
     app = create_app({
         "TESTING": True, 
         "SQLALCHEMY_DATABASE_URI": "sqlite:///" + db_path,
-        "DATA_PATH": "./test/data/"
+        "DATA_PATH": "./test/data"
         })
     
     # create the database and load test data

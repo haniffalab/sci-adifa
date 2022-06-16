@@ -1,5 +1,9 @@
+*********
 Pipelines
-=========
+*********
+
+Github Actions Workflows
+========================
 
 Testing
 -------
