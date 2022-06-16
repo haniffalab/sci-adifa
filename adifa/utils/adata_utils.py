@@ -18,6 +18,8 @@ def mod_name(mod):
 		return "RNA"
 	if mod == "prot":
 		return "Protein"
+	if mod == "muon":
+		return "Muon"
 	#atac-seq
 	else:
 		return mod
@@ -49,7 +51,10 @@ def get_annotations(adata):
 
 	# remove unwanted obsm arrays
 	if isinstance(adata, mu.MuData):
-		annotations['obsm'] = [ value for value in adata.obsm if value not in adata.mod.keys()]
+		annotations['obsm'] = [ value for value in adata.obsm if value not in adata.mod.keys() ]
+		for mod in adata.mod.keys():
+			annotations['obsm'].extend([ mod + ":" + value for value in adata[mod].obsm ])
+
 	else:
 		annotations['obsm'] = [ value for value in adata.obsm ]
 
@@ -75,11 +80,22 @@ def get_bounds(datasetId, obsm):
 	except exc.SQLAlchemyError as e:
 		raise DatabaseOperationError
 
+	parts = obsm.split(":")
+	if len(parts) > 1:
+		modality = parts[0]
+		obsm = parts[1]
+	else:
+		modality = False
+
 	try:
-		if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
+		if dataset.filename.endswith(".h5ad"):
 			adata = current_app.adata[dataset.filename]
-		elif dataset.filename.endswith(".h5mu"):
+		elif dataset.filename.endswith(".h5mu") and dataset.modality != 'muon':
 			adata = current_app.adata[dataset.filename][dataset.modality]
+		elif dataset.filename.endswith(".h5mu") and modality:
+			adata = current_app.adata[dataset.filename][modality]
+		elif dataset.filename.endswith(".h5mu"):
+			adata = current_app.adata[dataset.filename]
 	except (ValueError, AttributeError) as e:
 		raise DatasetNotExistsError
 
@@ -109,11 +125,22 @@ def get_coordinates(datasetId, obsm):
 	except exc.SQLAlchemyError as e:
 		raise DatabaseOperationError
 
+	parts = obsm.split(":")
+	if len(parts) > 1:
+		modality = parts[0]
+		obsm = parts[1]
+	else:
+		modality = False
+
 	try:
-		if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
+		if dataset.filename.endswith(".h5ad"):
 			adata = current_app.adata[dataset.filename]
-		elif dataset.filename.endswith(".h5mu"):
+		elif dataset.filename.endswith(".h5mu") and dataset.modality != 'muon':
 			adata = current_app.adata[dataset.filename][dataset.modality]
+		elif dataset.filename.endswith(".h5mu") and modality:
+			adata = current_app.adata[dataset.filename][modality]
+		elif dataset.filename.endswith(".h5mu"):
+			adata = current_app.adata[dataset.filename]
 	except (ValueError, AttributeError) as e:
 		raise DatasetNotExistsError
 
@@ -132,10 +159,12 @@ def get_labels(datasetId, feature="", obs="", modality=""):
 	dataset = models.Dataset.query.get(datasetId)
 	if dataset.filename.endswith(".h5ad"):
 		adata = current_app.adata[dataset.filename]
-	if dataset.filename.endswith(".h5mu") and dataset.modality=='muon':
-		adata = current_app.adata[dataset.filename][modality]
-	elif dataset.filename.endswith(".h5mu"):
+	elif dataset.filename.endswith(".h5mu") and dataset.modality != 'muon':
 		adata = current_app.adata[dataset.filename][dataset.modality]
+	elif dataset.filename.endswith(".h5mu") and feature:
+		adata = current_app.adata[dataset.filename][modality]
+	elif dataset.filename.endswith(".h5mu") and obs:
+		adata = current_app.adata[dataset.filename]
 
 	if (feature):
 		try:

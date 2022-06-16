@@ -86,6 +86,7 @@ def auto_discover():
         else:
             continue           
 
+    return 5
 
 def load_files():
     # load data files and populate database
