@@ -5,6 +5,7 @@ import hashlib
 from flask import current_app
 from scipy.sparse import find
 from sqlalchemy import exc
+import muon as mu
 import scanpy as sc
 import numpy as np
 
@@ -22,7 +23,7 @@ def mod_name(mod):
 		return mod
 
 def get_annotations(adata):
-	annotations = {'obs': [], 'obsm': {}}
+	annotations = {'obs': {}, 'obsm': {}}
 	
 	switcher = {
 		'category': type_category,
@@ -38,14 +39,19 @@ def get_annotations(adata):
 		# Get the function from switcher dictionary
 		func = switcher.get(dtype, type_discrete)
 		# Define a safe key 
-		key = re.sub(r'[^a-zA-Z0-9]', '', name).lower()
+		key = hashlib.md5(name.encode('utf-8')).hexdigest()
+		# Define obs
 		obs = func(adata.obs[name])
 		obs['name'] = name
-		obs['id'] = hashlib.md5(name.encode('utf-8')).hexdigest()
+		obs['id'] = key
 		obs['group'] = name.split(':')[0] if len(name.split(':')) > 1 else 'default'
-		annotations['obs'].append(obs)
-		
-	annotations['obsm'] = [ value for value in adata.obsm ]
+		annotations['obs'][key] = obs
+
+	# remove unwanted obsm arrays
+	if isinstance(adata, mu.MuData):
+		annotations['obsm'] = [ value for value in adata.obsm if value not in adata.mod.keys()]
+	else:
+		annotations['obsm'] = [ value for value in adata.obsm ]
 
 	return annotations
 
@@ -122,19 +128,20 @@ def get_coordinates(datasetId, obsm):
 
 	return output
 
-def get_labels(datasetId, obsm, gene="", obs=""):
+def get_labels(datasetId, feature="", obs="", modality=""):
 	dataset = models.Dataset.query.get(datasetId)
-	if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
+	if dataset.filename.endswith(".h5ad"):
 		adata = current_app.adata[dataset.filename]
+	if dataset.filename.endswith(".h5mu") and dataset.modality=='muon':
+		adata = current_app.adata[dataset.filename][modality]
 	elif dataset.filename.endswith(".h5mu"):
-		adata = current_app.adata[dataset.filename][dataset.modality]	#adata = current_app.adata
-	#adata = sc.read(current_app.config.get('DATA_PATH') + 'covid_portal.h5ad')      
+		adata = current_app.adata[dataset.filename][dataset.modality]
 
-	if (gene):
+	if (feature):
 		try:
 			output = [0] * len(adata.obs.index)
-			#expression = adata[:,gene].X/max(1,adata[:,gene].X.max())
-			expression = adata[:,gene].X
+			#expression = adata[:,feature].X/max(1,adata[:,feature].X.max())
+			expression = adata[:,feature].X
 			(x,y,v) = find(expression)
 			for index, i in enumerate(x):
 				output[i] = str(round(v[index], 4))	
@@ -158,12 +165,15 @@ def get_labels(datasetId, obsm, gene="", obs=""):
 
 	return output
 
-def search_genes(datasetId, searchterm):
+def search_features(datasetId, searchterm, modality):
 	dataset = models.Dataset.query.get(datasetId)
-	if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
+	if dataset.filename.endswith(".h5ad"):
 		adata = current_app.adata[dataset.filename]
+	if dataset.filename.endswith(".h5mu") and dataset.modality=='muon':
+		adata = current_app.adata[dataset.filename][modality]
 	elif dataset.filename.endswith(".h5mu"):
-		adata = current_app.adata[dataset.filename][dataset.modality]	#adata = current_app.adata
+		adata = current_app.adata[dataset.filename][dataset.modality]
+		
 	output = [g for g in adata.var_names if searchterm.lower() in g.lower()]
 
 	return output

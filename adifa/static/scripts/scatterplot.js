@@ -211,17 +211,16 @@
             }
 
             if (colorScaleType == 'categorical') {
-                arr = active.dataset['data_obs'][colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()]['values']
+                arr = active.dataset['data_obs'][colorScaleId]['values']
                 var catColors = d3.scaleOrdinal().domain($.map(arr, (v, k) => v)).range(["#2f4f4f", "#2e8b57", "#7f0000", "#808000", "#483d8b", "#008000", "#000080", "#8b008b", "#b03060", "#ff0000", "#00ced1", "#ff8c00", "#ffff00", "#00ff00", "#8a2be2", "#00ff7f", "#dc143c", "#00bfff", "#f4a460", "#0000ff", "#f08080", "#adff2f", "#d8bfd8", "#ff00ff", "#1e90ff", "#90ee90", "#ff1493", "#7b68ee", "#ee82ee", "#ffdab9"]);
                 var checkboxCheck = new Object();
                 for (var k in arr) {
                     if (arr.hasOwnProperty(k)) {
-                        //console.log(obs.replace(/[^a-zA-Z0-9]/g, '') + '-' + k)
-                        document.getElementById(colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + '-' + k).style.backgroundColor = catColors(arr[k]);
-                        checkboxCheck[arr[k]] = $('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + arr[k] + '"]').is(':checked')
+                        document.getElementById(colorScaleId + '-' + k).style.backgroundColor = catColors(arr[k]);
+                        checkboxCheck[arr[k]] = $('#obs-list-' + colorScaleId + ' input[name="obs-' + arr[k] + '"]').is(':checked')
                     }
                 }
-      
+
                 var myColor = function(d) { // Public Method
                     //console.log('#obs-' + d);
                     if (checkboxCheck[d]) {
@@ -244,8 +243,8 @@
             } else if (colorScaleType == 'continuous') {
                 // console.log(colorScaleType);
                 // console.log(active.dataset);
-                arr = active.dataset['data_obs'][colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()]['values']
-                var myColor = d3.scaleSequential().domain([active.dataset['data_obs'][colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()]['min'], active.dataset['data_obs'][colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()]['max']]).interpolator(d3.interpolateViridis);
+                arr = active.dataset['data_obs'][colorScaleId]['values']
+                var myColor = d3.scaleSequential().domain([active.dataset['data_obs'][colorScaleId]['min'], active.dataset['data_obs'][colorScaleId]['max']]).interpolator(d3.interpolateViridis);
                 $( "#continuous-legend" ).empty();
                 createLegend(myColor);
       
@@ -711,14 +710,14 @@
             loadData();
         }
         $('.select2-gene-search').select2({
-            placeholder: "Search by name",
             //closeOnSelect: false,
             sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
             ajax: {
-                url: API_SERVER + "api/v1/datasets/" + datasetId + "/search/genes",
+                url: API_SERVER + "api/v1/datasets/" + datasetId + "/search/features",
                 data: function (params) {
                 var query = {
                     search: params.term,
+                    modality: 'rna',
                     type: 'public'
                 }
 
@@ -767,6 +766,34 @@
                 );
             });
         });
+        $('.select2-protein-search').select2({
+            //closeOnSelect: false,
+            sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
+            ajax: {
+                url: API_SERVER + "api/v1/datasets/" + datasetId + "/search/features",
+                data: function (params) {
+                var query = {
+                    search: params.term,
+                    modality: 'prot',
+                    type: 'public'
+                }
+
+                // Query parameters will be ?search=[term]&type=public
+                return query;
+                }
+            }
+        }).on('select2:select', function (e) {
+            var data = e.params.data;
+            $('#search-protein-selected').append(
+                $('<button/>')
+                .attr("type", "button")
+                .attr("id", "gene-deg-" + data.id)
+                .attr("data-gene", data.id)
+                .addClass("btn-gene-select btn btn-outline-info btn-sm")
+                    .text(data.id)
+            );
+            $("button[data-gene='" + data.id + "']").trigger( "click" );
+        });        
         return this.initialize();
     }
 })(jQuery);

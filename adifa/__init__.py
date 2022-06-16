@@ -113,19 +113,22 @@ def create_app(test_config=None):
     @click.command("init-db")
     @with_appcontext
     def init_db_command():
-        """Clear existing data and create new tables."""
+        click.echo(click.style("Starting...", fg="green"))
         db.create_all()
-        click.echo("Initialized the database.")
+        click.echo(click.style("Initialized the database", fg="blue"))
+        click.echo(click.style("Finished...", fg="green"))
 
     @click.command("autodiscover")
     @with_appcontext
     def autodiscover_command():
-        click.echo("############")
-        click.echo("Discovering AnnData (.h5ad) and MuData (.h5mu) objects in " + app.config.get('DATA_PATH'))
-        click.echo("############")
+        click.echo(click.style("Starting...", fg="green"))
+        click.echo(click.style("Looking for AnnData (.h5ad) and MuData (.h5mu) objects in " + app.config.get('DATA_PATH'), fg="blue"))
+        import warnings
+        warnings.filterwarnings('ignore')
         from .utils import dataset_utils
         dataset_utils.auto_discover()
-        click.echo("Discovered Datasets.")
+        click.echo(click.style("Successfully discovered datasets", fg="blue"))
+        click.echo(click.style("Finished...", fg="green"))
 
     app.cli.add_command(init_db_command)
     app.cli.add_command(autodiscover_command)

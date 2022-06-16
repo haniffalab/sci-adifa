@@ -1,16 +1,16 @@
 {% macro menu(dataset, obs, type) %}
-{%for group, obs in obs.items()%}
+{% for group, obs in obs.items() %}
 <h6 class="main-sidebar__nav-title">Observations {{ group }}</h6>
 <ul class="nav flex-column">
   <div id="obs-accordion">
     <div class="list-group list-group-flush">                                                              
-      {% for ob in obs %}
+      {% for uid, ob in obs.items() %}
         <div class="list-group-item justify-content-between align-items-center" data-toggle="collapse" data-target="#collapse{{ ob.id }}" aria-controls="collapse{{ ob.id }}">
           <h4>
             <i class="fa fa-plus-square"></i>&nbsp;&nbsp;{{ ob.name }}
           </h4>
         </div>
-        <div id="collapse{{ ob.id }}" class="collapse m-4 obs-values" aria-labelledby="heading{{ ob.id }}" data-parent="#obs-accordion" data-name="{{ ob.name }}" data-id="{{ ob.id }}" data-type="{{ ob.type }}">
+        <div id="collapse{{ ob.id }}" class="collapse m-4 obs-values" data-parent="#obs-accordion" data-name="{{ ob.name }}" data-id="{{ ob.id }}" data-type="{{ ob.type }}">
           {% if ob.type == "categorical" %}
             {% if ob.is_truncated %}
               <div class="alert alert-warning" role="alert">
@@ -25,15 +25,15 @@
             <div class="list-group list-group-flush">
             {% for key, value in ob['values'].items()|sort(attribute=1) %}
               <div class="list-group-item p-1">
-                <div id="obs-list-{{ob}}" class="row">
+                <div id="obs-list-{{ ob.id }}" class="row">
                   <div class="col-9">
-                    <label class="label-checkbox">{{ob.values[key]}}
+                    <label class="label-checkbox">{{ value }}
                       <input class="obs_value_cb" id="obs-{{ ob.id }}-value-{{key}}" type="checkbox" name="obs-{{value}}" value="{{value}}" checked="checked">
                       <span class="checkmark"></span>
                     </label>    
                   </div>
                   <div class="col-3">
-                    <div id="{{ob}}-{{key}}" class="legend-box-color"></div>
+                    <div id="{{ ob.id }}-{{ key }}" class="legend-box-color"></div>
                   </div>
                 </div>
               </div>
@@ -91,5 +91,5 @@
     </div>  
   </div>           
 </ul>
-{%endfor%}
+{% endfor %}
 {% endmacro %}
