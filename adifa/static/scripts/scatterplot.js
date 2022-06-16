@@ -109,12 +109,14 @@
                     if (colorScaleKey) {               
                         if (colorScaleType === 'gene'){               
                             var url = API_SERVER + "api/v1/labels?gene=" + colorScaleKey + "&datasetId=" + datasetId;                
+                        } else if (colorScaleType === 'prot'){               
+                            var url = API_SERVER + "api/v1/labels?gene=" + colorScaleKey + "&datasetId=" + datasetId + "&modality=prot";                
                         } else {
                             var url = API_SERVER + "api/v1/labels?obs=" + colorScaleKey + "&datasetId=" + datasetId;                
                         }
                         var requestLabels = doAjax(url, false)
                         if (requestLabels.status === 200) {
-                            if (colorScaleType === 'gene'){  
+                            if (colorScaleType === 'gene' || colorScaleType === 'prot'){  
                                 active.min = 0;
                                 active.max = getMax(requestLabels.responseJSON);
                             }                            
@@ -251,7 +253,7 @@
                 function myRadius(x) {
                     return 100
                 }
-            } else if (colorScaleType == 'gene') {
+            } else if (colorScaleType == 'gene' || colorScaleType == 'prot') {
                 var myColor = d3.scaleSequential().domain([active.min, active.max]).interpolator(d3.interpolateViridis);
                 $( "#continuous-legend" ).empty();
                 createLegend(myColor);
@@ -568,13 +570,19 @@
                 var colorScaleType = Cookies.get('ds' + datasetId + '-obs-type') // @TODO 
                 // populate embedding options
                 $.each(d1.data_obsm, function(key, obsm) {
+                    const parts = obsm.split(":");
+                    if (parts.length > 1) {
+                        html = parts[1] + ' <span class="badge badge-secondary">' + parts[0] + '</span>'
+                    } else {
+                        html = obsm
+                    } 
                     $('#canvas-obsm-dropdown').append(
                         $('<a/>')
                             .attr("id", "canvas-obsm-key-" + obsm)
                             .attr("href", "#")
                             .attr("data-name", obsm)
                             .addClass("dropdown-item canvas-obsm-key")
-                            .text(obsm))
+                            .html(html))
                 });                
                 // process embedding option
                 if(jQuery.inArray("X_umap", active.dataset.data_obsm) !== -1) {
@@ -632,11 +640,16 @@
             } else {
                 $(".colourise").removeClass('active');
                 $(".btn-gene-select").removeClass("active");
-
+           
                 if (el.id === 'genes'){
                     var colorScaleKey = el.selectedItems[0];
                     var colorScaleId = 0;
-                    var colorScaleType = 'gene';                
+                    var colorScaleType = 'gene'; 
+                } else if ($(el).data('modality') === 'prot') {
+                    var colorScaleKey = $(el).text();
+                    var colorScaleId = 0;
+                    var colorScaleType = 'prot';  
+                    $(el).addClass('active');                                        
                 } else if ($(el).hasClass('btn-gene-select')) {
                     var colorScaleKey = $(el).text();
                     var colorScaleId = 0;
@@ -732,6 +745,7 @@
                 .attr("type", "button")
                 .attr("id", "gene-deg-" + data.id)
                 .attr("data-gene", data.id)
+                .attr("data-modality", "rna")
                 .addClass("btn-gene-select btn btn-outline-info btn-sm")
                     .text(data.id)
             );
@@ -789,6 +803,7 @@
                 .attr("type", "button")
                 .attr("id", "gene-deg-" + data.id)
                 .attr("data-gene", data.id)
+                .attr("data-modality", "prot")
                 .addClass("btn-gene-select btn btn-outline-info btn-sm")
                     .text(data.id)
             );

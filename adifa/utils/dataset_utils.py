@@ -87,6 +87,7 @@ def auto_discover():
         else:
             continue           
 
+    return 5
 
 
 def load_files():

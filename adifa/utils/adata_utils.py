@@ -18,47 +18,51 @@ from adifa.resources.errors import (
 
 @current_app.template_filter('modality')
 def mod_name(mod):
-    if mod == "rna":
-        return "RNA"
-    if mod == "prot":
-        return "Protein"
-    #atac-seq
-    else:
-        return mod
+	if mod == "rna":
+		return "RNA"
+	if mod == "prot":
+		return "Protein"
+	if mod == "muon":
+		return "Muon"
+	#atac-seq
+	else:
+		return mod
 
 def get_annotations(adata):
-    annotations = {'obs': {}, 'obsm': {}}
-        
-    switcher = {
-        'category': type_category,
-        'bool': type_bool,
-        'int': type_numeric,
-        'float': type_numeric,
-        'complex': type_numeric,
-    }
+	annotations = {'obs': {}, 'obsm': {}}
+	
+	switcher = {
+		'category': type_category,
+		'bool': type_bool,
+		'int': type_numeric,
+		'float': type_numeric,
+		'complex': type_numeric,
+	}
 
-    for name in adata.obs:
-        # Map numpy dtype to a simple type for switching
-        dtype = re.sub(r'[^a-zA-Z]', '', adata.obs[name].dtype.name)
-        # Get the function from switcher dictionary
-        func = switcher.get(dtype, type_discrete)
-        # Define a safe key 
-        key = hashlib.md5(name.encode('utf-8')).hexdigest()
-        # Define obs
-        obs = func(adata.obs[name])
-        obs['name'] = name
-        obs['id'] = key
-        obs['group'] = name.split(':')[0] if len(name.split(':')) > 1 else 'default'
-        annotations['obs'][key] = obs
+	for name in adata.obs:
+		# Map numpy dtype to a simple type for switching
+		dtype = re.sub(r'[^a-zA-Z]', '', adata.obs[name].dtype.name)
+		# Get the function from switcher dictionary
+		func = switcher.get(dtype, type_discrete)
+		# Define a safe key 
+		key = hashlib.md5(name.encode('utf-8')).hexdigest()
+		# Define obs
+		obs = func(adata.obs[name])
+		obs['name'] = name
+		obs['id'] = key
+		obs['group'] = name.split(':')[0] if len(name.split(':')) > 1 else 'default'
+		annotations['obs'][key] = obs
 
-    # remove unwanted obsm arrays
-    if isinstance(adata, mu.MuData):
-        annotations['obsm'] = [ value for value in adata.obsm if value not in adata.mod.keys()]
-    else:
-        annotations['obsm'] = [ value for value in adata.obsm ]
+	# remove unwanted obsm arrays
+	if isinstance(adata, mu.MuData):
+		annotations['obsm'] = [ value for value in adata.obsm if value not in adata.mod.keys() ]
+		for mod in adata.mod.keys():
+			annotations['obsm'].extend([ mod + ":" + value for value in adata[mod].obsm ])
 
-    return annotations
+	else:
+		annotations['obsm'] = [ value for value in adata.obsm ]
 
+	return annotations
 
 def get_degs(adata):
     try:
@@ -77,105 +81,127 @@ def get_degs(adata):
 
 
 def get_bounds(datasetId, obsm):
-    if not datasetId > 0 :
-        raise InvalidDatasetIdError
+	if not datasetId > 0 :
+		raise InvalidDatasetIdError
 
-    try:
-        dataset = models.Dataset.query.get(datasetId)
-    except exc.SQLAlchemyError as e:
-        raise DatabaseOperationError
+	try:
+		dataset = models.Dataset.query.get(datasetId)
+	except exc.SQLAlchemyError as e:
+		raise DatabaseOperationError
 
-    try:
-        if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
-            adata = current_app.adata[dataset.filename]
-        elif dataset.filename.endswith(".h5mu"):
-            adata = current_app.adata[dataset.filename][dataset.modality]
-    except (ValueError, AttributeError) as e:
-        raise DatasetNotExistsError
+	parts = obsm.split(":")
+	if len(parts) > 1:
+		modality = parts[0]
+		obsm = parts[1]
+	else:
+		modality = False
 
-    # Normalised [-1,1] @TODO
-    adata.obsm[obsm] = 2.*(adata.obsm[obsm] - np.min(adata.obsm[obsm]))/np.ptp(adata.obsm[obsm])-1
+	try:
+		if dataset.filename.endswith(".h5ad"):
+			adata = current_app.adata[dataset.filename]
+		elif dataset.filename.endswith(".h5mu") and dataset.modality != 'muon':
+			adata = current_app.adata[dataset.filename][dataset.modality]
+		elif dataset.filename.endswith(".h5mu") and modality:
+			adata = current_app.adata[dataset.filename][modality]
+		elif dataset.filename.endswith(".h5mu"):
+			adata = current_app.adata[dataset.filename]
+	except (ValueError, AttributeError) as e:
+		raise DatasetNotExistsError
 
-    # Embedded coordinate bounds
-    output = {
-        'x': {
-            'min': adata.obsm[obsm][:,0].min().item(),
-            'max': adata.obsm[obsm][:,0].max().item()
-        },
-        'y': {
-            'min': adata.obsm[obsm][:,1].min().item(),
-            'max': adata.obsm[obsm][:,1].max().item()
-        }
-    }
+	# Normalised [-1,1] @TODO
+	adata.obsm[obsm] = 2.*(adata.obsm[obsm] - np.min(adata.obsm[obsm]))/np.ptp(adata.obsm[obsm])-1
 
-    return output
+	# Embedded coordinate bounds
+	output = {
+		'x': {
+			'min': adata.obsm[obsm][:,0].min().item(),
+			'max': adata.obsm[obsm][:,0].max().item()
+		},
+		'y': {
+			'min': adata.obsm[obsm][:,1].min().item(),
+			'max': adata.obsm[obsm][:,1].max().item()
+		}
+	}
+
+	return output
 
 def get_coordinates(datasetId, obsm):
-    if not datasetId > 0:
-        raise InvalidDatasetIdError
+	if not datasetId > 0 :
+		raise InvalidDatasetIdError
 
-    try:
-        dataset = models.Dataset.query.get(datasetId)
-    except exc.SQLAlchemyError as e:
-        raise DatabaseOperationError
+	try:
+		dataset = models.Dataset.query.get(datasetId)
+	except exc.SQLAlchemyError as e:
+		raise DatabaseOperationError
 
-    try:
-        if dataset.filename.endswith(".h5ad") or dataset.modality=='multimodal':
-            adata = current_app.adata[dataset.filename]
-        elif dataset.filename.endswith(".h5mu"):
-            adata = current_app.adata[dataset.filename][dataset.modality]
-    except (ValueError, AttributeError) as e:
-        raise DatasetNotExistsError
+	parts = obsm.split(":")
+	if len(parts) > 1:
+		modality = parts[0]
+		obsm = parts[1]
+	else:
+		modality = False
 
-    try:
-        adata = current_app.adata[(dataset.filename, dataset.modality)]     
-    except (ValueError, AttributeError) as e:
-        raise DatasetNotExistsError
+	try:
+		if dataset.filename.endswith(".h5ad"):
+			adata = current_app.adata[dataset.filename]
+		elif dataset.filename.endswith(".h5mu") and dataset.modality != 'muon':
+			adata = current_app.adata[dataset.filename][dataset.modality]
+		elif dataset.filename.endswith(".h5mu") and modality:
+			adata = current_app.adata[dataset.filename][modality]
+		elif dataset.filename.endswith(".h5mu"):
+			adata = current_app.adata[dataset.filename]
+	except (ValueError, AttributeError) as e:
+		raise DatasetNotExistsError
 
-    # True resolution sample generation
-    output = []
-    for x in adata.obsm[obsm]:
-        # output.append(x[:2].tolist())
-        output.append([round(num, 4) for num in x[:2].tolist()])
+	# Normalised [-1,1] @TODO
+	adata.obsm[obsm] = 2.*(adata.obsm[obsm] - np.min(adata.obsm[obsm]))/np.ptp(adata.obsm[obsm])-1
 
-    return output
+	# True resolution sample generation
+	output = []
+	for x in adata.obsm[obsm]:
+		#output.append(x[:2].tolist())
+		output.append([round(num, 4) for num in x[:2].tolist()])
+
+	return output
 
 def get_labels(datasetId, feature="", obs="", modality=""):
-    dataset = models.Dataset.query.get(datasetId)
-    if dataset.filename.endswith(".h5ad"):
-        adata = current_app.adata[dataset.filename]
-    if dataset.filename.endswith(".h5mu") and dataset.modality=='muon':
-        adata = current_app.adata[dataset.filename][modality]
-    elif dataset.filename.endswith(".h5mu"):
-        adata = current_app.adata[dataset.filename][dataset.modality]
+	dataset = models.Dataset.query.get(datasetId)
+	if dataset.filename.endswith(".h5ad"):
+		adata = current_app.adata[dataset.filename]
+	elif dataset.filename.endswith(".h5mu") and dataset.modality != 'muon':
+		adata = current_app.adata[dataset.filename][dataset.modality]
+	elif dataset.filename.endswith(".h5mu") and feature:
+		adata = current_app.adata[dataset.filename][modality]
+	elif dataset.filename.endswith(".h5mu") and obs:
+		adata = current_app.adata[dataset.filename]
 
-    if (feature):
-        try:
-            output = [0] * len(adata.obs.index)
-            #expression = adata[:,feature].X/max(1,adata[:,feature].X.max())
-            expression = adata[:,feature].X
-            (x,y,v) = find(expression)
-            for index, i in enumerate(x):
-                output[i] = str(round(v[index], 4)) 
-        except KeyError:
-            # @todo HANDLE ERROR
-            output = [0] * len(adata.obs.index)
-        except IndexError:
-            # @todo HANDLE ERROR
-            output = [0] * len(adata.obs.index)
-    elif (obs):
-        output = []
-        for index, x in enumerate(adata.obs.index):
-            try:    
-                output.append(str(adata.obs[obs][index]))
-            except KeyError:
-                # @todo HANDLE ERROR
-                output.append(0)
-            except IndexError:
-                # @todo HANDLE ERROR
-                output.append(0)
+	if (feature):
+		try:
+			output = [0] * len(adata.obs.index)
+			#expression = adata[:,feature].X/max(1,adata[:,feature].X.max())
+			expression = adata[:,feature].X
+			(x,y,v) = find(expression)
+			for index, i in enumerate(x):
+				output[i] = str(round(v[index], 4))	
+		except KeyError:
+			# @todo HANDLE ERROR
+			output = [0] * len(adata.obs.index)
+		except IndexError:
+			# @todo HANDLE ERROR
+			output = [0] * len(adata.obs.index)
+	elif (obs):
+		output = []
+		for index, x in enumerate(adata.obs.index):
+			try:	
+				output.append(str(adata.obs[obs][index]))
+			except KeyError:
+				# @todo HANDLE ERROR
+				output.append(0)
+			except IndexError:
+				# @todo HANDLE ERROR
+				output.append(0)
 
-    return output
+	return output
 
 def search_features(datasetId, searchterm, modality):
     dataset = models.Dataset.query.get(datasetId)

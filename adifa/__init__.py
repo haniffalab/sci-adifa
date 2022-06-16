@@ -146,9 +146,8 @@ def create_app(test_config=None):
         import warnings
         warnings.filterwarnings('ignore')
         from .utils import dataset_utils
-
-        dataset_utils.auto_discover()
-        click.echo(click.style("Successfully discovered datasets", fg="blue"))
+        count = dataset_utils.auto_discover()
+        click.echo(click.style(f"Successfully discovered {count} datasets", fg="blue"))
         click.echo(click.style("Finished...", fg="green"))
 
     app.cli.add_command(init_db_command)
