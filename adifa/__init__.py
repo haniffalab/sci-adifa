@@ -2,6 +2,8 @@ import os
 import sys
 
 import click
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
 from flask import Flask, render_template, redirect
 from flask_sqlalchemy import SQLAlchemy, inspect
 from flask.cli import with_appcontext
@@ -64,6 +66,17 @@ def create_app(test_config=None):
                 dbn=os.environ.get("SQLALCHEMY_GCP_DB_NAME"),
                 con=os.environ.get("SQLALCHEMY_GCP_CONNECTION"),
             )
+        )
+    
+    # Sentry
+    if os.environ.get('SENTRY_DSN') is not None:
+        sentry_sdk.init(
+            dsn = os.environ.get('SENTRY_DSN'),
+            integrations = [
+                FlaskIntegration(),
+            ],
+            environment="development",
+            traces_sample_rate = 1.0
         )
 
     # ensure the instance folder exists

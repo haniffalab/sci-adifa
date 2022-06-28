@@ -7,3 +7,4 @@ Flask-SQLAlchemy==2.5.1
 python-dotenv==0.20.0
 #tables==3.6.1 # 3.7 causes DDL error in Windows
 mysqlclient==2.1.0 # required for Azure and Google MySQL support
+sentry_sdk[flask]==1.6.0
