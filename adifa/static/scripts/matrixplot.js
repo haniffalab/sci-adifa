@@ -14,6 +14,7 @@
         var widthParent = $('#' + settings.containerId).parent().width();
         var heightParent = $(window).height() - 116;
         var datasetId = this.attr('data-datasetId');
+        var modality = this.attr('data-modality');
         var xhrPool = [];
         var active = {
             plot: {},
@@ -108,6 +109,10 @@
             }
         }    
         var loadData = function() {
+            if (modality == 'muon') {
+                showError('Select a modality with expression matrix to plot.')
+                return
+            }
             // load cookies  
             if (typeof Cookies.get('ds' + datasetId + '-obs-name') === 'undefined') {
                 showError('Please select a group from the list of observations')
@@ -122,10 +127,10 @@
             if (!markers.length > 0) {
                 showError('Select genes of interest from the sidebar on the right')
                 return
-            } 
+            }
 
             $.when(
-                doAjax(API_SERVER + "api/v1/datasets/" + datasetId + "/plotting/matrixplot?groupby=" + Cookies.get('ds' + datasetId + '-obs-name') + "&" + markersQuery).then(function(data) {
+                doAjax(API_SERVER + "api/v1/datasets/" + datasetId + "/plotting/matrixplot?groupby=" + Cookies.get('ds' + datasetId + '-obs-name') + "&" + markersQuery + "&modality=" + modality).then(function(data) {
                 // update active plot data
                 active.data = data
                 active.dataframe = transform(data.values_df)
@@ -138,6 +143,7 @@
             // load cookies  
             var obsmKey = Cookies.get('ds' + datasetId + '-obsm-key');
             var colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name');
+            var colorScaleId = (typeof Cookies.get('ds' + datasetId + '-obs-id') === 'undefined') ? 0 : Cookies.get('ds' + datasetId + '-obs-id');
             var colorScaleType = Cookies.get('ds' + datasetId + '-obs-type');
             var colorScale = (typeof Cookies.get('d3-scale-chromatic') === 'undefined') ? "Viridis" : Cookies.get('d3-scale-chromatic');
 
@@ -168,12 +174,11 @@
             else {
                 var myGroups = []
                 active.data.categories.forEach(function (item, index) {
-                    if ($('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + item + '"]').is(':checked')) {
+                    if ($('#obs-list-' + colorScaleId + ' input[name="obs-' + item + '"]').is(':checked')) {
                         myGroups.push(item);
                     }
                 });
             }
-                    
 
 
 
@@ -522,16 +527,12 @@
 
             if (el.id === 'genes'){
                 var colorScaleKey = el.selectedItems[0];
-                var colorScaleId = 0;
-                var colorScaleType = 'gene';                
-                    var colorScaleType = 'gene';                
+                var colorScaleId = 0;               
                 var colorScaleType = 'gene';                
             } else if ($(el).hasClass('btn-gene-select')) {
                 var colorScaleKey = $(el).text();
                 var colorScaleId = 0;
-                var colorScaleType = 'gene';  
-                    var colorScaleType = 'gene';  
-                var colorScaleType = 'gene';  
+                var colorScaleType = 'gene';
                 $(el).addClass('active');
             } else {
                 var colorScaleKey = $(el).data('name');
@@ -550,8 +551,6 @@
             })
              
             // get data
-            startLoader()
-                startLoader()  
             startLoader()
             loadData();
         };
@@ -607,6 +606,7 @@
                 data: function (params) {
                 var query = {
                     search: params.term,
+                    modality: 'rna',
                     type: 'public'
                 }
 
@@ -621,6 +621,7 @@
                 .attr("type", "button")
                 .attr("id", "gene-deg-" + data.id)
                 .attr("data-gene", data.id)
+                .attr("data-modality", "rna")
                 .addClass("btn-gene-select btn btn-outline-info btn-sm")
                     .text(data.id)
             );
@@ -649,10 +650,40 @@
                 $('<button/>')
                     .attr("type", "button")
                     .attr("id", "'gene-deg-" + genes[i])
+                    .attr("data-gene", genes[i])
                     .addClass("btn-gene-select btn btn-outline-info btn-sm")
                     .text(genes[i])
                 );
             });
+        });
+        $('.select2-protein-search').select2({
+            //closeOnSelect: false,
+            sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
+            ajax: {
+                url: API_SERVER + "api/v1/datasets/" + datasetId + "/search/features",
+                data: function (params) {
+                var query = {
+                    search: params.term,
+                    modality: 'prot',
+                    type: 'public'
+                }
+
+                // Query parameters will be ?search=[term]&type=public
+                return query;
+                }
+            }
+        }).on('select2:select', function (e) {
+            var data = e.params.data;
+            $('#search-protein-selected').append(
+                $('<button/>')
+                .attr("type", "button")
+                .attr("id", "gene-deg-" + data.id)
+                .attr("data-gene", data.id)
+                .attr("data-modality", "prot")
+                .addClass("btn-gene-select btn btn-outline-info btn-sm")
+                    .text(data.id)
+            );
+            $("button[data-gene='" + data.id + "']").trigger( "click" );
         });
         return this.initialize();
     }

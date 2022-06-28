@@ -10,6 +10,9 @@ class DatabaseOperationError(Exception):
 class InvalidDatasetIdError(Exception):
     pass
 
+class InvalidModalityError(Exception):
+    pass
+
 class DatasetNotExistsError(Exception):
     pass
 
@@ -31,6 +34,10 @@ errors = {
      },
      "InvalidDatasetIdError": {
          "message": "Invalid Dataset ID passed in request",
+         "status": 400
+     },
+     "InvalidModalityError": {
+         "message": "Invalid modality passed in request",
          "status": 400
      },
      "DatasetNotExistsError": {

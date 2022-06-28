@@ -6,12 +6,13 @@ import scanpy as sc
 import pandas as pd
 
 from adifa import models
-from adifa.resources.errors import InvalidDatasetIdError, DatabaseOperationError, DatasetNotExistsError
+from adifa.resources.errors import InvalidDatasetIdError, DatabaseOperationError, DatasetNotExistsError, InvalidModalityError
 
 def get_matrixplot(
-	datasetId, 
+	datasetId,
+	modality,
 	var_names, 
-	groupby, 
+	groupby,
 	use_raw=None, 
 	log=False, 
 	num_categories=7, 
@@ -45,20 +46,25 @@ def get_matrixplot(
 	except exc.SQLAlchemyError as e:
 		raise DatabaseOperationError
 
+	if modality == 'muon':
+		raise InvalidModalityError
 	try:
-		adata = current_app.adata[(dataset.filename, dataset.modality)]
+		if dataset.filename.endswith(".h5ad"):
+			adata = current_app.adata[dataset.filename]
+		elif dataset.filename.endswith(".h5mu"):
+			adata = current_app.adata[dataset.filename][modality]
 	except (ValueError, AttributeError) as e:
 		raise DatasetNotExistsError
 
 	var_intersection = list(set(adata.var.index) & set(var_names))
 
 	plot = sc.pl.matrixplot(adata, var_intersection, groupby, use_raw, log, num_categories, figsize, dendrogram, title, cmap, colorbar_title, gene_symbols, var_group_positions, var_group_labels, var_group_rotation, layer, standard_scale, values_df, swap_axes, show, save, ax, return_fig, vmin, vmax, vcenter, norm)
-
+	
 	if isinstance(plot.categories, pd.IntervalIndex):
 		categories = [ "({}, {}]".format(interval.left, interval.right) for interval in plot.categories.values ]
 	else:
 		categories = list(plot.categories)
-
+	
 	output = {
 		"categories": categories,
 		"var_names": plot.var_names,
