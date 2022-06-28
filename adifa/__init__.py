@@ -60,7 +60,7 @@ def create_app(test_config=None):
             integrations = [
                 FlaskIntegration(),
             ],
-            environment="development",
+            environment=os.environ.get('FLASK_ENV'),
             traces_sample_rate = 1.0
         )
 
