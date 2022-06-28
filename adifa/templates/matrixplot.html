@@ -23,7 +23,7 @@
   <div class="col-lg-9 col-md-12 mb-4">
     {% block visualisation %}
       <div id="matrixplot-alert" class="d-none"></div>
-      <div id="matrixplot-container" data-datasetId="{{ dataset.id }}" class="card card-small"></div>
+      <div id="matrixplot-container" data-datasetId="{{ dataset.id }}" data-modality="{{ dataset.modality }}" class="card card-small"></div>
     {% endblock %}
   </div>
   <div class="col-lg-3 col-md-12">
@@ -32,7 +32,9 @@
         {% include 'blocks/selector/genes.html' %}
       {% elif dataset.modality == "prot" %}
         {% include 'blocks/selector/proteins.html' %}
-      {% else %}
+      {% elif dataset.modality == "muon" %}
+        {% include 'blocks/selector/muon.html' %}
+      {% elif dataset.modality == "combined" %}
         {% include 'blocks/selector/combined.html' %}
       {% endif %}
     {% endblock %}

@@ -89,17 +89,22 @@ def matrixplot(id):
         session["auth_redirect"] = "datasets.matrixplot"
         return redirect(url_for("datasets.password", id=id))
 
-    from collections import OrderedDict
-    from operator import getitem
+    from collections import defaultdict, OrderedDict
+    from operator import getitem 
+    groups = defaultdict(dict)
+    for key, value in dataset.data_obs.items():
+        groups[value['group']][key] = value
 
-    if current_app.config.get("KEEP_OBS_ORDER"):
-        obs = OrderedDict(dataset.data_obs.items())
+    if current_app.config.get('KEEP_OBS_ORDER'):
+        pass
+        # obs = OrderedDict(dataset.data_obs.items())
     else:
-        obs = OrderedDict(sorted(dataset.data_obs.items(), key = lambda x: getitem(x[1], 'name')))
+        for key, value in groups.items():
+            groups[key] = OrderedDict(sorted(value.items(), key = lambda x: getitem(x[1], 'name'))) 
     
     dataset.other_modalities = get_modalities(dataset)
 
-    return render_template('matrixplot.html', dataset=dataset, obs=obs)    
+    return render_template('matrixplot.html', dataset=dataset, obs=groups)    
 
 @bp.route("/dataset/<int:id>/download", methods=["GET"])
 def download(id):
