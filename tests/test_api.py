@@ -1,7 +1,8 @@
 def test_about(client):
     response = client.get("/api/v1/about")
-    assert b"\"name\": \"AdifaAPI\"" in response.data
-    assert b"\"version\": \"1\"" in response.data
+    assert b'"name": "AdifaAPI"' in response.data
+    assert b'"version": "1"' in response.data
+
 
 # def test_bounds(client):
 #     response = client.get("/api/v1/bounds?datasetId=1")

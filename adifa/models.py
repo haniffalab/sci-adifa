@@ -7,15 +7,15 @@ from adifa import db
 
 
 class Dataset(db.Model):
-    __tablename__ = 'datasets'
+    __tablename__ = "datasets"
     id = db.Column(db.Integer, primary_key=True)
     published = db.Column(db.Boolean, default=False, nullable=False)
     filename = db.Column(db.String(120), nullable=False)
     hash = db.Column(db.String(120), unique=True, nullable=False)
     title = db.Column(db.String(120), nullable=False)
     desc = db.Column(db.String(500), nullable=True)
-    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)    
-    date_modified = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)    
+    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    date_modified = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     data_obs = db.Column(db.JSON, default={})
     data_var = db.Column(db.JSON, default={})
     data_uns = db.Column(db.JSON, default={})
@@ -32,17 +32,18 @@ class Dataset(db.Model):
     genes_curated = db.Column(db.JSON, default={})
 
     def __repr__(self):
-        return f"Dataset('{self.filename}')"     
+        return f"Dataset('{self.filename}')"
 
     @property
-    def serialize(self):      
-       """Return object data in easily serializable format"""
-       return {
-           'id'  : self.id,
-           'filename': self.filename,
-           'size': os.path.getsize(os.path.join(current_app.config.get('DATA_PATH'), self.filename)),
-           'data_obs': self.data_obs,
-           'data_obsm': self.data_obsm,
-           'title': self.title,
-       }
-
+    def serialize(self):
+        """Return object data in easily serializable format"""
+        return {
+            "id": self.id,
+            "filename": self.filename,
+            "size": os.path.getsize(
+                os.path.join(current_app.config.get("DATA_PATH"), self.filename)
+            ),
+            "data_obs": self.data_obs,
+            "data_obsm": self.data_obsm,
+            "title": self.title,
+        }

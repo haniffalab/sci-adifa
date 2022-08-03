@@ -11,16 +11,22 @@ from config import Config
 # init globally accessible libraries
 db = SQLAlchemy()
 
+
 def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
-    app = Flask(__name__,
+    app = Flask(
+        __name__,
         instance_relative_config=True,
-        static_url_path='', 
-        static_folder='static',
-        template_folder='templates')
+        static_url_path="",
+        static_folder="static",
+        template_folder="templates",
+    )
 
     from werkzeug.middleware.proxy_fix import ProxyFix
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=0, x_host=0, x_port=0, x_prefix=1)
+
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app, x_for=1, x_proto=0, x_host=0, x_port=0, x_prefix=1
+    )
 
     # load the default config
     app.config.from_object(Config)
@@ -33,21 +39,30 @@ def create_app(test_config=None):
         app.config.update(test_config)
 
     # Microsoft Azure MySQL
-    if os.environ.get('SQLALCHEMY_AZURE_MYSQL_HOST') is not None:
+    if os.environ.get("SQLALCHEMY_AZURE_MYSQL_HOST") is not None:
         app.config.update(
-            SQLALCHEMY_DATABASE_URI = 'mysql://' + os.environ.get('SQLALCHEMY_AZURE_MYSQL_USER') + ':' + os.environ.get('SQLALCHEMY_AZURE_MYSQL_PASS') + '@' + os.environ.get('SQLALCHEMY_AZURE_MYSQL_HOST') + ':3306/' + os.environ.get('SQLALCHEMY_AZURE_MYSQL_DB') + '?ssl_ca=BaltimoreCyberTrustRoot.crt.pem'
+            SQLALCHEMY_DATABASE_URI="mysql://"
+            + os.environ.get("SQLALCHEMY_AZURE_MYSQL_USER")
+            + ":"
+            + os.environ.get("SQLALCHEMY_AZURE_MYSQL_PASS")
+            + "@"
+            + os.environ.get("SQLALCHEMY_AZURE_MYSQL_HOST")
+            + ":3306/"
+            + os.environ.get("SQLALCHEMY_AZURE_MYSQL_DB")
+            + "?ssl_ca=BaltimoreCyberTrustRoot.crt.pem"
         )
 
     # Google Cloud MySQL
-    if os.environ.get('SQLALCHEMY_GCP_HOST') is not None:
+    if os.environ.get("SQLALCHEMY_GCP_HOST") is not None:
         app.config.update(
-            SQLALCHEMY_DATABASE_URI = (
-                'mysql://{usr}:{pas}@{hst}:3306/{dbn}?unix_socket=/cloudsql/{con}').format(
-                usr=os.environ.get('SQLALCHEMY_GCP_USER'),
-                pas=os.environ.get('SQLALCHEMY_GCP_PASS'),
-                hst=os.environ.get('SQLALCHEMY_GCP_HOST'),
-                dbn=os.environ.get('SQLALCHEMY_GCP_DB_NAME'),
-                con=os.environ.get('SQLALCHEMY_GCP_CONNECTION'),
+            SQLALCHEMY_DATABASE_URI=(
+                "mysql://{usr}:{pas}@{hst}:3306/{dbn}?unix_socket=/cloudsql/{con}"
+            ).format(
+                usr=os.environ.get("SQLALCHEMY_GCP_USER"),
+                pas=os.environ.get("SQLALCHEMY_GCP_PASS"),
+                hst=os.environ.get("SQLALCHEMY_GCP_HOST"),
+                dbn=os.environ.get("SQLALCHEMY_GCP_DB_NAME"),
+                con=os.environ.get("SQLALCHEMY_GCP_CONNECTION"),
             )
         )
 
@@ -58,37 +73,36 @@ def create_app(test_config=None):
         pass
 
     # validate data directory
-    directory = os.path.abspath(app.config.get('DATA_PATH'))
-    if (os.path.exists(directory)):
-        app.config.update(
-            DATA_PATH = directory
-        )
+    directory = os.path.abspath(app.config.get("DATA_PATH"))
+    if os.path.exists(directory):
+        app.config.update(DATA_PATH=directory)
     else:
-        app.config.update(
-            DATA_PATH = os.path.abspath('./instance')
-        )
+        app.config.update(DATA_PATH=os.path.abspath("./instance"))
 
     @app.route("/")
     def index():
-        return render_template('index.html')
+        return render_template("index.html")
 
     @app.route("/hello")
     def hello():
         return "Hello, World!"
-        
+
     @app.route("/privacy")
     def privacy():
-        return render_template('privacy.html')
+        return render_template("privacy.html")
 
     db.init_app(app)
 
     # perform setup checks
     with app.app_context():
         # detect if we are running the app
-        command_line = ' '.join(sys.argv)
-        is_running_server = ('flask run' in command_line) or ('gunicorn' in command_line)
+        command_line = " ".join(sys.argv)
+        is_running_server = ("flask run" in command_line) or (
+            "gunicorn" in command_line
+        )
         # detect if dataset table exists
         from .utils import dataset_utils
+
         inspector = inspect(db.engine)
         # load datasets files
         if is_running_server and inspector.has_table("datasets"):
@@ -98,17 +112,23 @@ def create_app(test_config=None):
     def inject_datasets():
         from adifa import models
         from sqlalchemy import asc
-        return {'datasets': models.Dataset.query.filter_by(published=1).order_by(asc(models.Dataset.title)).all()}
+
+        return {
+            "datasets": models.Dataset.query.filter_by(published=1)
+            .order_by(asc(models.Dataset.title))
+            .all()
+        }
 
     # apply the blueprints to the app
-    from adifa import api, datasets 
+    from adifa import api, datasets
 
     app.register_blueprint(datasets.bp)
-    app.register_blueprint(api.bp,
-        url_prefix='{prefix}/v{version}'.format(
-            prefix=app.config['API_PREFIX'],
-            version=app.config['API_VERSION']))
-
+    app.register_blueprint(
+        api.bp,
+        url_prefix="{prefix}/v{version}".format(
+            prefix=app.config["API_PREFIX"], version=app.config["API_VERSION"]
+        ),
+    )
 
     @click.command("init-db")
     @with_appcontext
@@ -121,6 +141,7 @@ def create_app(test_config=None):
     @with_appcontext
     def autodiscover_command():
         from .utils import dataset_utils
+
         dataset_utils.auto_discover()
         click.echo("Discovered Datasets.")
 
