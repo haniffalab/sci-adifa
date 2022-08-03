@@ -1,5 +1,6 @@
 import os
 import hashlib
+import gc
 
 from flask import current_app
 import scanpy as sc
@@ -66,6 +67,8 @@ def auto_discover():
                     current_app.logger.error("Error: " + str(e))
                 else:
                     current_app.logger.info("Reprocessed " + filename)
+            del adata
+            gc.collect()
         else:
             continue
 
