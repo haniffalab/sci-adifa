@@ -174,181 +174,174 @@
                 });
             }
                     
+            var svg = d3.select("#canvas_plot")
+            .append("svg");
 
+            // Build X scales and axis:
+            var y = d3.scaleBand().domain(myGroups);
+            var x = d3.scaleBand().domain(myVars);
 
+            // Build X scales and axis:
+            var yAxis = svg.append("g")
+            .call(d3.axisLeft(y).tickSizeOuter(0));
 
+            // Build X scales and axis:
+            var xAxis = svg.append("g")
+                .call(d3.axisBottom(x).tickSizeOuter(0))
 
+            xAxis.selectAll("text")  
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", "rotate(-65)")
 
-                    var svg = d3.select("#canvas_plot")
-                    .append("svg");
+            // determine max width of text label
+            var mW = 30;
+            yAxis.selectAll(".tick").each(function(d) {
+                var w = this.getBBox().width;
+                if (w > mW) mW = w;
+            });
 
+            var mH = 30;
+            xAxis.selectAll(".tick").each(function(d) {
+                var h = this.getBBox().height;
+                if (h > mH) mH = h;
+                console.log(mH)
+            });
 
+            // set the dimensions and margins of the graph
+            var margin = {top: 0, right: 0, bottom: mH, left: mW},
+            width = (myVars.length * 20),
+            height = (myGroups.length * 20);
 
-                    // Build X scales and axis:
-                    var y = d3.scaleBand().domain(myGroups);
-                    var x = d3.scaleBand().domain(myVars);
+            // append the svg object to the body of the page
+            d3.select("#canvas_plot").selectAll("svg").remove()
 
-                    // Build X scales and axis:
-                    var yAxis = svg.append("g")
-                    .call(d3.axisLeft(y).tickSizeOuter(0));
+            console.log(widthParent)
+            var svg = d3.select("#canvas_plot")
+            .append("svg")
+                .style("position", "relative")
+                //.style("width", width + margin.left + margin.right)
+                .style("width", "100%")
+                .style("display", "block")
+                .style("min-height", height + margin.top + margin.bottom + 130 + "px")
+                .append("g")
+                    .attr("transform",
+                            "translate("+ (widthParent/2 - width/2) +",100)");
 
-                    // Build X scales and axis:
-                    var xAxis = svg.append("g")
-                        .call(d3.axisBottom(x).tickSizeOuter(0))
+            // Build X scales and axis:
+            var x = d3.scaleBand()
+                .range([ 0, width ])
+                .domain(myVars)
+                .padding(0.02);
+            var colLabels = svg.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x).tickSizeOuter(0))
+                .selectAll("text")  
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", "rotate(-65)")
 
-                    xAxis.selectAll("text")  
-                        .style("text-anchor", "end")
-                        .attr("dx", "-.8em")
-                        .attr("dy", ".15em")
-                        .attr("transform", "rotate(-65)")
+            // Build X scales and axis:
+            var y = d3.scaleBand()
+                .range([ height, 0 ])
+                .domain(myGroups)
+                .padding(0.02);
+            var rowLabels = svg.append("g")
+                .call(d3.axisLeft(y).tickSizeOuter(0));
 
-                    // determine max width of text label
-                    var mW = 30;
-                    yAxis.selectAll(".tick").each(function(d) {
-                        var w = this.getBBox().width;
-                        if (w > mW) mW = w;
-                    });
+            // $("#canvas_plot").height(height)
 
-                    var mH = 30;
-                    xAxis.selectAll(".tick").each(function(d) {
-                        var h = this.getBBox().height;
-                        if (h > mH) mH = h;
-                        console.log(mH)
-                    });
+            if (colorScale == "Turbo") {
+                interpolator = d3.interpolateTurbo
+            } else if (colorScale == "Inferno") {
+                interpolator = d3.interpolateInferno
+            } else if (colorScale == "Magma") {
+                interpolator = d3.interpolateMagma
+            } else if (colorScale == "Plasma") {
+                interpolator = d3.interpolatePlasma
+            } else if (colorScale == "Cividis") {
+                interpolator = d3.interpolateCividis
+            } else if (colorScale == "Warm") {
+                interpolator = d3.interpolateWarm
+            } else if (colorScale == "Cool") {
+                interpolator = d3.interpolateCool
+            } else {
+                interpolator = d3.interpolateViridis
+            }
 
-                    // set the dimensions and margins of the graph
-                    var margin = {top: 0, right: 0, bottom: mH, left: mW},
-                    width = (myVars.length * 20),
-                    height = (myGroups.length * 20);
+            // Build color scale
+            var myColor = d3.scaleSequential()
+                .domain([active.data.min_value,active.data.max_value]).interpolator(interpolator);
 
-                    // append the svg object to the body of the page
-                    d3.select("#canvas_plot").selectAll("svg").remove()
-
-                    console.log(widthParent)
-                    var svg = d3.select("#canvas_plot")
-                    .append("svg")
-                        .style("position", "relative")
-                        //.style("width", width + margin.left + margin.right)
-                        .style("width", "100%")
-                        .style("display", "block")
-                        .style("min-height", height + margin.top + margin.bottom + 130)
-                        .append("g")
-                            .attr("transform",
-                                    "translate("+ (widthParent/2 - width/2) +",100)");
-
-                    // Build X scales and axis:
-                    var x = d3.scaleBand()
-                        .range([ 0, width ])
-                        .domain(myVars)
-                        .padding(0.02);
-                    var colLabels = svg.append("g")
-                        .attr("transform", "translate(0," + height + ")")
-                        .call(d3.axisBottom(x).tickSizeOuter(0))
-                        .selectAll("text")  
-                        .style("text-anchor", "end")
-                        .attr("dx", "-.8em")
-                        .attr("dy", ".15em")
-                        .attr("transform", "rotate(-65)")
-
-                    // Build X scales and axis:
-                    var y = d3.scaleBand()
-                        .range([ height, 0 ])
-                        .domain(myGroups)
-                        .padding(0.02);
-                    var rowLabels = svg.append("g")
-                        .call(d3.axisLeft(y).tickSizeOuter(0));
-
-                    if (colorScale == "Turbo") {
-                        interpolator = d3.interpolateTurbo
-                    } else if (colorScale == "Inferno") {
-                        interpolator = d3.interpolateInferno
-                    } else if (colorScale == "Magma") {
-                        interpolator = d3.interpolateMagma
-                    } else if (colorScale == "Plasma") {
-                        interpolator = d3.interpolatePlasma
-                    } else if (colorScale == "Cividis") {
-                        interpolator = d3.interpolateCividis
-                    } else if (colorScale == "Warm") {
-                        interpolator = d3.interpolateWarm
-                    } else if (colorScale == "Cool") {
-                        interpolator = d3.interpolateCool
-                    } else {
-                        interpolator = d3.interpolateViridis
-                    }
-
-                    // Build color scale
-                    var myColor = d3.scaleSequential()
-                        .domain([active.data.min_value,active.data.max_value]).interpolator(interpolator);
-
-                    uid = 0
-                    svg.selectAll()
-                        .data(Object.entries(active.data.values_df), function(d) { return d[1] })
-                        .enter()
-                        .selectAll()
-                        .data(function(d, i) { 
-                            uid++;
-                            var ownProps = Object.keys( d[1] ),
-                            i = ownProps.length,
-                            resArray = new Array(i); // preallocate the Array
-                            while (i--)
-                                resArray[i] = [d[0], ownProps[i], d[1][ownProps[i]]];
-                            return resArray })
-                        .enter()
-                        .append("rect")
-                        .attr("x", function(d) { return x(d[0]) })
-                        .attr("y", function(d) { return y(d[1]) })
-                        .attr("class", function(d, i, j) {
-                            console.log(uid)
-                            return "cell bordered cr" + uid;
-                        })                        
-                        .attr("width", x.bandwidth() )
-                        .attr("height", y.bandwidth() )
-                        .on('mouseover', function(event,d) {
-                            console.log(event)
-                            if (d != null) {
-                                tooltip.html('<div class="heatmap_tooltip">' + d[2] + '</div>');
-                                tooltip.style("visibility", "visible");
-                                tooltip.style("left", (event.offsetX - 44) + "px");
-                                tooltip.style("top", (event.offsetY - 50) + "px");
-                            } else
-                                tooltip.style("visibility", "hidden");
-                        })
-                        .on('mouseout', function(event,d) {
-                            tooltip.style("visibility", "hidden");
-                        });
-                        
-                        createLegend(myColor);
-
-                    // create svg and set up a y scale, the height value doesn't matter
-                    var t = svg.transition().duration(500);
-                    t.selectAll(".cell")
-                        .style("fill", function(d) { return myColor(d[2])} )
-
-
-                    var zoom = d3.zoom()
-                    .scaleExtent([0.5, 8])
-                    .on('zoom', function(event) {
-                        svg.attr('transform', event.transform);
-                    });
+            uid = 0
+            svg.selectAll()
+                .data(Object.entries(active.data.values_df), function(d) { return d[1] })
+                .enter()
+                .selectAll()
+                .data(function(d, i) { 
+                    uid++;
+                    var ownProps = Object.keys( d[1] ),
+                    i = ownProps.length,
+                    resArray = new Array(i); // preallocate the Array
+                    while (i--)
+                        resArray[i] = [d[0], ownProps[i], d[1][ownProps[i]]];
+                    return resArray })
+                .enter()
+                .append("rect")
+                .attr("x", function(d) { return x(d[0]) })
+                .attr("y", function(d) { return y(d[1]) })
+                .attr("class", function(d, i, j) {
+                    console.log(uid)
+                    return "cell bordered cr" + uid;
+                })                        
+                .attr("width", x.bandwidth() )
+                .attr("height", y.bandwidth() )
+                .on('mouseover', function(event,d) {
+                    console.log(event)
+                    if (d != null) {
+                        tooltip.html('<div class="heatmap_tooltip">' + d[2] + '</div>');
+                        tooltip.style("visibility", "visible");
+                        tooltip.style("left", (event.offsetX - 44) + "px");
+                        tooltip.style("top", (event.offsetY - 50) + "px");
+                    } else
+                        tooltip.style("visibility", "hidden");
+                })
+                .on('mouseout', function(event,d) {
+                    tooltip.style("visibility", "hidden");
+                });
                 
-                    
-                    svg.call(zoom);
+                createLegend(myColor);
 
-                    d3.select('#canvas-zoom-plus')
-                    .on('click', function() { 
-                        svg.transition().call(zoom.scaleBy, 2)
-                     });
+            // create svg and set up a y scale, the height value doesn't matter
+            var t = svg.transition().duration(500);
+            t.selectAll(".cell")
+                .style("fill", function(d) { return myColor(d[2])} )
 
-                     d3.select('#canvas-zoom-minus')
-                     .on('click', function() { 
-                         svg.transition().call(zoom.scaleBy, 0.5)
-                      });
+            var zoom = d3.zoom()
+            .scaleExtent([0.5, 8])
+            .on('zoom', function(event) {
+                svg.attr('transform', event.transform);
+            });
+            
+            svg.call(zoom);
 
-                      d3.select('#canvas-zoom-reset')
-                      .on('click', function() { 
-                          svg.transition().call(zoom.scaleBy, 1)
-                       });
-                    endLoader();                  
+            d3.select('#canvas-zoom-plus')
+            .on('click', function() { 
+                svg.transition().call(zoom.scaleBy, 2)
+                });
+
+                d3.select('#canvas-zoom-minus')
+                .on('click', function() { 
+                    svg.transition().call(zoom.scaleBy, 0.5)
+                });
+
+                d3.select('#canvas-zoom-reset')
+                .on('click', function() { 
+                    svg.transition().call(zoom.scaleBy, 1)
+                });
+            endLoader();                  
         }  
         // create continuous color legend
         function createLegend(colorscale) {
@@ -512,7 +505,7 @@
                             .attr("id", "canvas_plot"))
             );
             // get data
-            startLoader()
+            startLoader();
             loadData();
             return this;
         };
@@ -550,8 +543,6 @@
             })
              
             // get data
-            startLoader()
-                startLoader()  
             startLoader()
             loadData();
         };
