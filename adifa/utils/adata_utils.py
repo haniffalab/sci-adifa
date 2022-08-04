@@ -16,53 +16,58 @@ from adifa.resources.errors import (
     DatasetNotExistsError,
 )
 
-@current_app.template_filter('modality')
+
+@current_app.template_filter("modality")
 def mod_name(mod):
-	if mod == "rna":
-		return "RNA"
-	if mod == "prot":
-		return "Protein"
-	if mod == "muon":
-		return "Muon"
-	#atac-seq
-	else:
-		return mod
+    if mod == "rna":
+        return "RNA"
+    if mod == "prot":
+        return "Protein"
+    if mod == "muon":
+        return "Muon"
+    # atac-seq
+    else:
+        return mod
+
 
 def get_annotations(adata):
-	annotations = {'obs': {}, 'obsm': {}}
-	
-	switcher = {
-		'category': type_category,
-		'bool': type_bool,
-		'int': type_numeric,
-		'float': type_numeric,
-		'complex': type_numeric,
-	}
+    annotations = {"obs": {}, "obsm": {}}
 
-	for name in adata.obs:
-		# Map numpy dtype to a simple type for switching
-		dtype = re.sub(r'[^a-zA-Z]', '', adata.obs[name].dtype.name)
-		# Get the function from switcher dictionary
-		func = switcher.get(dtype, type_discrete)
-		# Define a safe key 
-		key = hashlib.md5(name.encode('utf-8')).hexdigest()
-		# Define obs
-		obs = func(adata.obs[name])
-		obs['name'] = name
-		obs['id'] = key
-		obs['group'] = name.split(':')[0] if len(name.split(':')) > 1 else 'default'
-		annotations['obs'][key] = obs
+    switcher = {
+        "category": type_category,
+        "bool": type_bool,
+        "int": type_numeric,
+        "float": type_numeric,
+        "complex": type_numeric,
+    }
 
-	# remove unwanted obsm arrays
-	if isinstance(adata, mu.MuData):
-		annotations['obsm'] = [ value for value in adata.obsm if value not in adata.mod.keys() ]
-		for mod in adata.mod.keys():
-			annotations['obsm'].extend([ mod + ":" + value for value in adata[mod].obsm ])
+    for name in adata.obs:
+        # Map numpy dtype to a simple type for switching
+        dtype = re.sub(r"[^a-zA-Z]", "", adata.obs[name].dtype.name)
+        # Get the function from switcher dictionary
+        func = switcher.get(dtype, type_discrete)
+        # Define a safe key
+        key = hashlib.md5(name.encode("utf-8")).hexdigest()
+        # Define obs
+        obs = func(adata.obs[name])
+        obs["name"] = name
+        obs["id"] = key
+        obs["group"] = name.split(":")[0] if len(name.split(":")) > 1 else "default"
+        annotations["obs"][key] = obs
 
-	else:
-		annotations['obsm'] = [ value for value in adata.obsm ]
+    # remove unwanted obsm arrays
+    if isinstance(adata, mu.MuData):
+        annotations["obsm"] = [
+            value for value in adata.obsm if value not in adata.mod.keys()
+        ]
+        for mod in adata.mod.keys():
+            annotations["obsm"].extend([mod + ":" + value for value in adata[mod].obsm])
 
-	return annotations
+    else:
+        annotations["obsm"] = [value for value in adata.obsm]
+
+    return annotations
+
 
 def get_degs(adata):
     try:
@@ -81,165 +86,176 @@ def get_degs(adata):
 
 
 def get_bounds(datasetId, obsm):
-	if not datasetId > 0 :
-		raise InvalidDatasetIdError
+    if not datasetId > 0:
+        raise InvalidDatasetIdError
 
-	try:
-		dataset = models.Dataset.query.get(datasetId)
-	except exc.SQLAlchemyError as e:
-		raise DatabaseOperationError
+    try:
+        dataset = models.Dataset.query.get(datasetId)
+    except exc.SQLAlchemyError as e:
+        raise DatabaseOperationError
 
-	parts = obsm.split(":")
-	if len(parts) > 1:
-		modality = parts[0]
-		obsm = parts[1]
-	else:
-		modality = False
+    parts = obsm.split(":")
+    if len(parts) > 1:
+        modality = parts[0]
+        obsm = parts[1]
+    else:
+        modality = False
 
-	try:
-		if dataset.filename.endswith(".h5ad"):
-			adata = current_app.adata[dataset.filename]
-		elif dataset.filename.endswith(".h5mu") and dataset.modality != 'muon':
-			adata = current_app.adata[dataset.filename][dataset.modality]
-		elif dataset.filename.endswith(".h5mu") and modality:
-			adata = current_app.adata[dataset.filename][modality]
-		elif dataset.filename.endswith(".h5mu"):
-			adata = current_app.adata[dataset.filename]
-	except (ValueError, AttributeError) as e:
-		raise DatasetNotExistsError
+    try:
+        if dataset.filename.endswith(".h5ad"):
+            adata = current_app.adata[dataset.filename]
+        elif dataset.filename.endswith(".h5mu") and dataset.modality != "muon":
+            adata = current_app.adata[dataset.filename][dataset.modality]
+        elif dataset.filename.endswith(".h5mu") and modality:
+            adata = current_app.adata[dataset.filename][modality]
+        elif dataset.filename.endswith(".h5mu"):
+            adata = current_app.adata[dataset.filename]
+    except (ValueError, AttributeError) as e:
+        raise DatasetNotExistsError
 
-	# Normalised [-1,1] @TODO
-	adata.obsm[obsm] = 2.*(adata.obsm[obsm] - np.min(adata.obsm[obsm]))/np.ptp(adata.obsm[obsm])-1
+    # Normalised [-1,1] @TODO
+    adata.obsm[obsm] = (
+        2.0 * (adata.obsm[obsm] - np.min(adata.obsm[obsm])) / np.ptp(adata.obsm[obsm])
+        - 1
+    )
 
-	# Embedded coordinate bounds
-	output = {
-		'x': {
-			'min': adata.obsm[obsm][:,0].min().item(),
-			'max': adata.obsm[obsm][:,0].max().item()
-		},
-		'y': {
-			'min': adata.obsm[obsm][:,1].min().item(),
-			'max': adata.obsm[obsm][:,1].max().item()
-		}
-	}
+    # Embedded coordinate bounds
+    output = {
+        "x": {
+            "min": adata.obsm[obsm][:, 0].min().item(),
+            "max": adata.obsm[obsm][:, 0].max().item(),
+        },
+        "y": {
+            "min": adata.obsm[obsm][:, 1].min().item(),
+            "max": adata.obsm[obsm][:, 1].max().item(),
+        },
+    }
 
-	return output
+    return output
+
 
 def get_coordinates(datasetId, obsm):
-	if not datasetId > 0 :
-		raise InvalidDatasetIdError
+    if not datasetId > 0:
+        raise InvalidDatasetIdError
 
-	try:
-		dataset = models.Dataset.query.get(datasetId)
-	except exc.SQLAlchemyError as e:
-		raise DatabaseOperationError
+    try:
+        dataset = models.Dataset.query.get(datasetId)
+    except exc.SQLAlchemyError as e:
+        raise DatabaseOperationError
 
-	parts = obsm.split(":")
-	if len(parts) > 1:
-		modality = parts[0]
-		obsm = parts[1]
-	else:
-		modality = False
+    parts = obsm.split(":")
+    if len(parts) > 1:
+        modality = parts[0]
+        obsm = parts[1]
+    else:
+        modality = False
 
-	try:
-		if dataset.filename.endswith(".h5ad"):
-			adata = current_app.adata[dataset.filename]
-		elif dataset.filename.endswith(".h5mu") and dataset.modality != 'muon':
-			adata = current_app.adata[dataset.filename][dataset.modality]
-		elif dataset.filename.endswith(".h5mu") and modality:
-			adata = current_app.adata[dataset.filename][modality]
-		elif dataset.filename.endswith(".h5mu"):
-			adata = current_app.adata[dataset.filename]
-	except (ValueError, AttributeError) as e:
-		raise DatasetNotExistsError
+    try:
+        if dataset.filename.endswith(".h5ad"):
+            adata = current_app.adata[dataset.filename]
+        elif dataset.filename.endswith(".h5mu") and dataset.modality != "muon":
+            adata = current_app.adata[dataset.filename][dataset.modality]
+        elif dataset.filename.endswith(".h5mu") and modality:
+            adata = current_app.adata[dataset.filename][modality]
+        elif dataset.filename.endswith(".h5mu"):
+            adata = current_app.adata[dataset.filename]
+    except (ValueError, AttributeError) as e:
+        raise DatasetNotExistsError
 
-	# Normalised [-1,1] @TODO
-	adata.obsm[obsm] = 2.*(adata.obsm[obsm] - np.min(adata.obsm[obsm]))/np.ptp(adata.obsm[obsm])-1
+    # Normalised [-1,1] @TODO
+    adata.obsm[obsm] = (
+        2.0 * (adata.obsm[obsm] - np.min(adata.obsm[obsm])) / np.ptp(adata.obsm[obsm])
+        - 1
+    )
 
-	# True resolution sample generation
-	output = []
-	for x in adata.obsm[obsm]:
-		#output.append(x[:2].tolist())
-		output.append([round(num, 4) for num in x[:2].tolist()])
+    # True resolution sample generation
+    output = []
+    for x in adata.obsm[obsm]:
+        # output.append(x[:2].tolist())
+        output.append([round(num, 4) for num in x[:2].tolist()])
 
-	return output
+    return output
+
 
 def get_labels(datasetId, feature="", obs="", modality=""):
-	dataset = models.Dataset.query.get(datasetId)
-	if dataset.filename.endswith(".h5ad"):
-		adata = current_app.adata[dataset.filename]
-	elif dataset.filename.endswith(".h5mu") and dataset.modality != 'muon':
-		adata = current_app.adata[dataset.filename][dataset.modality]
-	elif dataset.filename.endswith(".h5mu") and feature:
-		adata = current_app.adata[dataset.filename][modality]
-	elif dataset.filename.endswith(".h5mu") and obs:
-		adata = current_app.adata[dataset.filename]
+    dataset = models.Dataset.query.get(datasetId)
+    if dataset.filename.endswith(".h5ad"):
+        adata = current_app.adata[dataset.filename]
+    elif dataset.filename.endswith(".h5mu") and dataset.modality != "muon":
+        adata = current_app.adata[dataset.filename][dataset.modality]
+    elif dataset.filename.endswith(".h5mu") and feature:
+        adata = current_app.adata[dataset.filename][modality]
+    elif dataset.filename.endswith(".h5mu") and obs:
+        adata = current_app.adata[dataset.filename]
 
-	if (feature):
-		try:
-			output = [0] * len(adata.obs.index)
-			#expression = adata[:,feature].X/max(1,adata[:,feature].X.max())
-			expression = adata[:,feature].X
-			(x,y,v) = find(expression)
-			for index, i in enumerate(x):
-				output[i] = str(round(v[index], 4))	
-		except KeyError:
-			# @todo HANDLE ERROR
-			output = [0] * len(adata.obs.index)
-		except IndexError:
-			# @todo HANDLE ERROR
-			output = [0] * len(adata.obs.index)
-	elif (obs):
-		output = []
-		for index, x in enumerate(adata.obs.index):
-			try:	
-				output.append(str(adata.obs[obs][index]))
-			except KeyError:
-				# @todo HANDLE ERROR
-				output.append(0)
-			except IndexError:
-				# @todo HANDLE ERROR
-				output.append(0)
+    if feature:
+        try:
+            output = [0] * len(adata.obs.index)
+            # expression = adata[:,feature].X/max(1,adata[:,feature].X.max())
+            expression = adata[:, feature].X
+            (x, y, v) = find(expression)
+            for index, i in enumerate(x):
+                output[i] = str(round(v[index], 4))
+        except KeyError:
+            # @todo HANDLE ERROR
+            output = [0] * len(adata.obs.index)
+        except IndexError:
+            # @todo HANDLE ERROR
+            output = [0] * len(adata.obs.index)
+    elif obs:
+        output = []
+        for index, x in enumerate(adata.obs.index):
+            try:
+                output.append(str(adata.obs[obs][index]))
+            except KeyError:
+                # @todo HANDLE ERROR
+                output.append(0)
+            except IndexError:
+                # @todo HANDLE ERROR
+                output.append(0)
 
-	return output
+    return output
+
 
 def search_features(datasetId, searchterm, modality):
     dataset = models.Dataset.query.get(datasetId)
     if dataset.filename.endswith(".h5ad"):
         adata = current_app.adata[dataset.filename]
-    if dataset.filename.endswith(".h5mu") and dataset.modality=='muon':
+    if dataset.filename.endswith(".h5mu") and dataset.modality == "muon":
         adata = current_app.adata[dataset.filename][modality]
     elif dataset.filename.endswith(".h5mu"):
         adata = current_app.adata[dataset.filename][dataset.modality]
-        
+
     output = [g for g in adata.var_names if searchterm.lower() in g.lower()]
 
     return output
 
+
 def gene_search(datasetId, searchterm):
     dataset = models.Dataset.query.get(datasetId)
-    if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
+    if dataset.filename.endswith(".h5ad") or dataset.modality == "muon":
         adata = current_app.adata[dataset.filename]
     elif dataset.filename.endswith(".h5mu"):
-        adata = current_app.adata[dataset.filename][dataset.modality]   #adata = current_app.adata
+        adata = current_app.adata[dataset.filename][
+            dataset.modality
+        ]  # adata = current_app.adata
     genes = [g for g in adata.var_names if searchterm in g]
 
     output = []
     for gene in genes:
-        sample = {
-            "name": gene
-        }
+        sample = {"name": gene}
         output.append(sample)
 
     return output
 
+
 def categorised_expr(datasetId, cat, gene, func="mean"):
     dataset = models.Dataset.query.get(datasetId)
-    if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
+    if dataset.filename.endswith(".h5ad") or dataset.modality == "muon":
         adata = current_app.adata[dataset.filename]
     elif dataset.filename.endswith(".h5mu"):
         adata = current_app.adata[dataset.filename][dataset.modality]
-    data = adata[:,[gene]].to_df()
+    data = adata[:, [gene]].to_df()
     grouping = data.join(adata.obs[cat]).groupby(cat)
 
     # counts = grouping.count()/grouping.count().sum()
@@ -256,12 +272,18 @@ def cat_expr_w_counts(datasetId, cat, gene, func="mean"):
     from numpy import NaN
 
     dataset = models.Dataset.query.get(datasetId)
-    if dataset.filename.endswith(".h5ad") or dataset.modality=='muon':
+    if dataset.filename.endswith(".h5ad") or dataset.modality == "muon":
         adata = current_app.adata[dataset.filename]
     elif dataset.filename.endswith(".h5mu"):
         adata = current_app.adata[dataset.filename][dataset.modality]
-    groupall = adata[:,[gene]].to_df().join(adata.obs[cat]).groupby(cat)
-    groupexpr = adata[:,[gene]].to_df().replace(float(adata[:,[gene]].X.min()), NaN).join(adata.obs[cat]).groupby(cat)
+    groupall = adata[:, [gene]].to_df().join(adata.obs[cat]).groupby(cat)
+    groupexpr = (
+        adata[:, [gene]]
+        .to_df()
+        .replace(float(adata[:, [gene]].X.min()), NaN)
+        .join(adata.obs[cat])
+        .groupby(cat)
+    )
 
     if func == "mean":
         expr = groupexpr.mean()
@@ -296,25 +318,34 @@ def type_category(obs):
     if len(categories) > 100:
         return {
             "type": "categorical",
+            "group": obs.name.split(":")[0]
+            if len(obs.name.split(":")) > 1
+            else "default",
             "is_truncated": True,
             "values": dict(enumerate(categories[:99], 1)),
         }
 
     return {
         "type": "categorical",
+        "group": obs.name.split(":")[0] if len(obs.name.split(":")) > 1 else "default",
         "is_truncated": False,
         "values": dict(enumerate(categories, 1)),
     }
 
 
 def type_bool(obs):
-    return {"type": "categorical", "values": {0: "True", 1: "False"}}
+    return {
+        "type": "categorical",
+        "group": obs.name.split(":")[0] if len(obs.name.split(":")) > 1 else "default",
+        "values": {0: "True", 1: "False"},
+    }
 
 
 def type_numeric(obs):
     accuracy = 4
     return {
         "type": "continuous",
+        "group": obs.name.split(":")[0] if len(obs.name.split(":")) > 1 else "default",
         "min": round(series_min(obs), accuracy),
         "max": round(series_max(obs), accuracy),
         "mean": round(series_mean(obs), accuracy),
