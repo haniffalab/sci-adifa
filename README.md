@@ -4,6 +4,7 @@
 [![docker](https://github.com/haniffalab/sci-adifa/actions/workflows/docker-latest.yml/badge.svg)](https://github.com/haniffalab/sci-adifa/actions/workflows/docker-latest.yml)
 [![sphinx](https://github.com/haniffalab/sci-adifa/actions/workflows/sphinx-build.yml/badge.svg)](https://github.com/haniffalab/sci-adifa/actions/workflows/sphinx-build.yml)
 [![codecov](https://codecov.io/gh/haniffalab/sci-adifa/branch/main/graph/badge.svg?token=RQLL0HKQ5W)](https://codecov.io/gh/haniffalab/sci-adifa)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![python](https://img.shields.io/badge/python-3.8-blue)](https://python.org)
 
 ## SINGLE CELL INSIGHTS
