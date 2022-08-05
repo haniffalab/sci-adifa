@@ -13,5 +13,3 @@ class Matrixplot(Resource):
         var_names = request.args.getlist("var_names")
 
         return get_matrixplot(id, modality, var_names, groupby)
-
-        return get_matrixplot(id, var_names, groupby)
