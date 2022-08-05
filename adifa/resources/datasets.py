@@ -48,6 +48,7 @@ class Bounds(Resource):
 class SearchFeatures(Resource):
     def get(self, id):
         q = request.args.get("search", "", type=str)
+        mod = request.args.get("modality", "rna", type=str)
 
         output = []
         for feature in adata_utils.search_features(id, q, mod):
