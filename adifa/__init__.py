@@ -67,16 +67,16 @@ def create_app(test_config=None):
                 con=os.environ.get("SQLALCHEMY_GCP_CONNECTION"),
             )
         )
-    
+
     # Sentry
-    if os.environ.get('SENTRY_DSN') is not None:
+    if os.environ.get("SENTRY_DSN") is not None:
         sentry_sdk.init(
-            dsn = os.environ.get('SENTRY_DSN'),
-            integrations = [
+            dsn=os.environ.get("SENTRY_DSN"),
+            integrations=[
                 FlaskIntegration(),
             ],
-            environment=os.environ.get('FLASK_ENV'),
-            traces_sample_rate = 1.0
+            environment=os.environ.get("FLASK_ENV"),
+            traces_sample_rate=1.0,
         )
 
     # ensure the instance folder exists
@@ -155,10 +155,18 @@ def create_app(test_config=None):
     @with_appcontext
     def autodiscover_command():
         click.echo(click.style("Starting...", fg="green"))
-        click.echo(click.style("Looking for AnnData (.h5ad) and MuData (.h5mu) objects in " + app.config.get('DATA_PATH'), fg="blue"))
+        click.echo(
+            click.style(
+                "Looking for AnnData (.h5ad) and MuData (.h5mu) objects in "
+                + app.config.get("DATA_PATH"),
+                fg="blue",
+            )
+        )
         import warnings
-        warnings.filterwarnings('ignore')
+
+        warnings.filterwarnings("ignore")
         from .utils import dataset_utils
+
         count = dataset_utils.auto_discover()
         click.echo(click.style(f"Successfully discovered {count} datasets", fg="blue"))
         click.echo(click.style("Finished...", fg="green"))
