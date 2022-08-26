@@ -223,7 +223,7 @@
                 }
       
                 var myColor = function(d) { // Public Method
-                    //console.log('#obs-' + d);
+                    // console.log('#obs-' + d);
                     if (checkboxCheck[d]) {
                         return catColors(d)
                     } else {
@@ -293,7 +293,7 @@
               getFillColor: function(d) {
                 v = d3.rgb(myColor(d[2]))
                 return [v.r, v.g, v.b]
-                return [160, 160, 180, 200]
+                // return [160, 160, 180, 200]
               },
               getRadius: d => myRadius(d),
               pickable: true, // enable picking (i.e. tooltips)

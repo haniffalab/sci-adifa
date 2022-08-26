@@ -4,8 +4,10 @@ from flask import current_app, flash
 from sqlalchemy import exc
 import scanpy as sc
 import pandas as pd
+import numpy as np
 
 from adifa import models
+from adifa.utils.adata_utils import parse_array, parse_group
 from adifa.resources.errors import (
     InvalidDatasetIdError,
     DatabaseOperationError,
@@ -56,12 +58,25 @@ def get_matrixplot(
     except (ValueError, AttributeError) as e:
         raise DatasetNotExistsError
 
-    var_intersection = list(set(adata.var.index) & set(var_names))
+    var_intersection = list(set(adata["var"]["_index"][:]) & set(var_names))
+    var_indx = np.in1d(adata["var"]["_index"][:], var_intersection).nonzero()[0]
+
+    obs_df = pd.DataFrame(
+        parse_group(adata["obs"][groupby])
+        if type(adata["obs"][groupby]).__name__ == "group"
+        else parse_array(adata, adata["obs"][groupby]),
+        index=adata["obs"]["_index"][:],
+        columns=[groupby],
+    )
+    tempdata = sc.AnnData(adata["X"].oindex[:, var_indx])
+
+    tempdata.var_names = var_intersection
+    tempdata.obs = obs_df
 
     plot = sc.pl.matrixplot(
-        adata,
-        var_intersection,
-        groupby,
+        tempdata,
+        var_intersection,  # multiple var
+        groupby,  # single obs
         use_raw,
         log,
         num_categories,
@@ -102,7 +117,7 @@ def get_matrixplot(
         "values_df": json.loads(plot.values_df.to_json()),
         "min_value": str(plot.values_df.min().min()),
         "max_value": str(plot.values_df.max().max()),
-        "excluded": list(set(var_names).difference(adata.var.index)),
+        "excluded": list(set(var_names).difference(adata["var"]["_index"][:])),
     }
 
     return output

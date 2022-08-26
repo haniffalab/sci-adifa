@@ -206,7 +206,7 @@
             xAxis.selectAll(".tick").each(function(d) {
                 var h = this.getBBox().height;
                 if (h > mH) mH = h;
-                console.log(mH)
+                // console.log(mH)
             });
 
             // set the dimensions and margins of the graph
@@ -217,7 +217,7 @@
             // append the svg object to the body of the page
             d3.select("#canvas_plot").selectAll("svg").remove()
 
-            console.log(widthParent)
+            // console.log(widthParent)
             var svg = d3.select("#canvas_plot")
             .append("svg")
                 .style("position", "relative")
@@ -293,13 +293,13 @@
                 .attr("x", function(d) { return x(d[0]) })
                 .attr("y", function(d) { return y(d[1]) })
                 .attr("class", function(d, i, j) {
-                    console.log(uid)
+                    // console.log(uid)
                     return "cell bordered cr" + uid;
                 })                        
                 .attr("width", x.bandwidth() )
                 .attr("height", y.bandwidth() )
                 .on('mouseover', function(event,d) {
-                    console.log(event)
+                    // console.log(event)
                     if (d != null) {
                         tooltip.html('<div class="heatmap_tooltip">' + d[2] + '</div>');
                         tooltip.style("visibility", "visible");
