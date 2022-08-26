@@ -15,6 +15,14 @@ from adifa.resources.errors import (
     DatasetNotExistsError,
 )
 
+
+def get_group_index(group):
+    if "_index" in group.attrs:
+        return group[group.attrs["_index"]]
+    else:
+        return group["_index"]
+
+
 # anndata versions >=0.8.0 write categorical values in a Group with categories and codes
 def parse_group(group):
     series = pd.Categorical.from_codes(
@@ -65,16 +73,18 @@ def get_annotations(adata):
     for group in [
         group for group in adata["obs"].group_keys() if not group.startswith("_")
     ]:
-        if ["categories", "codes"] in adata["obs"][group].group_keys():
-            array = parse_group(adata["obs"][name])
+        if all(
+            a in list(adata["obs"][group].array_keys()) for a in ["categories", "codes"]
+        ):
+            array = parse_group(adata["obs"][group])
             dtype = re.sub(r"[^a-zA-Z]", "", array.dtype.name)
             # Get the function from switcher dictionary
             func = switcher.get(dtype, type_discrete)
             # Define an API key safe
-            slug = re.sub(r"[^a-zA-Z0-9]", "", name).lower()
+            slug = re.sub(r"[^a-zA-Z0-9]", "", group).lower()
 
             annotations["obs"][slug] = func(array)
-            annotations["obs"][slug]["name"] = name
+            annotations["obs"][slug]["name"] = group
 
     annotations["obsm"] = [value for value in adata["obsm"].array_keys()]
 
@@ -172,22 +182,25 @@ def get_labels(datasetId, obsm, gene="", obs=""):
 
     if gene:
         try:
-            output = [0] * adata["obs"]["_index"].shape[0]
+            output = [0] * get_group_index(adata["obs"]).shape[0]
             # expression = adata[:,gene].X/max(1,adata[:,gene].X.max())
-            gene_idx = np.where(adata["var"]["_index"][:] == gene)[0][0]
+            gene_idx = np.where(get_group_index(adata["var"])[:] == gene)[0][0]
             expression = adata["X"][:, gene_idx]
             nonzero_idx = np.nonzero(expression)[0]
             for i in nonzero_idx:
                 output[i] = str(round(expression[i], 4))
         except KeyError:
             # @todo HANDLE ERROR
-            output = [0] * adata["obs"]["_index"].shape[0]
+            output = [0] * get_group_index(adata["obs"]).shape[0]
         except IndexError:
             # @todo HANDLE ERROR
-            output = [0] * adata["obs"]["_index"].shape[0]
+            output = [0] * get_group_index(adata["obs"]).shape[0]
     elif obs:
         try:
-            output = [str(x) for x in list(parse_array(adata, adata["obs"][obs]))]
+            if type(adata["obs"][obs]).__name__ == "Group":
+                output = [str(x) for x in list(parse_group(adata["obs"][obs]))]
+            else:
+                output = [str(x) for x in list(parse_array(adata, adata["obs"][obs]))]
         except KeyError:
             # @todo HANDLE ERROR
             output = [0]
@@ -201,9 +214,9 @@ def get_labels(datasetId, obsm, gene="", obs=""):
 def search_genes(datasetId, searchterm):
     dataset = models.Dataset.query.get(datasetId)
     adata = current_app.adata[dataset.filename]
-    current_app.logger.info(adata)
-    current_app.logger.info(adata["var"])
-    output = [g for g in adata["var"]["_index"][:] if searchterm.lower() in g.lower()]
+    output = [
+        g for g in get_group_index(adata["var"])[:] if searchterm.lower() in g.lower()
+    ]
 
     return output
 
@@ -212,7 +225,7 @@ def gene_search(datasetId, searchterm):
     dataset = models.Dataset.query.get(datasetId)
     adata = current_app.adata[dataset.filename]
     # adata = current_app.adata
-    genes = [g for g in adata["var"]["_index"][:] if searchterm in g]
+    genes = [g for g in get_group_index(adata["var"])[:] if searchterm in g]
 
     output = []
     for gene in genes:
@@ -250,16 +263,16 @@ def cat_expr_w_counts(datasetId, cat, gene, func="mean"):
     dataset = models.Dataset.query.get(datasetId)
     adata = current_app.adata[dataset.filename]
 
-    gene_idx = np.where(adata["var"]["_index"][:] == gene)[0][0]
+    gene_idx = np.where(get_group_index(adata["var"])[:] == gene)[0][0]
     cat_df = pd.DataFrame(
         parse_group(adata["obs"][cat])
         if type(adata["obs"][cat]).__name__ == "group"
         else parse_array(adata, adata["obs"][cat]),
-        index=adata["obs"]["_index"][:],
+        index=get_group_index(adata["obs"])[:],
         columns=[cat],
     )
     gene_df = pd.DataFrame(
-        adata["X"][:, gene_idx], index=adata["obs"]["_index"], columns=[gene]
+        adata["X"][:, gene_idx], index=get_group_index(adata["obs"]), columns=[gene]
     )
 
     groupall = gene_df.join(cat_df).groupby(cat)

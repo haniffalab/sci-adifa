@@ -10,18 +10,6 @@ from adifa import models
 from adifa.utils import adata_utils
 
 
-class AnndataGroup(zarr.Group):
-    def __getitem__(self, item):
-        if item == "_index":
-            current_app.logger.info("_index")
-            try:
-                return super().__getitem__(self.attrs["_index"])
-            except KeyError:
-                return super().__getitem__(item)
-        else:
-            return super().__getitem__(item)
-
-
 def auto_discover():
     for zarr_dir in [
         x
@@ -31,11 +19,10 @@ def auto_discover():
         if zarr_dir.endswith(".zarr"):  #
             # process file
             current_app.logger.info("Inspecting " + zarr_dir)
-            adata = AnndataGroup(
-                zarr.open(
-                    os.path.join(current_app.config.get("DATA_PATH"), zarr_dir), "r"
-                ).store
+            adata = zarr.open(
+                os.path.join(current_app.config.get("DATA_PATH"), zarr_dir), "r"
             )
+
             annotations = adata_utils.get_annotations(adata)
             # generate hash
             current_app.logger.info("Hashing " + zarr_dir)
@@ -93,9 +80,7 @@ def load_files():
     for dataset in datasets:
         zarr_dir = os.path.join(current_app.config.get("DATA_PATH"), dataset.filename)
         if os.path.isdir(zarr_dir):
-            current_app.adata[dataset.filename] = AnndataGroup(
-                zarr.open(zarr_dir, "r").store
-            )
+            current_app.adata[dataset.filename] = zarr.open(zarr_dir, "r")
             dataset.published = 1
             db.session.commit()
             current_app.logger.info("Loading " + dataset.title)

@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 from adifa import models
-from adifa.utils.adata_utils import parse_array, parse_group
+from adifa.utils.adata_utils import parse_array, parse_group, get_group_index
 from adifa.resources.errors import (
     InvalidDatasetIdError,
     DatabaseOperationError,
@@ -58,14 +58,14 @@ def get_matrixplot(
     except (ValueError, AttributeError) as e:
         raise DatasetNotExistsError
 
-    var_intersection = list(set(adata["var"]["_index"][:]) & set(var_names))
-    var_indx = np.in1d(adata["var"]["_index"][:], var_intersection).nonzero()[0]
+    var_intersection = list(set(get_group_index(adata["var"])[:]) & set(var_names))
+    var_indx = np.in1d(get_group_index(adata["var"])[:], var_intersection).nonzero()[0]
 
     obs_df = pd.DataFrame(
         parse_group(adata["obs"][groupby])
-        if type(adata["obs"][groupby]).__name__ == "group"
+        if type(adata["obs"][groupby]).__name__ == "Group"
         else parse_array(adata, adata["obs"][groupby]),
-        index=adata["obs"]["_index"][:],
+        index=get_group_index(adata["obs"])[:],
         columns=[groupby],
     )
     tempdata = sc.AnnData(adata["X"].oindex[:, var_indx])
@@ -117,7 +117,7 @@ def get_matrixplot(
         "values_df": json.loads(plot.values_df.to_json()),
         "min_value": str(plot.values_df.min().min()),
         "max_value": str(plot.values_df.max().max()),
-        "excluded": list(set(var_names).difference(adata["var"]["_index"][:])),
+        "excluded": list(set(var_names).difference(get_group_index(adata["var"])[:])),
     }
 
     return output
