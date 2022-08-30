@@ -58,13 +58,18 @@ def get_matrixplot(
     except (ValueError, AttributeError) as e:
         raise DatasetNotExistsError
 
-    var_intersection = list(set(get_group_index(adata["var"])[:]) & set(var_names))
-    var_indx = np.in1d(get_group_index(adata["var"])[:], var_intersection).nonzero()[0]
+    vars = get_group_index(adata["var"])[:]
+    var_intersection = [
+        x for x in var_names if x in set(vars)
+    ]  # preserve var_names order
+
+    sorter = np.argsort(vars)
+    var_indx = sorter[np.searchsorted(vars, var_intersection, sorter=sorter)]
 
     obs_df = pd.DataFrame(
-        parse_group(adata["obs"][groupby])
+        [str(x) for x in list(parse_group(adata["obs"][groupby]))]
         if type(adata["obs"][groupby]).__name__ == "Group"
-        else parse_array(adata, adata["obs"][groupby]),
+        else [str(x) for x in list(parse_array(adata, adata["obs"][groupby]))],
         index=get_group_index(adata["obs"])[:],
         columns=[groupby],
     )
@@ -117,7 +122,7 @@ def get_matrixplot(
         "values_df": json.loads(plot.values_df.to_json()),
         "min_value": str(plot.values_df.min().min()),
         "max_value": str(plot.values_df.max().max()),
-        "excluded": list(set(var_names).difference(get_group_index(adata["var"])[:])),
+        "excluded": list(set(var_names).difference(vars)),
     }
 
     return output
