@@ -249,25 +249,6 @@ def gene_search(datasetId, searchterm):
     return output
 
 
-def categorised_expr(datasetId, cat, gene, func="mean"):
-    dataset = models.Dataset.query.get(datasetId)
-    if dataset.filename.endswith(".h5ad") or dataset.modality == "muon":
-        adata = current_app.adata[dataset.filename]
-    elif dataset.filename.endswith(".h5mu"):
-        adata = current_app.adata[dataset.filename][dataset.modality]
-    data = adata[:, [gene]].to_df()
-    grouping = data.join(adata.obs[cat]).groupby(cat)
-
-    # counts = grouping.count()/grouping.count().sum()
-    #'count': counts.loc[group,gene]
-    output = [
-        {"gene": gene, "cat": group, "expr": float(expr.loc[group, gene])}
-        for group in grouping.groups.keys()
-    ]
-
-    return output
-
-
 def cat_expr_w_counts(datasetId, cat, gene, func="mean"):
     from numpy import NaN
 
