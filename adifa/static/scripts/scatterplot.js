@@ -9,8 +9,8 @@
       containerId: 'canvas-container', // the data point transparency
       canvasId: 'canvas_plot' // the color scale usage
     }
-    let currentYear
     let cellDeck
+    let embeddingViewState
     let currentViewState
     const settings = $.extend({}, defaults, options)
     if (this.length > 1) {
@@ -27,6 +27,10 @@
       bounds: {},
       samples: {}
     }
+    let obsmKey
+    let colorScaleId
+    let colorScaleKey
+    let colorScaleType
     const resources = {}
     // attach a function to be executed before an Ajax request is sent.
     $(document).ajaxSend(function (e, jqXHR, options) {
@@ -63,6 +67,9 @@
     }
 
     const decolorize = function () {
+      colorScaleId = null
+      colorScaleKey = null
+      colorScaleType = null
       Cookies.remove('ds' + datasetId + '-obs-name')
       Cookies.remove('ds' + datasetId + '-obs-id')
       Cookies.remove('ds' + datasetId + '-obs-type')
@@ -106,44 +113,42 @@
       }
     }
 
-    const loadData = function () {
-      // load cookies
-      let defaultKey
-      if (jQuery.inArray('X_umap', active.dataset.data_obsm) !== -1) {
-        defaultKey = 'X_umap'
-      } else {
-        defaultKey = Object.values(active.dataset.data_obsm)[0]
-      }
-      const obsmKey = (typeof Cookies.get('ds' + datasetId + '-obsm-key') === 'undefined') ? defaultKey : Cookies.get('ds' + datasetId + '-obsm-key')
-      const colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name') || null
-      const colorScaleType = Cookies.get('ds' + datasetId + '-obs-type') || null
+    const loadEmbedding = function () {
       $.when(
         doAjax(API_SERVER + 'api/v1/coordinates?embedding=' + obsmKey + '&datasetId=' + datasetId),
         doAjax(API_SERVER + 'api/v1/bounds?embedding=' + obsmKey + '&datasetId=' + datasetId)).then(function (a1, a2) {
         active.samples = a1[0]
         active.bounds = a2[0]
-        if (colorScaleKey) {
-          let url
-          if (colorScaleType === 'gene') {
-            url = API_SERVER + 'api/v1/labels?gene=' + colorScaleKey + '&datasetId=' + datasetId
-          } else if (colorScaleType === 'prot') {
-            url = API_SERVER + 'api/v1/labels?gene=' + colorScaleKey + '&datasetId=' + datasetId + '&modality=prot'
-          } else {
-            url = API_SERVER + 'api/v1/labels?obs=' + colorScaleKey + '&datasetId=' + datasetId
+
+        // calculate viewport bounding values
+        const longitude = (active.bounds.x.max + active.bounds.x.min) / 2
+        const latitude = (active.bounds.y.max + active.bounds.y.min) / 2
+        const bboxMinLon = Math.max(active.bounds.x.min, -179)
+        const bboxMinLat = Math.max(active.bounds.y.min, -89)
+        const bboxMaxLon = Math.min(active.bounds.x.max, 179)
+        const bboxMaxLat = Math.min(active.bounds.y.max, 89)
+        // create viewport and fit bounds
+        const { WebMercatorViewport } = deck
+        const viewport = new WebMercatorViewport({
+          width,
+          height,
+          longitude,
+          latitude,
+          zoom: 4
+        }).fitBounds([
+          [bboxMinLon, bboxMinLat],
+          [bboxMaxLon, bboxMaxLat]
+        ], {
+          padding: {
+            top: 10,
+            bottom: 10,
+            left: 10,
+            right: 10
           }
-          const requestLabels = doAjax(url, false)
-          if (requestLabels.status === 200) {
-            if (colorScaleType === 'gene' || colorScaleType === 'prot') {
-              active.min = 0
-              active.max = getMax(requestLabels.responseJSON)
-            }
-            active.samples = active.samples.map(function (e, i) {
-              return [e[0], e[1], requestLabels.responseJSON[i]]
-            })
-          }
-        }
-        render()
-        endLoader()
+        })
+        embeddingViewState = viewport
+        currentViewState = viewport
+        loadData()
         // lazy load obs resources
         $.each(active.dataset.data_obs, function (key, value) {
           doAjax(API_SERVER + 'api/v1/labels?obs=' + value.name + '&datasetId=' + datasetId)
@@ -156,34 +161,37 @@
       }, showError)
     }
 
+    // @TODO: split loadData into loadEmbedding and loadData (labels)
+    //  loadEmbedding will update bounds & reset currentViewState
+    //  loadData will load labels for loaded data points
+    const loadData = function () {
+      if (colorScaleKey) {
+        let url
+        if (colorScaleType === 'gene') {
+          url = API_SERVER + 'api/v1/labels?gene=' + colorScaleKey + '&datasetId=' + datasetId
+        } else if (colorScaleType === 'prot') {
+          url = API_SERVER + 'api/v1/labels?gene=' + colorScaleKey + '&datasetId=' + datasetId + '&modality=prot'
+        } else {
+          url = API_SERVER + 'api/v1/labels?obs=' + colorScaleKey + '&datasetId=' + datasetId
+        }
+        const requestLabels = doAjax(url, false)
+        if (requestLabels.status === 200) {
+          if (colorScaleType === 'gene' || colorScaleType === 'prot') {
+            active.min = 0
+            active.max = getMax(requestLabels.responseJSON)
+          }
+          active.samples = active.samples.map(function (e, i) {
+            return [e[0], e[1], requestLabels.responseJSON[i]]
+          })
+        }
+      }
+      render()
+      endLoader()
+    }
+
     const render = function () {
       // init deck
-      const { ScatterplotLayer, WebMercatorViewport } = deck
-      // calculate viewport bounding values
-      const longitude = (active.bounds.x.max + active.bounds.x.min) / 2
-      const latitude = (active.bounds.y.max + active.bounds.y.min) / 2
-      const bboxMinLon = Math.max(active.bounds.x.min, -179)
-      const bboxMinLat = Math.max(active.bounds.y.min, -89)
-      const bboxMaxLon = Math.min(active.bounds.x.max, 179)
-      const bboxMaxLat = Math.min(active.bounds.y.max, 89)
-      // create viewport and fit bounds
-      const viewport = new WebMercatorViewport({
-        width,
-        height,
-        longitude,
-        latitude,
-        zoom: 4
-      }).fitBounds([
-        [bboxMinLon, bboxMinLat],
-        [bboxMaxLon, bboxMaxLat]
-      ], {
-        padding: {
-          top: 10,
-          bottom: 10,
-          left: 10,
-          right: 10
-        }
-      })
+      const { ScatterplotLayer } = deck
 
       // update viewport
       // @TODO: This is causing zoom 0 on init
@@ -197,19 +205,6 @@
       //     });
       // }
 
-      currentYear++
-
-      // get cookie data
-      let defaultKey
-      if (jQuery.inArray('X_umap', active.dataset.data_obsm) !== -1) {
-        defaultKey = 'X_umap'
-      } else {
-        defaultKey = Object.values(active.dataset.data_obsm)[0]
-      }
-      const obsmKey = (typeof Cookies.get('ds' + datasetId + '-obsm-key') === 'undefined') ? defaultKey : Cookies.get('ds' + datasetId + '-obsm-key')
-      const colorScaleKey = (typeof Cookies.get('ds' + datasetId + '-obs-name') === 'undefined') ? null : Cookies.get('ds' + datasetId + '-obs-name')
-      const colorScaleId = (typeof Cookies.get('ds' + datasetId + '-obs-id') === 'undefined') ? 0 : Cookies.get('ds' + datasetId + '-obs-id')
-      const colorScaleType = (typeof Cookies.get('ds' + datasetId + '-obs-type') === 'undefined') ? null : Cookies.get('ds' + datasetId + '-obs-type')
       // set cell count
       $('#cell-count-value').html(active.samples.length.toLocaleString())
       // set embedding key
@@ -269,7 +264,7 @@
         createLegend(myColor)
       } else {
         myColor = function () {
-          return '#0000'
+          return '#000000'
         }
       }
 
@@ -301,14 +296,14 @@
         getRadius: d => myRadius(d),
         pickable: true, // enable picking (i.e. tooltips)
         updateTriggers: {
-          getFillColor: currentYear,
-          initialViewState: currentYear
+          getFillColor: myColor,
+          initialViewState: currentViewState
         }
       })
       // update layer
       cellDeck.setProps({
         layers: [layer],
-        initialViewState: viewport
+        initialViewState: currentViewState
       })
     }
 
@@ -519,12 +514,16 @@
         } else {
           defaultKey = Object.values(active.dataset.data_obsm)[0]
         }
-        const obsmKey = (typeof Cookies.get('ds' + datasetId + '-obsm-key') === 'undefined') ? defaultKey : Cookies.get('ds' + datasetId + '-obsm-key')
+        obsmKey = Cookies.get('ds' + datasetId + '-obsm-key') || null
+        obsmKey = !obsmKey || jQuery.inArray(obsmKey, active.dataset.data_obsm) === -1 ? defaultKey : obsmKey
         Cookies.set('ds' + datasetId + '-obsm-key', obsmKey, {
           expires: 30
         })
+        colorScaleId = Cookies.get('ds' + datasetId + '-obs-id') || null
+        colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name') || null
+        colorScaleType = Cookies.get('ds' + datasetId + '-obs-type') || null
         // get data
-        loadData()
+        loadEmbedding()
       }, showError)
       // init deck
       const { DeckGL, WebMercatorViewport } = deck
@@ -535,9 +534,9 @@
         latitude: 0,
         zoom: 0
       })
+      currentViewState = viewport
       deck.log.enable(false)
       deck.log.level = 3
-      currentYear = null // @TODO refactor
       // create deck
       cellDeck = new DeckGL({
         container: 'canvas_plot',
@@ -553,7 +552,6 @@
         }) => {
           // we can manipulate the viewState here
           currentViewState = viewState
-          // console.log(viewState);
         }
       })
       // convert filesize
@@ -570,10 +568,6 @@
       } else {
         $('.colourise').removeClass('active')
         $('.btn-gene-select').removeClass('active')
-
-        let colorScaleKey
-        let colorScaleId
-        let colorScaleType
         if (el.id === 'genes') {
           colorScaleKey = el.selectedItems[0]
           colorScaleId = 0
@@ -621,16 +615,14 @@
     }
 
     this.resetZoom = function () {
-      currentViewState = null
-      startLoader()
-      render()
-      endLoader()
+      currentViewState = embeddingViewState || null
+      cellDeck.setProps({ initialViewState: currentViewState })
     }
 
     this.zoomIn = function () {
-      const { Viewport } = deck
-      const viewState = (typeof currentViewState !== 'undefined') ? currentViewState : cellDeck.viewManager.viewState
-      currentViewState = new Viewport({
+      const { WebMercatorViewport } = deck
+      const viewState = currentViewState || cellDeck.viewManager.viewState
+      currentViewState = new WebMercatorViewport({
         width: viewState.width,
         height: viewState.height,
         longitude: viewState.longitude,
@@ -641,9 +633,9 @@
     }
 
     this.zoomOut = function () {
-      const { Viewport } = deck
-      const viewState = (typeof currentViewState !== 'undefined') ? currentViewState : cellDeck.viewManager.viewState
-      currentViewState = new Viewport({
+      const { WebMercatorViewport } = deck
+      const viewState = currentViewState || cellDeck.viewManager.viewState
+      currentViewState = new WebMercatorViewport({
         width: viewState.width,
         height: viewState.height,
         longitude: viewState.longitude,
@@ -654,12 +646,13 @@
     }
 
     this.embedding = function (el) {
-      Cookies.set('ds' + datasetId + '-obsm-key', $(el).data('name'), {
+      obsmKey = $(el).data('name')
+      Cookies.set('ds' + datasetId + '-obsm-key', obsmKey, {
         expires: 30
       })
       startLoader()
       abort()
-      loadData()
+      loadEmbedding()
     }
 
     $('.select2-gene-search').select2({
