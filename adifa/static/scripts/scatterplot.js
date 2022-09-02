@@ -129,7 +129,7 @@
         const bboxMaxLat = Math.min(active.bounds.y.max, 89)
         // create viewport and fit bounds
         const { WebMercatorViewport } = deck
-        const viewport = new WebMercatorViewport({
+        currentViewState = new WebMercatorViewport({
           width,
           height,
           longitude,
@@ -146,8 +146,7 @@
             right: 10
           }
         })
-        embeddingViewState = viewport
-        currentViewState = viewport
+        embeddingViewState = currentViewState
         loadData()
         // lazy load obs resources
         $.each(active.dataset.data_obs, function (key, value) {
@@ -615,7 +614,15 @@
     }
 
     this.resetZoom = function () {
-      currentViewState = embeddingViewState || null
+      const { WebMercatorViewport } = deck
+      const viewState = embeddingViewState || cellDeck.viewManager.viewState
+      currentViewState = new WebMercatorViewport({
+        width: viewState.width,
+        height: viewState.height,
+        longitude: viewState.longitude,
+        latitude: viewState.latitude,
+        zoom: viewState.zoom
+      })
       cellDeck.setProps({ initialViewState: currentViewState })
     }
 
