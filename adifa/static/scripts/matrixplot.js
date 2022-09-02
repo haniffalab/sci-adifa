@@ -610,7 +610,7 @@
 
     $('.select2-gene-search').select2({
       placeholder: 'Search by name',
-      closeOnSelect: false,
+      // closeOnSelect: false,
       sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
       ajax: {
         url: API_SERVER + 'api/v1/datasets/' + datasetId + '/search/features',
@@ -627,16 +627,50 @@
       }
     }).on('select2:select', function (e) {
       const data = e.params.data
-      $('#search-genes-selected').append(
-        $('<button/>')
-          .attr('type', 'button')
-          .attr('id', 'gene-deg-' + data.id)
-          .attr('data-gene', data.id)
-          .attr('data-modality', 'rna')
-          .addClass('btn-gene-select btn btn-outline-info btn-sm')
-          .text(data.id)
-      )
-      $("button[data-gene='" + data.id + "']").trigger('click')
+      if (!$('#search-genes-selected').find('#gene-deg-' + data.id).length) {
+        $('#search-genes-selected').append(
+          $('<button/>')
+            .attr('type', 'button')
+            .attr('id', 'gene-deg-' + data.id)
+            .attr('data-gene', data.id)
+            .attr('data-modality', 'rna')
+            .addClass('btn-gene-select btn btn-outline-info btn-sm')
+            .text(data.id)
+        )
+        $("button[data-gene='" + data.id + "']").trigger('click')
+      }
+    })
+
+    $('.select2-protein-search').select2({
+      // closeOnSelect: false,
+      sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
+      ajax: {
+        url: API_SERVER + 'api/v1/datasets/' + datasetId + '/search/features',
+        data: function (params) {
+          const query = {
+            search: params.term,
+            modality: 'prot',
+            type: 'public'
+          }
+
+          // Query parameters will be ?search=[term]&type=public
+          return query
+        }
+      }
+    }).on('select2:select', function (e) {
+      const data = e.params.data
+      if (!$('#search-genes-selected').find('#gene-deg-' + data.id).length) {
+        $('#search-protein-selected').append(
+          $('<button/>')
+            .attr('type', 'button')
+            .attr('id', 'gene-deg-' + data.id)
+            .attr('data-gene', data.id)
+            .attr('data-modality', 'prot')
+            .addClass('btn-gene-select btn btn-outline-info btn-sm')
+            .text(data.id)
+        )
+        $("button[data-gene='" + data.id + "']").trigger('click')
+      }
     })
 
     $('.select2-disease-search').select2({
@@ -667,36 +701,6 @@
             .text(genes[i])
         )
       })
-    })
-
-    $('.select2-protein-search').select2({
-      // closeOnSelect: false,
-      sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
-      ajax: {
-        url: API_SERVER + 'api/v1/datasets/' + datasetId + '/search/features',
-        data: function (params) {
-          const query = {
-            search: params.term,
-            modality: 'prot',
-            type: 'public'
-          }
-
-          // Query parameters will be ?search=[term]&type=public
-          return query
-        }
-      }
-    }).on('select2:select', function (e) {
-      const data = e.params.data
-      $('#search-protein-selected').append(
-        $('<button/>')
-          .attr('type', 'button')
-          .attr('id', 'gene-deg-' + data.id)
-          .attr('data-gene', data.id)
-          .attr('data-modality', 'prot')
-          .addClass('btn-gene-select btn btn-outline-info btn-sm')
-          .text(data.id)
-      )
-      $("button[data-gene='" + data.id + "']").trigger('click')
     })
 
     return this.initialize()

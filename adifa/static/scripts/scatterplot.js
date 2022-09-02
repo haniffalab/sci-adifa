@@ -476,10 +476,12 @@
             $('<div/>')
               .attr('id', 'canvas_plot'))
       )
+
       // set container size
       $('#' + this.attr('id')).parent().height(height)
       $('#' + this.attr('id')).height(height)
       $('#' + this.attr('id')).width(width)
+
       // load dataset
       startLoader()
       $.when(
@@ -506,6 +508,7 @@
               .addClass('dropdown-item canvas-obsm-key')
               .html(html))
         })
+
         // process embedding option
         let defaultKey
         if (jQuery.inArray('X_umap', active.dataset.data_obsm) !== -1) {
@@ -524,6 +527,7 @@
         // get data
         loadEmbedding()
       }, showError)
+
       // init deck
       const { DeckGL, WebMercatorViewport } = deck
       const viewport = new WebMercatorViewport({
@@ -553,6 +557,7 @@
           currentViewState = viewState
         }
       })
+
       // convert filesize
       const size = $('#ds-size').html()
       const i = Math.floor(Math.log(size) / Math.log(1024))
@@ -680,16 +685,54 @@
       }
     }).on('select2:select', function (e) {
       const data = e.params.data
-      $('#search-genes-selected').append(
-        $('<button/>')
-          .attr('type', 'button')
-          .attr('id', 'gene-deg-' + data.id)
-          .attr('data-gene', data.id)
-          .attr('data-modality', 'rna')
-          .addClass('btn-gene-select btn btn-outline-info btn-sm')
-          .text(data.id)
-      )
-      $("button[data-gene='" + data.id + "']").trigger('click')
+      if ($('#search-genes-selected').find('#gene-deg-' + data.id).length) {
+        $("button[data-gene='" + data.id + "']").trigger('click')
+      } else {
+        $('#search-genes-selected').append(
+          $('<button/>')
+            .attr('type', 'button')
+            .attr('id', 'gene-deg-' + data.id)
+            .attr('data-gene', data.id)
+            .attr('data-modality', 'rna')
+            .addClass('btn-gene-select btn btn-outline-info btn-sm')
+            .text(data.id)
+        )
+        $("button[data-gene='" + data.id + "']").trigger('click')
+      }
+    })
+
+    $('.select2-protein-search').select2({
+      // closeOnSelect: false,
+      sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
+      ajax: {
+        url: API_SERVER + 'api/v1/datasets/' + datasetId + '/search/features',
+        data: function (params) {
+          const query = {
+            search: params.term,
+            modality: 'prot',
+            type: 'public'
+          }
+
+          // Query parameters will be ?search=[term]&type=public
+          return query
+        }
+      }
+    }).on('select2:select', function (e) {
+      const data = e.params.data
+      if ($('#search-genes-selected').find('#gene-deg-' + data.id).length) {
+        $("button[data-gene='" + data.id + "']").trigger('click')
+      } else {
+        $('#search-protein-selected').append(
+          $('<button/>')
+            .attr('type', 'button')
+            .attr('id', 'gene-deg-' + data.id)
+            .attr('data-gene', data.id)
+            .attr('data-modality', 'prot')
+            .addClass('btn-gene-select btn btn-outline-info btn-sm')
+            .text(data.id)
+        )
+        $("button[data-gene='" + data.id + "']").trigger('click')
+      }
     })
 
     $('.select2-disease-search').select2({
@@ -720,36 +763,6 @@
             .text(genes[i])
         )
       })
-    })
-
-    $('.select2-protein-search').select2({
-      // closeOnSelect: false,
-      sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
-      ajax: {
-        url: API_SERVER + 'api/v1/datasets/' + datasetId + '/search/features',
-        data: function (params) {
-          const query = {
-            search: params.term,
-            modality: 'prot',
-            type: 'public'
-          }
-
-          // Query parameters will be ?search=[term]&type=public
-          return query
-        }
-      }
-    }).on('select2:select', function (e) {
-      const data = e.params.data
-      $('#search-protein-selected').append(
-        $('<button/>')
-          .attr('type', 'button')
-          .attr('id', 'gene-deg-' + data.id)
-          .attr('data-gene', data.id)
-          .attr('data-modality', 'prot')
-          .addClass('btn-gene-select btn btn-outline-info btn-sm')
-          .text(data.id)
-      )
-      $("button[data-gene='" + data.id + "']").trigger('click')
     })
 
     return this.initialize()
