@@ -192,18 +192,6 @@
       // init deck
       const { ScatterplotLayer } = deck
 
-      // update viewport
-      // @TODO: This is causing zoom 0 on init
-      // if (typeof currentViewState !== 'undefined') {
-      //     var viewport = new WebMercatorViewport({
-      //         width: currentViewState.width,
-      //         height: currentViewState.height,
-      //         longitude: currentViewState.longitude,
-      //         latitude: currentViewState.latitude,
-      //         zoom: currentViewState.zoom
-      //     });
-      // }
-
       // set cell count
       $('#cell-count-value').html(active.samples.length.toLocaleString())
       // set embedding key
@@ -213,11 +201,41 @@
         $('#color-scale-value').removeClass('d-none')
         $('#color-scale').removeClass('disabled')
         $('#color-scale-remove').removeClass('d-none')
+        if (colorScaleType === 'gene') {
+          if (!$('#gene-deg-' + colorScaleKey).length) {
+            $('#search-genes-selected').append(
+              $('<button/>')
+                .attr('type', 'button')
+                .attr('id', 'gene-deg-' + colorScaleKey)
+                .attr('data-gene', colorScaleKey)
+                .attr('data-modality', 'rna')
+                .addClass('btn-gene-select btn btn-outline-info btn-sm active')
+                .text(colorScaleKey)
+            )
+          } else if (!$('#gene-deg-' + colorScaleKey).hasClass('active')) {
+            $('#gene-deg-' + colorScaleKey).addClass('active')
+          }
+        } else if (colorScaleType === 'prot') {
+          if (!$('#gene-deg-' + colorScaleKey).length) {
+            $('#search-protein-selected').append(
+              $('<button/>')
+                .attr('type', 'button')
+                .attr('id', 'gene-deg-' + colorScaleKey)
+                .attr('data-gene', colorScaleKey)
+                .attr('data-modality', 'rna')
+                .addClass('btn-gene-select btn btn-outline-info btn-sm active')
+                .text(colorScaleKey)
+            )
+          } else if (!$('#gene-deg-' + colorScaleKey).hasClass('active')) {
+            $('#gene-deg-' + colorScaleKey).addClass('active')
+          }
+        }
       } else { // decolor
         $('.colourise').removeClass('active')
         $('#color-scale-remove').addClass('d-none')
         $('#color-scale-value').empty().addClass('d-none')
         $('#color-scale').addClass('disabled')
+        $('.btn-gene-select').removeClass('active')
       }
       if (colorScaleId) {
         $('#collapse' + colorScaleId).collapse('show')
@@ -519,7 +537,8 @@
         obsmKey = Cookies.get('ds' + datasetId + '-obsm-key') || null
         obsmKey = !obsmKey || jQuery.inArray(obsmKey, active.dataset.data_obsm) === -1 ? defaultKey : obsmKey
         Cookies.set('ds' + datasetId + '-obsm-key', obsmKey, {
-          expires: 30
+          expires: 30,
+          sameSite: 'Strict'
         })
         colorScaleId = Cookies.get('ds' + datasetId + '-obs-id') || null
         colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name') || null
@@ -593,13 +612,16 @@
           $('#colourise' + colorScaleId).addClass('active')
         }
         Cookies.set('ds' + datasetId + '-obs-name', colorScaleKey, {
-          expires: 30
+          expires: 30,
+          sameSite: 'Strict'
         })
         Cookies.set('ds' + datasetId + '-obs-id', colorScaleId, {
-          expires: 30
+          expires: 30,
+          sameSite: 'Strict'
         })
         Cookies.set('ds' + datasetId + '-obs-type', colorScaleType, {
-          expires: 30
+          expires: 30,
+          sameSite: 'Strict'
         })
 
         startLoader()
@@ -660,7 +682,8 @@
     this.embedding = function (el) {
       obsmKey = $(el).data('name')
       Cookies.set('ds' + datasetId + '-obsm-key', obsmKey, {
-        expires: 30
+        expires: 30,
+        sameSite: 'Strict'
       })
       startLoader()
       abort()
@@ -685,7 +708,7 @@
       }
     }).on('select2:select', function (e) {
       const data = e.params.data
-      if ($('#search-genes-selected').find('#gene-deg-' + data.id).length) {
+      if ($('#gene-deg-' + data.id).length) {
         $("button[data-gene='" + data.id + "']").trigger('click')
       } else {
         $('#search-genes-selected').append(
@@ -719,7 +742,7 @@
       }
     }).on('select2:select', function (e) {
       const data = e.params.data
-      if ($('#search-genes-selected').find('#gene-deg-' + data.id).length) {
+      if ($('#gene-deg-' + data.id).length) {
         $("button[data-gene='" + data.id + "']").trigger('click')
       } else {
         $('#search-protein-selected').append(

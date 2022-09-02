@@ -547,13 +547,16 @@
         $('#colourise' + colorScaleId).addClass('active')
       }
       Cookies.set('ds' + datasetId + '-obs-name', colorScaleKey, {
-        expires: 30
+        expires: 30,
+        sameSite: 'Strict'
       })
       Cookies.set('ds' + datasetId + '-obs-id', colorScaleId, {
-        expires: 30
+        expires: 30,
+        sameSite: 'Strict'
       })
       Cookies.set('ds' + datasetId + '-obs-type', colorScaleType, {
-        expires: 30
+        expires: 30,
+        sameSite: 'Strict'
       })
 
       // get data
@@ -579,7 +582,8 @@
         $(el).addClass('active')
       }
       Cookies.set('ds' + datasetId + '-var-list', JSON.stringify(varList), {
-        expires: 30
+        expires: 30,
+        sameSite: 'Strict'
       })
 
       // get data
@@ -603,7 +607,8 @@
 
     this.changePalette = function (paletteName) {
       Cookies.set('d3-scale-chromatic', paletteName, {
-        expires: 30
+        expires: 30,
+        sameSite: 'Strict'
       })
       render()
     }
