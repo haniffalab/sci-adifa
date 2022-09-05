@@ -70,6 +70,9 @@ def get_matrixplot(
 
     var_intersection = list(set(adata.var.index) & set(var_names))
 
+    if adata.obs[groupby].dtype == "bool":
+        adata.obs[groupby] = adata.obs[groupby].astype("str").astype("category")
+
     plot = sc.pl.matrixplot(
         adata,
         var_intersection,

@@ -149,7 +149,7 @@
     const render = function () {
       // load cookies
       const colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name')
-      const colorScaleId = (typeof Cookies.get('ds' + datasetId + '-obs-id') === 'undefined') ? 0 : Cookies.get('ds' + datasetId + '-obs-id')
+      const colorScaleId = Cookies.get('ds' + datasetId + '-obs-id') || 0
       const colorScale = (typeof Cookies.get('d3-scale-chromatic') === 'undefined') ? 'Viridis' : Cookies.get('d3-scale-chromatic')
 
       // ##########################################################################
@@ -232,7 +232,7 @@
       svg = d3.select('#canvas_plot')
         .append('svg')
         .style('position', 'relative')
-      // .style("width", width + margin.left + margin.right)
+        // .style("width", width + margin.left + margin.right)
         .style('width', '100%')
         .style('display', 'block')
         .style('min-height', height + margin.top + margin.bottom + 130 + 'px')
@@ -402,11 +402,11 @@
       // A simpler way to do the above, but possibly slower. Keep in mind the legend width is stretched because the width attr of the canvas is 1
       // See http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
       /*
-            d3.range(legendheight).forEach(function(i) {
-                ctx.fillStyle = colorscale(legendscale.invert(i));
-                ctx.fillRect(0,i,1,1);
-            });
-            */
+          d3.range(legendheight).forEach(function(i) {
+              ctx.fillStyle = colorscale(legendscale.invert(i));
+              ctx.fillRect(0,i,1,1);
+          });
+          */
 
       const legendaxis = d3.axisBottom()
         .scale(legendscale)
@@ -664,7 +664,7 @@
       }
     }).on('select2:select', function (e) {
       const data = e.params.data
-      if (!$('#search-genes-selected').find('#gene-deg-' + data.id).length) {
+      if (!$('#search-protein-selected').find('#gene-deg-' + data.id).length) {
         $('#search-protein-selected').append(
           $('<button/>')
             .attr('type', 'button')

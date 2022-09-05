@@ -535,7 +535,7 @@
           defaultKey = Object.values(active.dataset.data_obsm)[0]
         }
         obsmKey = Cookies.get('ds' + datasetId + '-obsm-key') || null
-        obsmKey = !obsmKey || jQuery.inArray(obsmKey, active.dataset.data_obsm) === -1 ? defaultKey : obsmKey
+        obsmKey = jQuery.inArray(obsmKey, active.dataset.data_obsm) === -1 ? defaultKey : obsmKey
         Cookies.set('ds' + datasetId + '-obsm-key', obsmKey, {
           expires: 30,
           sameSite: 'Strict'
