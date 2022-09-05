@@ -66,13 +66,23 @@ def get_matrixplot(
     sorter = np.argsort(vars)
     var_indx = sorter[np.searchsorted(vars, var_intersection, sorter=sorter)]
 
-    obs_df = pd.DataFrame(
-        [str(x) for x in list(parse_group(adata["obs"][groupby]))]
-        if type(adata["obs"][groupby]).__name__ == "Group"
-        else [str(x) for x in list(parse_array(adata, adata["obs"][groupby]))],
-        index=get_group_index(adata["obs"])[:],
-        columns=[groupby],
-    )
+    if type(adata["obs"][groupby]).__name__ == "Group":
+        obs_df = pd.DataFrame(
+            [str(x) for x in list(parse_group(adata["obs"][groupby]))],
+            index=get_group_index(adata["obs"])[:],
+            columns=[groupby],
+        )
+    else:
+        obs_arr = parse_array(adata, adata["obs"][groupby])
+        obs_df = pd.DataFrame(
+            [int(x) for x in list(obs_arr)]
+            if obs_arr.dtype in ["int"]
+            else [float(x) for x in list(obs_arr)]
+            if obs_arr.dtype in ["float"]
+            else [str(x) for x in list(obs_arr)],
+            index=get_group_index(adata["obs"])[:],
+            columns=[groupby],
+        )
     tempdata = sc.AnnData(adata["X"].oindex[:, var_indx])
 
     tempdata.var_names = var_intersection
