@@ -13,3 +13,4 @@ build/
 *.swp
 *~
 sphinx/_build
+node_modules/
