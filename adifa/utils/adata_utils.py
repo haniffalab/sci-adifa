@@ -16,6 +16,13 @@ from adifa.resources.errors import (
 )
 
 
+def get_group_index_name(group):
+    if "_index" in group.attrs:
+        return group.attrs["_index"]
+    else:
+        return "_index"
+
+
 def get_group_index(group):
     if "_index" in group.attrs:
         return group[group.attrs["_index"]]
@@ -57,7 +64,9 @@ def get_annotations(adata):
     }
 
     for name in [
-        name for name in adata["obs"].array_keys() if not name.startswith("_")
+        name
+        for name in adata["obs"].array_keys()
+        if not name.startswith("_") and name != get_group_index_name(adata["obs"])
     ]:
         array = parse_array(adata, adata["obs"][name])
         # Map numpy dtype to a simple type for switching
@@ -71,7 +80,9 @@ def get_annotations(adata):
         annotations["obs"][slug]["name"] = name
 
     for group in [
-        group for group in adata["obs"].group_keys() if not group.startswith("_")
+        group
+        for group in adata["obs"].group_keys()
+        if not group.startswith("_") and group != get_group_index_name(adata["obs"])
     ]:
         if all(
             a in list(adata["obs"][group].array_keys()) for a in ["categories", "codes"]
