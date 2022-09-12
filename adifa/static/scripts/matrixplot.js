@@ -357,7 +357,7 @@
 
       d3.select('#canvas-zoom-reset')
         .on('click', function () {
-          svg.transition().call(zoom.scaleBy, 1)
+          svg.call(zoom.transform, d3.zoomIdentity.translate((widthParent / 2 - width / 2), 100).scale(1))
         })
       endLoader()
     }
