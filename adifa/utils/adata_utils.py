@@ -16,7 +16,7 @@ from adifa.resources.errors import (
 
 
 def get_annotations(adata):
-    annotations = {"obs": {}, "obsm": {}}
+    annotations = {"obs": {}, "obsm": [], "var": []}
 
     switcher = {
         "category": type_category,
@@ -36,7 +36,8 @@ def get_annotations(adata):
         annotations["obs"][slug] = func(adata.obs[name])
         annotations["obs"][slug]["name"] = name
 
-    annotations["obsm"] = [value for value in adata.obsm]
+    annotations["obsm"] = adata.obsm_keys()
+    annotations["var"] = adata.var_names.tolist()
 
     return annotations
 
