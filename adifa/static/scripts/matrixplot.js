@@ -36,6 +36,10 @@
       xhrPool = $.grep(xhrPool, function (x) { return x !== jqXHR })
     })
 
+    const escapeSelector = function (s) {
+      return s.replace(/(:|\.|\[|\])/g, '\\$1')
+    }
+
     // private methods
     const startLoader = function (id) {
       $('#canvas-loader').html('<div class="btn-group mb-3"><a class="btn btn-white">Loading...</a></div>')
@@ -161,8 +165,8 @@
       }
       if (varList.length) {
         varList.forEach(function (v) {
-          if ($("button[data-gene='" + v + "']").length) {
-            $("button[data-gene='" + v + "']").addClass('active')
+          if ($("button[data-gene='" + escapeSelector(v) + "']").length) {
+            $("button[data-gene='" + escapeSelector(v) + "']").addClass('active')
           } else {
             $('#search-genes-selected').append(
               $('<button/>')
@@ -179,12 +183,12 @@
       // Labels of row and columns
       const myVars = active.data.var_names
       let myGroups
-      if ($('div[data-name="' + colorScaleKey + '"]').data('type') === 'continuous') {
+      if ($('div[data-name="' + escapeSelector(colorScaleKey) + '"]').data('type') === 'continuous') {
         myGroups = active.data.categories
       } else {
         myGroups = []
         active.data.categories.forEach(function (item, index) {
-          if ($('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + item + '"]').is(':checked')) {
+          if ($('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + escapeSelector(item) + '"]').is(':checked')) {
             myGroups.push(item)
           }
         })
@@ -654,7 +658,7 @@
       }
     }).on('select2:select', function (e) {
       const data = e.params.data
-      if (!$('#gene-deg-' + data.id).length) {
+      if (!$('#gene-deg-' + escapeSelector(data.id)).length) {
         $('#search-genes-selected').append(
           $('<button/>')
             .attr('type', 'button')
@@ -663,7 +667,7 @@
             .addClass('btn-gene-select btn btn-outline-info btn-sm')
             .text(data.id)
         )
-        $("button[data-gene='" + data.id + "']").trigger('click')
+        $("button[data-gene='" + escapeSelector(data.id) + "']").trigger('click')
       }
     })
 

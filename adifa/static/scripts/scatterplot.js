@@ -40,6 +40,10 @@
       xhrPool = $.grep(xhrPool, function (x) { return x !== jqXHR })
     })
 
+    const escapeSelector = function (s) {
+      return s.replace(/(:|\.|\[|\])/g, '\\$1')
+    }
+
     // private methods
     const startLoader = function (id) {
       $('#canvas-loader').html('<div class="btn-group mb-3"><a class="btn btn-white">Loading...</a></div>')
@@ -197,7 +201,7 @@
         $('#color-scale').removeClass('disabled')
         $('#color-scale-remove').removeClass('d-none')
         if (colorScaleType === 'gene') {
-          if (!$('#gene-deg-' + colorScaleKey).length) {
+          if (!$('#gene-deg-' + escapeSelector(colorScaleKey)).length) {
             $('#search-genes-selected').append(
               $('<button/>')
                 .attr('type', 'button')
@@ -206,8 +210,8 @@
                 .addClass('btn-gene-select btn btn-outline-info btn-sm active')
                 .text(colorScaleKey)
             )
-          } else if (!$('#gene-deg-' + colorScaleKey).hasClass('active')) {
-            $('#gene-deg-' + colorScaleKey).addClass('active')
+          } else if (!$('#gene-deg-' + escapeSelector(colorScaleKey)).hasClass('active')) {
+            $('#gene-deg-' + escapeSelector(colorScaleKey)).addClass('active')
           }
         }
       } else { // decolor
@@ -701,8 +705,8 @@
       }
     }).on('select2:select', function (e) {
       const data = e.params.data
-      if ($('#gene-deg-' + data.id).length) {
-        $("button[data-gene='" + data.id + "']").trigger('click')
+      if ($('#gene-deg-' + escapeSelector(data.id)).length) {
+        $("button[data-gene='" + escapeSelector(data.id) + "']").trigger('click')
       } else {
         $('#search-genes-selected').append(
           $('<button/>')
@@ -712,7 +716,7 @@
             .addClass('btn-gene-select btn btn-outline-info btn-sm')
             .text(data.id)
         )
-        $("button[data-gene='" + data.id + "']").trigger('click')
+        $("button[data-gene='" + escapeSelector(data.id) + "']").trigger('click')
       }
     })
 
