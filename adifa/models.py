@@ -45,7 +45,9 @@ class Dataset(db.Model):
             "size": os.path.getsize(
                 os.path.join(current_app.config.get("DATA_PATH"), self.filename)
             ),
+            "modality": self.modality,
             "data_obs": self.data_obs,
             "data_obsm": self.data_obsm,
+            "data_var": self.data_var,
             "title": self.title,
         }

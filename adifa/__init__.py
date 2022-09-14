@@ -127,7 +127,18 @@ def create_app(test_config=None):
         from sqlalchemy import asc
 
         return {
-            "datasets": models.Dataset.query.filter_by(published=1)
+            "datasets": models.Dataset.query.with_entities(
+                models.Dataset.id,
+                models.Dataset.title,
+                models.Dataset.modality,
+                models.Dataset.published,
+                models.Dataset.desc,
+                models.Dataset.pub_author,
+                models.Dataset.pub_doi,
+                models.Dataset.pub_group,
+                models.Dataset.pub_link,
+            )
+            .filter_by(published=1)
             .order_by(asc(models.Dataset.title))
             .all()
         }

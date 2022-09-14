@@ -32,28 +32,6 @@ def get_modalities(dataset):
     return {d.modality: d.id for d in datasets} if datasets else None
 
 
-def get_modalities(dataset):
-    try:
-        datasets = models.Dataset.query.where(
-            models.Dataset.filename == dataset.filename,
-            models.Dataset.modality != dataset.modality,
-        ).all()
-    except exc.SQLAlchemyError as e:
-        abort(500)
-    return {d.modality: d.id for d in datasets} if datasets else None
-
-
-def get_modalities(dataset):
-    try:
-        datasets = models.Dataset.query.where(
-            models.Dataset.filename == dataset.filename,
-            models.Dataset.modality != dataset.modality,
-        ).all()
-    except exc.SQLAlchemyError as e:
-        abort(500)
-    return {d.modality: d.id for d in datasets} if datasets else None
-
-
 @bp.route("/")
 def index():
     return render_template("index.html")

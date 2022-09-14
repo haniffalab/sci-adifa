@@ -31,7 +31,7 @@ def mod_name(mod):
 
 
 def get_annotations(adata):
-    annotations = {"obs": {}, "obsm": {}}
+    annotations = {"obs": {}, "obsm": [], "var": {}}
 
     switcher = {
         "category": type_category,
@@ -62,9 +62,10 @@ def get_annotations(adata):
         ]
         for mod in adata.mod.keys():
             annotations["obsm"].extend([mod + ":" + value for value in adata[mod].obsm])
-
     else:
-        annotations["obsm"] = [value for value in adata.obsm]
+        annotations["obsm"] = adata.obsm_keys()
+
+    annotations["var"] = adata.var_names.tolist()
 
     return annotations
 
