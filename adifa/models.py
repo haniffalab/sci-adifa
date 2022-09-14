@@ -45,5 +45,6 @@ class Dataset(db.Model):
             ),
             "data_obs": self.data_obs,
             "data_obsm": self.data_obsm,
+            "data_var": self.data_var,
             "title": self.title,
         }

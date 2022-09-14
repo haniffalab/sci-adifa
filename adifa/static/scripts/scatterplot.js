@@ -40,6 +40,10 @@
       xhrPool = $.grep(xhrPool, function (x) { return x !== jqXHR })
     })
 
+    const escapeSelector = function (s) {
+      return s.replace(/(:|\.|\[|\])/g, '\\$1')
+    }
+
     // private methods
     const startLoader = function (id) {
       $('#canvas-loader').html('<div class="btn-group mb-3"><a class="btn btn-white">Loading...</a></div>')
@@ -116,9 +120,9 @@
     const loadEmbedding = function () {
       $.when(
         doAjax(API_SERVER + 'api/v1/coordinates?embedding=' + obsmKey + '&datasetId=' + datasetId),
-        doAjax(API_SERVER + 'api/v1/bounds?embedding=' + obsmKey + '&datasetId=' + datasetId)).then(function (a1, a2) {
-        active.samples = a1[0]
-        active.bounds = a2[0]
+        doAjax(API_SERVER + 'api/v1/bounds?embedding=' + obsmKey + '&datasetId=' + datasetId)).then(function (s, b) {
+        active.samples = s[0]
+        active.bounds = b[0]
 
         // calculate viewport bounding values
         const longitude = (active.bounds.x.max + active.bounds.x.min) / 2
@@ -197,7 +201,7 @@
         $('#color-scale').removeClass('disabled')
         $('#color-scale-remove').removeClass('d-none')
         if (colorScaleType === 'gene') {
-          if (!$('#gene-deg-' + colorScaleKey).length) {
+          if (!$('#gene-deg-' + escapeSelector(colorScaleKey)).length) {
             $('#search-genes-selected').append(
               $('<button/>')
                 .attr('type', 'button')
@@ -206,8 +210,8 @@
                 .addClass('btn-gene-select btn btn-outline-info btn-sm active')
                 .text(colorScaleKey)
             )
-          } else if (!$('#gene-deg-' + colorScaleKey).hasClass('active')) {
-            $('#gene-deg-' + colorScaleKey).addClass('active')
+          } else if (!$('#gene-deg-' + escapeSelector(colorScaleKey)).hasClass('active')) {
+            $('#gene-deg-' + escapeSelector(colorScaleKey)).addClass('active')
           }
         }
       } else { // decolor
@@ -514,15 +518,30 @@
         } else {
           defaultKey = Object.values(active.dataset.data_obsm)[0]
         }
+
         obsmKey = Cookies.get('ds' + datasetId + '-obsm-key') || null
-        obsmKey = jQuery.inArray(obsmKey, active.dataset.data_obsm) === -1 ? defaultKey : obsmKey
-        Cookies.set('ds' + datasetId + '-obsm-key', obsmKey, {
-          expires: 30,
-          sameSite: 'Strict'
-        })
         colorScaleId = Cookies.get('ds' + datasetId + '-obs-id') || null
         colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name') || null
         colorScaleType = Cookies.get('ds' + datasetId + '-obs-type') || null
+
+        obsmKey = jQuery.inArray(obsmKey, active.dataset.data_obsm) === -1 ? defaultKey : obsmKey
+        Cookies.set('ds' + datasetId + '-obsm-key', obsmKey, {
+          expires: 30,
+          sameSite: 'Strict',
+          path: window.location.pathname
+        })
+
+        if ((colorScaleKey && colorScaleType !== 'gene' && !(colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() in active.dataset.data_obs)) ||
+        (colorScaleKey && colorScaleType === 'gene' && active.dataset.data_var.indexOf(colorScaleKey) === -1)
+        ) {
+          colorScaleKey = null
+          colorScaleId = null
+          colorScaleType = null
+          Cookies.remove('ds' + datasetId + '-obs-name')
+          Cookies.remove('ds' + datasetId + '-obs-id')
+          Cookies.remove('ds' + datasetId + '-obs-type')
+        }
+
         // get data
         loadEmbedding()
       }, showError)
@@ -588,15 +607,18 @@
         }
         Cookies.set('ds' + datasetId + '-obs-name', colorScaleKey, {
           expires: 30,
-          sameSite: 'Strict'
+          sameSite: 'Strict',
+          path: window.location.pathname
         })
         Cookies.set('ds' + datasetId + '-obs-id', colorScaleId, {
           expires: 30,
-          sameSite: 'Strict'
+          sameSite: 'Strict',
+          path: window.location.pathname
         })
         Cookies.set('ds' + datasetId + '-obs-type', colorScaleType, {
           expires: 30,
-          sameSite: 'Strict'
+          sameSite: 'Strict',
+          path: window.location.pathname
         })
 
         startLoader()
@@ -658,7 +680,8 @@
       obsmKey = $(el).data('name')
       Cookies.set('ds' + datasetId + '-obsm-key', obsmKey, {
         expires: 30,
-        sameSite: 'Strict'
+        sameSite: 'Strict',
+        path: window.location.pathname
       })
       startLoader()
       abort()
@@ -682,8 +705,8 @@
       }
     }).on('select2:select', function (e) {
       const data = e.params.data
-      if ($('#gene-deg-' + data.id).length) {
-        $("button[data-gene='" + data.id + "']").trigger('click')
+      if ($('#gene-deg-' + escapeSelector(data.id)).length) {
+        $("button[data-gene='" + escapeSelector(data.id) + "']").trigger('click')
       } else {
         $('#search-genes-selected').append(
           $('<button/>')
@@ -693,7 +716,7 @@
             .addClass('btn-gene-select btn btn-outline-info btn-sm')
             .text(data.id)
         )
-        $("button[data-gene='" + data.id + "']").trigger('click')
+        $("button[data-gene='" + escapeSelector(data.id) + "']").trigger('click')
       }
     })
 

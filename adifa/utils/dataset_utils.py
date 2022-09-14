@@ -45,6 +45,7 @@ def auto_discover():
                 new.data_obsm = annotations.get("obsm")
                 # new.genes_deg = adata_utils.get_degs(adata)
                 new.title = zarr_dir
+                new.data_var = annotations.get("var")
                 try:
                     db.session.add(new)
                     db.session.commit()
@@ -58,6 +59,7 @@ def auto_discover():
                 record.data_obs = annotations.get("obs")
                 record.data_obsm = annotations.get("obsm")
                 # record.genes_deg = adata_utils.get_degs(adata)
+                record.data_var = annotations.get("var")
                 try:
                     db.session.commit()
                 except Exception as e:

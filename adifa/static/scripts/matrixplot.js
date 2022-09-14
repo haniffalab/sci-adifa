@@ -18,9 +18,14 @@
     const datasetId = this.attr('data-datasetId')
     let xhrPool = []
     const active = {
+      dataset: {},
       plot: {},
       dataframe: {}
     }
+    let colorScaleKey
+    let colorScaleId
+    let colorScale
+    let varList
     const resources = {}
     // attach a function to be executed before an Ajax request is sent.
     $(document).ajaxSend(function (e, jqXHR, options) {
@@ -30,6 +35,10 @@
     $(document).ajaxComplete(function (e, jqXHR, options) {
       xhrPool = $.grep(xhrPool, function (x) { return x !== jqXHR })
     })
+
+    const escapeSelector = function (s) {
+      return s.replace(/(:|\.|\[|\])/g, '\\$1')
+    }
 
     // private methods
     const startLoader = function (id) {
@@ -69,36 +78,6 @@
         ))
     }
 
-    const validate = function () {
-      // load cookies
-      const varList = (typeof Cookies.get('ds' + datasetId + '-var-list') === 'undefined') ? [] : JSON.parse(Cookies.get('ds' + datasetId + '-var-list'))
-      let cMarkers
-      if (jQuery.isArray(varList) !== -1) {
-        cMarkers = varList
-      } else {
-        cMarkers = ['ALB', 'AFP', 'C3', 'HP', 'SAA1', 'RARRES2', 'LRP1', 'NR1H4', 'NNMT', 'HPD', 'CES2', 'C1R', 'AOX1', 'GLUL']
-      }
-      // validate markers
-      const markers = cMarkers.filter(function (marker) {
-        if ($("button[data-gene='" + marker + "']").length) {
-          $("button[data-gene='" + marker + "']").addClass('active')
-          return true
-        }
-        // else {
-        //   $('#search-genes-selected').append(
-        //     $('<button/>')
-        //       .attr('type', 'button')
-        //       .attr('id', 'gene-deg-' + marker)
-        //       .attr('data-gene', marker)
-        //       .addClass('btn-gene-select btn btn-outline-info btn-sm active')
-        //       .text(marker)
-        //   )
-        // }
-        return false
-      })
-      return markers
-    }
-
     const doAjax = function (url, async = true) {
       let result
       // return stored resource
@@ -125,24 +104,22 @@
     }
 
     const loadData = function () {
-      // load cookies
-      if (typeof Cookies.get('ds' + datasetId + '-obs-name') === 'undefined') {
+      if (!colorScaleKey) {
         showError('Please select a group from the list of observations')
         return
       }
-      // get validated markers
-      const markers = validate()
-      const markersQuery = markers.map(function (el, idx) {
-        return 'var_names=' + encodeURIComponent(el)
-      }).join('&')
 
-      if (!markers.length > 0) {
+      if (!varList.length) {
         showError('Select genes of interest from the sidebar on the right')
         return
       }
 
+      const markersQuery = varList.map(function (el, idx) {
+        return 'var_names=' + encodeURIComponent(el)
+      }).join('&')
+
       $.when(
-        doAjax(API_SERVER + 'api/v1/datasets/' + datasetId + '/plotting/matrixplot?groupby=' + Cookies.get('ds' + datasetId + '-obs-name') + '&' + markersQuery).then(function (data) {
+        doAjax(API_SERVER + 'api/v1/datasets/' + datasetId + '/plotting/matrixplot?groupby=' + colorScaleKey + '&' + markersQuery).then(function (data) {
           // update active plot data
           active.data = data
           active.dataframe = transform(data.values_df)
@@ -152,11 +129,6 @@
     }
 
     const render = function () {
-      // load cookies
-      const colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name')
-      // const colorScaleId = (typeof Cookies.get('ds' + datasetId + '-obs-id') === 'undefined') ? 0 : Cookies.get('ds' + datasetId + '-obs-id')
-      const colorScale = (typeof Cookies.get('d3-scale-chromatic') === 'undefined') ? 'Viridis' : Cookies.get('d3-scale-chromatic')
-
       // ##########################################################################
       // Patrick.Brockmann@lsce.ipsl.fr
       // ##########################################################################
@@ -176,15 +148,47 @@
         .style('position', 'absolute')
         .style('visibility', 'hidden')
 
+      if (colorScaleKey) {
+        $('#color-scale-value').html(colorScaleKey)
+        $('#color-scale-value').removeClass('d-none')
+        $('#color-scale').removeClass('disabled')
+        $('#color-scale-remove').removeClass('d-none')
+      } else { // decolor
+        $('.colourise').removeClass('active')
+        $('#color-scale-remove').addClass('d-none')
+        $('#color-scale-value').empty().addClass('d-none')
+        $('#color-scale').addClass('disabled')
+        $('.btn-gene-select').removeClass('active')
+      }
+      if (colorScaleId) {
+        $('#collapse' + colorScaleId).collapse('show')
+      }
+      if (varList.length) {
+        varList.forEach(function (v) {
+          if ($("button[data-gene='" + escapeSelector(v) + "']").length) {
+            $("button[data-gene='" + escapeSelector(v) + "']").addClass('active')
+          } else {
+            $('#search-genes-selected').append(
+              $('<button/>')
+                .attr('type', 'button')
+                .attr('id', 'gene-deg-' + v)
+                .attr('data-gene', v)
+                .addClass('btn-gene-select btn btn-outline-info btn-sm active')
+                .text(v)
+            )
+          }
+        })
+      }
+
       // Labels of row and columns
       const myVars = active.data.var_names
       let myGroups
-      if ($('div[data-name="' + colorScaleKey + '"]').data('type') === 'continuous') {
+      if ($('div[data-name="' + escapeSelector(colorScaleKey) + '"]').data('type') === 'continuous') {
         myGroups = active.data.categories
       } else {
         myGroups = []
         active.data.categories.forEach(function (item, index) {
-          if ($('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + item + '"]').is(':checked')) {
+          if ($('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + escapeSelector(item) + '"]').is(':checked')) {
             myGroups.push(item)
           }
         })
@@ -357,7 +361,7 @@
 
       d3.select('#canvas-zoom-reset')
         .on('click', function () {
-          svg.transition().call(zoom.scaleBy, 1)
+          svg.call(zoom.transform, d3.zoomIdentity.translate((widthParent / 2 - width / 2), 100).scale(1))
         })
       endLoader()
     }
@@ -524,44 +528,61 @@
             $('<div/>')
               .attr('id', 'canvas_plot'))
       )
+
+      // load cookies
+      colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name') || null
+      colorScaleId = Cookies.get('ds' + datasetId + '-obs-id') || null
+      colorScale = Cookies.get('d3-scale-chromatic') || 'Viridis'
+      varList = Cookies.get('ds' + datasetId + '-var-list')
+        ? JSON.parse(Cookies.get('ds' + datasetId + '-var-list'))
+        : ['ALB', 'AFP', 'C3', 'HP', 'SAA1', 'RARRES2', 'LRP1', 'NR1H4', 'NNMT', 'HPD', 'CES2', 'C1R', 'AOX1', 'GLUL']
+
       // get data
       startLoader()
-      loadData()
+      $.when(
+        doAjax(API_SERVER + 'api/v1/datasets/' + datasetId)).then(function (d) {
+        // update active dataset
+        active.dataset = d
+
+        if (colorScaleKey && !(colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() in active.dataset.data_obs)) {
+          colorScaleKey = null
+          colorScaleId = null
+          Cookies.remove('ds' + datasetId + '-obs-name')
+          Cookies.remove('ds' + datasetId + '-obs-id')
+        }
+
+        varList = varList.filter(function (n) {
+          return active.dataset.data_var.indexOf(n) !== -1
+        })
+        if (varList.length) {
+          Cookies.set('ds' + datasetId + '-var-list', JSON.stringify(varList), {
+            expires: 30,
+            sameSite: 'Strict',
+            path: window.location.pathname
+          })
+        } else {
+          Cookies.remove('ds' + datasetId + '-var-list')
+        }
+
+        loadData()
+      })
+
       return this
     }
 
     this.interact = function (el) {
       $('.colourise').removeClass('active')
-      $('.btn-gene-select').removeClass('active')
-      let colorScaleKey
-      let colorScaleId
-      let colorScaleType
-      if (el.id === 'genes') {
-        colorScaleKey = el.selectedItems[0]
-        colorScaleId = 0
-        colorScaleType = 'gene'
-      } else if ($(el).hasClass('btn-gene-select')) {
-        colorScaleKey = $(el).text()
-        colorScaleId = 0
-        colorScaleType = 'gene'
-        $(el).addClass('active')
-      } else {
-        colorScaleKey = $(el).data('name')
-        colorScaleId = $(el).data('id')
-        colorScaleType = $(el).data('type')
-        $('#colourise' + colorScaleId).addClass('active')
-      }
+      colorScaleKey = $(el).data('name')
+      colorScaleId = $(el).data('id')
       Cookies.set('ds' + datasetId + '-obs-name', colorScaleKey, {
         expires: 30,
-        sameSite: 'Strict'
+        sameSite: 'Strict',
+        path: window.location.pathname
       })
       Cookies.set('ds' + datasetId + '-obs-id', colorScaleId, {
         expires: 30,
-        sameSite: 'Strict'
-      })
-      Cookies.set('ds' + datasetId + '-obs-type', colorScaleType, {
-        expires: 30,
-        sameSite: 'Strict'
+        sameSite: 'Strict',
+        path: window.location.pathname
       })
 
       // get data
@@ -571,14 +592,12 @@
 
     this.genes = function (el) {
       // get cookie data
-      let varList = (typeof Cookies.get('ds' + datasetId + '-var-list') === 'undefined') ? [] : JSON.parse(Cookies.get('ds' + datasetId + '-var-list'))
       if (jQuery.isArray(varList) === -1) {
         varList = []
       }
       if ($(el).hasClass('active')) {
         $(el).removeClass('active')
-        const varFiltered = varList.filter(function (e, y) { return e !== $(el).data('gene') })
-        varList = varFiltered
+        varList = varList.filter(function (e) { return e !== $(el).data('gene') })
       } else {
         const gene = $(el).text()
         if (jQuery.inArray(gene, varList) === -1) {
@@ -588,7 +607,8 @@
       }
       Cookies.set('ds' + datasetId + '-var-list', JSON.stringify(varList), {
         expires: 30,
-        sameSite: 'Strict'
+        sameSite: 'Strict',
+        path: window.location.pathname
       })
 
       // get data
@@ -598,6 +618,7 @@
 
     this.resetGenes = function () {
       $('.btn-gene-select').removeClass('active')
+      varList = []
       Cookies.remove('ds' + datasetId + '-var-list')
       // get data
       startLoader()
@@ -613,7 +634,8 @@
     this.changePalette = function (paletteName) {
       Cookies.set('d3-scale-chromatic', paletteName, {
         expires: 30,
-        sameSite: 'Strict'
+        sameSite: 'Strict',
+        path: window.location.pathname
       })
       render()
     }
@@ -636,7 +658,7 @@
       }
     }).on('select2:select', function (e) {
       const data = e.params.data
-      if (!$('#gene-deg-' + data.id).length) {
+      if (!$('#gene-deg-' + escapeSelector(data.id)).length) {
         $('#search-genes-selected').append(
           $('<button/>')
             .attr('type', 'button')
@@ -645,7 +667,7 @@
             .addClass('btn-gene-select btn btn-outline-info btn-sm')
             .text(data.id)
         )
-        $("button[data-gene='" + data.id + "']").trigger('click')
+        $("button[data-gene='" + escapeSelector(data.id) + "']").trigger('click')
       }
     })
 

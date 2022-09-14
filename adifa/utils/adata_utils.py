@@ -53,7 +53,7 @@ def parse_array(zarr, array):
 
 
 def get_annotations(adata):
-    annotations = {"obs": {}, "obsm": {}}
+    annotations = {"obs": {}, "obsm": [], "var": []}
 
     switcher = {
         "category": type_category,
@@ -98,6 +98,7 @@ def get_annotations(adata):
             annotations["obs"][slug]["name"] = group
 
     annotations["obsm"] = [value for value in adata["obsm"].array_keys()]
+    annotations["var"] = list(get_group_index(adata["var"])[:])
 
     return annotations
 
