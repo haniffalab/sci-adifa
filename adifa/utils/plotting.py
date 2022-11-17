@@ -4,6 +4,9 @@ from flask import current_app, flash
 from sqlalchemy import exc
 import scanpy as sc
 import pandas as pd
+import base64
+from io import BytesIO
+from matplotlib.figure import Figure
 
 from adifa import models
 from adifa.resources.errors import (
@@ -109,3 +112,17 @@ def get_matrixplot(
     }
 
     return output
+
+def get_spatial_plot(datasetId):
+
+    print(datasetId)
+
+    fig = Figure()
+    ax = fig.subplots()
+    ax.plot([1,2])
+
+    buf = BytesIO()
+    fig.savefig(buf, format="png")
+    image = base64.b64encode(buf.getbuffer()).decode("ascii")
+
+    return image

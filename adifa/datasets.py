@@ -1,4 +1,6 @@
 import os
+import base64
+from io import BytesIO
 from signal import SIG_DFL
 
 from flask import (
@@ -14,6 +16,7 @@ from flask import (
     url_for,
 )
 from sqlalchemy import exc
+from matplotlib.figure import Figure
 
 from adifa import models
 
@@ -49,6 +52,7 @@ def scatterplot(id):
         obs = OrderedDict(
             sorted(dataset.data_obs.items(), key=lambda x: getitem(x[1], "name"))
         )
+
     return render_template("scatterplot.html", dataset=dataset, obs=obs)
 
 

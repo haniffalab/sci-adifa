@@ -10,6 +10,7 @@
 {% block bodyend %}
 {{ super() }}
 <script src="{{ url_for('static', filename='scripts/scatterplot.js') }}"></script>
+<script src="{{ url_for('static', filename='scripts/spatial.js') }}"></script>
 <script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
 <script src="https://unpkg.com/@deck.gl/core@^8.0.0/debug.min.js"></script>
 <script src="https://d3js.org/d3.v6.js"></script>
@@ -22,20 +23,34 @@
     breadcrumbs=dataset.title,
     dataset=dataset) }}
   <div class="row">
-    <div class="col-lg-9 col-md-12">
-      {% block visualisation %}
-        {% if dataset.data_obsm|length > 0 %}
-          <div id="canvas-container" data-datasetId="{{ dataset.id }}" class="card card-small"></div>
-        {% else %}
-          <div class="card card-small">
-            <div class="card-body">
-              <div class="alert alert-info" role="alert">
-                This dataset has no embeddings and can not be visualised as a scatterplot. Please select a different type of plot. 
+    <div class="container col-lg-9 col-md-12">
+      <div class="row">
+        <div class="col-lg-8 col-md-12">
+          {% block visualisation %}
+            {% if dataset.data_obsm|length > 0 %}
+            <div class="col-12" style="width: 100%;">
+              <div id="canvas-container" data-datasetId="{{ dataset.id }}" class="card card-small" style="width: 100%;"></div>
+            </div>
+              
+            {% else %}
+              <div class="card card-small">
+                <div class="card-body">
+                  <div class="alert alert-info" role="alert">
+                    This dataset has no embeddings and can not be visualised as a scatterplot. Please select a different type of plot. 
+                  </div>
+                </div>
               </div>
-            </div>            
-          </div>
-        {% endif %}
-      {% endblock %}
+            {% endif %}
+          {% endblock %}
+        </div>
+        <div class="col-lg-4 col-md-12 p-0 m-0">
+          <div id="spatial-container" data-datasetId="{{ dataset.id }}" class="card" style="height: 100%;">
+            <div class="card-body mx-auto row d-flex flex-wrap align-items-center p-0">
+                <img id="spatial-img" class="align-middle" src="data:image/png;base64,{{image}}" style="max-width: 100%;"/>
+            </div>
+        </div>
+        </div>
+      </div>
     </div>
     <div class="col-lg-3 col-md-12">
       {% block selector %}

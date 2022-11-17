@@ -79,15 +79,15 @@
 
     // Init matrixplot
     if ($('#matrixplot-container').length) {
-      const scatterplot = $('#matrixplot-container').matrixplot()
+      const matrixplot = $('#matrixplot-container').matrixplot()
       // Add events
       $(document.body).on('change', '#palette', function (event) {
-        scatterplot.changePalette($(this).val())
+        matrixplot.changePalette($(this).val())
       })
       // Accordion animations
       $('.obs-values').on('show.bs.collapse', function () {
         $(this).prev('.list-group-item').find('.fa').removeClass('fa-plus-square').addClass('fa-caret-square-up')
-        setTimeout(function (el) { scatterplot.interact(el) }, 100, this) // Defer to improve UX
+        setTimeout(function (el) { matrixplot.interact(el) }, 100, this) // Defer to improve UX
       }).on('shown.bs.collapse', function () {
         // $('.main-sidebar .nav-wrapper').animate({
         //     scrollTop: $(this).prev(".list-group-item").position().top - 61
@@ -97,26 +97,30 @@
       })
 
       $('.obs_value_cb').click(function (event) {
-        setTimeout(function () { scatterplot.redraw() }, 100) // Defer to improve UX
+        setTimeout(function () { matrixplot.redraw() }, 100) // Defer to improve UX
       })
 
       $('.checkall').click(function (event) {
         $('#collapse' + $(this).data('id')).find('input[type=checkbox]').prop('checked', true)
-        setTimeout(function () { scatterplot.redraw() }, 100) // Defer to improve UX
+        setTimeout(function () { matrixplot.redraw() }, 100) // Defer to improve UX
       })
 
       $('.uncheckall').click(function (event) {
         $('#collapse' + $(this).data('id')).find('input[type=checkbox]').prop('checked', false)
-        setTimeout(function () { scatterplot.redraw() }, 100) // Defer to improve UX
+        setTimeout(function () { matrixplot.redraw() }, 100) // Defer to improve UX
       })
 
       $('#canvas-gene-reset').click(function (event) {
-        scatterplot.resetGenes(this)
+        matrixplot.resetGenes(this)
       })
 
       $(document.body).on('click', '.btn-gene-select', function (event) {
-        if ($(this).text() !== $('#color-scale-value').text() && scatterplot) scatterplot.genes(this)
+        if ($(this).text() !== $('#color-scale-value').text() && matrixplot) matrixplot.genes(this)
       })
+    }
+
+    if ($('#spatial-container').length) {
+      const spatial = $('#spatial-container').spatial()
     }
   })
 })(jQuery)

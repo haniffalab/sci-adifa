@@ -12,11 +12,46 @@
     let cellDeck
     let embeddingViewState
     let currentViewState
+    let bboxMinLon, bboxMinLat, bboxMaxLon, bboxMaxLat
     const settings = $.extend({}, defaults, options)
     if (this.length > 1) {
       this.each(function () { $(this).cellatlas(options) })
       return this
     }
+
+    window.addEventListener("resize", ({}) => {
+      cellDeck.setProps({
+        width: $('#' + settings.containerId).parent().width()
+      })
+      cellDeck.canvas.width = cellDeck.width
+      const { WebMercatorViewport } = deck
+      currentViewState = new WebMercatorViewport({
+        width: cellDeck.canvas.width,
+        height: currentViewState.height,
+        longitude: currentViewState.longitude,
+        latitude: currentViewState.latitude,
+        zoom: currentViewState.zoom
+      })
+      embeddingViewState = new WebMercatorViewport({
+        width: cellDeck.canvas.width,
+        height: embeddingViewState.height,
+        longitude: embeddingViewState.longitude,
+        latitude: embeddingViewState.latitude,
+        zoom: embeddingViewState.zoom
+      }).fitBounds([
+        [bboxMinLon, bboxMinLat],
+        [bboxMaxLon, bboxMaxLat]
+      ], {
+        padding: {
+          top: 10,
+          bottom: 10,
+          left: 10,
+          right: 10
+        }
+      })
+      render()
+    })
+
     // private variables
     const width = $('#' + settings.containerId).parent().width()
     const height = $(window).height() - 116
@@ -71,12 +106,19 @@
     }
 
     const decolorize = function () {
+      console.log("decolorize")
       colorScaleId = null
       colorScaleKey = null
       colorScaleType = null
-      Cookies.remove('ds' + datasetId + '-obs-name')
-      Cookies.remove('ds' + datasetId + '-obs-id')
-      Cookies.remove('ds' + datasetId + '-obs-type')
+      Cookies.remove('ds' + datasetId + '-obs-name', {
+        path: window.location.pathname
+      })
+      Cookies.remove('ds' + datasetId + '-obs-id', {
+        path: window.location.pathname
+      })
+      Cookies.remove('ds' + datasetId + '-obs-type', {
+        path: window.location.pathname
+      })
       startLoader()
       render()
       endLoader()
@@ -127,10 +169,10 @@
         // calculate viewport bounding values
         const longitude = (active.bounds.x.max + active.bounds.x.min) / 2
         const latitude = (active.bounds.y.max + active.bounds.y.min) / 2
-        const bboxMinLon = Math.max(active.bounds.x.min, -179)
-        const bboxMinLat = Math.max(active.bounds.y.min, -89)
-        const bboxMaxLon = Math.min(active.bounds.x.max, 179)
-        const bboxMaxLat = Math.min(active.bounds.y.max, 89)
+        bboxMinLon = Math.max(active.bounds.x.min, -179)
+        bboxMinLat = Math.max(active.bounds.y.min, -89)
+        bboxMaxLon = Math.min(active.bounds.x.max, 179)
+        bboxMaxLat = Math.min(active.bounds.y.max, 89)
         // create viewport and fit bounds
         const { WebMercatorViewport } = deck
         currentViewState = new WebMercatorViewport({
@@ -301,10 +343,11 @@
           initialViewState: currentViewState
         }
       })
+
       // update layer
       cellDeck.setProps({
         layers: [layer],
-        initialViewState: currentViewState
+        initialViewState: currentViewState,
       })
     }
 
@@ -318,7 +361,7 @@
 
       const canvas = d3.select(selectorId)
         .style('height', legendheight + 'px')
-        .style('width', legendwidth + 'px')
+        .style('width', "100%")//legendwidth + 'px')
         .style('position', 'absolute')
         .style('bottom', '10px')
         .style('left', '20px')
@@ -482,7 +525,7 @@
       // set container size
       $('#' + this.attr('id')).parent().height(height)
       $('#' + this.attr('id')).height(height)
-      $('#' + this.attr('id')).width(width)
+      // $('#' + this.attr('id')).width(width)
 
       // load dataset
       startLoader()
@@ -537,9 +580,15 @@
           colorScaleKey = null
           colorScaleId = null
           colorScaleType = null
-          Cookies.remove('ds' + datasetId + '-obs-name')
-          Cookies.remove('ds' + datasetId + '-obs-id')
-          Cookies.remove('ds' + datasetId + '-obs-type')
+          Cookies.remove('ds' + datasetId + '-obs-name', {
+            path: window.location.pathname
+          })
+          Cookies.remove('ds' + datasetId + '-obs-id', {
+            path: window.location.pathname
+          })
+          Cookies.remove('ds' + datasetId + '-obs-type', {
+            path: window.location.pathname
+          })
         }
 
         // get data
@@ -549,7 +598,7 @@
       // init deck
       const { DeckGL, WebMercatorViewport } = deck
       const viewport = new WebMercatorViewport({
-        width,
+        width: "100%",
         height,
         longitude: 0,
         latitude: 0,
@@ -641,7 +690,7 @@
       const { WebMercatorViewport } = deck
       const viewState = embeddingViewState || cellDeck.viewManager.viewState
       currentViewState = new WebMercatorViewport({
-        width: viewState.width,
+        width: cellDeck.canvas.width,
         height: viewState.height,
         longitude: viewState.longitude,
         latitude: viewState.latitude,
