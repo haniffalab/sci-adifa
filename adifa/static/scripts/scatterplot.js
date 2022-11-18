@@ -19,7 +19,7 @@
       return this
     }
 
-    window.addEventListener("resize", ({}) => {
+    window.addEventListener('resize', () => {
       cellDeck.setProps({
         width: $('#' + settings.containerId).parent().width()
       })
@@ -106,7 +106,6 @@
     }
 
     const decolorize = function () {
-      console.log("decolorize")
       colorScaleId = null
       colorScaleKey = null
       colorScaleType = null
@@ -347,7 +346,7 @@
       // update layer
       cellDeck.setProps({
         layers: [layer],
-        initialViewState: currentViewState,
+        initialViewState: currentViewState
       })
     }
 
@@ -361,7 +360,7 @@
 
       const canvas = d3.select(selectorId)
         .style('height', legendheight + 'px')
-        .style('width', "100%")//legendwidth + 'px')
+        .style('width', '100%')// legendwidth + 'px')
         .style('position', 'absolute')
         .style('bottom', '10px')
         .style('left', '20px')
@@ -598,7 +597,7 @@
       // init deck
       const { DeckGL, WebMercatorViewport } = deck
       const viewport = new WebMercatorViewport({
-        width: "100%",
+        width: '100%',
         height,
         longitude: 0,
         latitude: 0,

@@ -8,25 +8,62 @@
     $('.toggle-sidebar').click(function (e) {
       $('.main-sidebar').toggleClass('open')
     })
+
+    let spatial
+
+    // Init spatial
+    if ($('#spatial-container').length) {
+      spatial = $('#spatial-container').spatial()
+    }
+
     // Init scatterplot
     if ($('#canvas-container').length) {
       const scatterplot = $('#canvas-container').scatterplot()
+
+      const colorize = function (el) {
+        const isActive = $(el).hasClass('active')
+        scatterplot.colorize(el)
+        if (spatial) {
+          spatial.colorize(el, isActive)
+        }
+      }
+
+      const decolorize = function (el) {
+        scatterplot.removeColor()
+        if (spatial) {
+          spatial.decolorize(el)
+        }
+      }
+
+      const redraw = function () {
+        scatterplot.redraw()
+        if (spatial) {
+          spatial.redraw()
+        }
+      }
+
       // Add events
       // Accordion animations
       $('.obs-values').on('show.bs.collapse', function () {
-        $(this).prev('.list-group-item').find('.fa').removeClass('fa-plus-square').addClass('fa-caret-square-up')
-        setTimeout(function (el) { scatterplot.colorize(el) }, 100, this) // Defer to improve UX
+        $(this).prev('.list-group-item')
+          .find('.fa')
+          .removeClass('fa-plus-square')
+          .addClass('fa-caret-square-up')
+        setTimeout(function (el) { colorize(el) }, 100, this) // Defer to improve UX
       }).on('shown.bs.collapse', function () {
         // $('.main-sidebar .nav-wrapper').animate({
         //     scrollTop: $(this).prev(".list-group-item").position().top - 61
         // }, 500, "swing");
       }).on('hide.bs.collapse', function () {
-        $(this).prev('.list-group-item').find('.fa').removeClass('fa-caret-square-up').addClass('fa-plus-square')
+        $(this).prev('.list-group-item')
+          .find('.fa')
+          .removeClass('fa-caret-square-up')
+          .addClass('fa-plus-square')
       })
 
       $('.colourise').on('click', function (event) {
         if (scatterplot) {
-          scatterplot.colorize(this)
+          colorize(this)
           const genes = document.querySelector('#genes')
           if (genes) {
             genes.deselect(genes.selectedItems[0])
@@ -35,29 +72,34 @@
       })
 
       $('#genes').on('update', function (event) {
-        if (this.selectedItems[0] && this.selectedItems[0] !== $('#color-scale-value').text() && scatterplot) scatterplot.colorize(this)
+        if (this.selectedItems[0] && this.selectedItems[0] !== $('#color-scale-value').text() && scatterplot) {
+          colorize(this)
+        }
       })
 
       $(document.body).on('click', '.btn-gene-select', function (event) {
-        if ($(this).text() !== $('#color-scale-value').text() && scatterplot) scatterplot.colorize(this)
+        if ($(this).text() !== $('#color-scale-value').text() && scatterplot) {
+          colorize(this)
+        }
       })
 
       $('.obs_value_cb').click(function (event) {
-        setTimeout(function () { scatterplot.redraw() }, 100) // Defer to improve UX
+        console.log('individual obs clicked')
+        setTimeout(function () { redraw() }, 100) // Defer to improve UX
       })
 
       $('.checkall').click(function (event) {
         $('#collapse' + $(this).data('id')).find('input[type=checkbox]').prop('checked', true)
-        setTimeout(function () { scatterplot.redraw() }, 100) // Defer to improve UX
+        setTimeout(function () { redraw() }, 100) // Defer to improve UX
       })
 
       $('.uncheckall').click(function (event) {
         $('#collapse' + $(this).data('id')).find('input[type=checkbox]').prop('checked', false)
-        setTimeout(function () { scatterplot.redraw() }, 100) // Defer to improve UX
+        setTimeout(function () { redraw() }, 100) // Defer to improve UX
       })
 
       $('#color-scale-remove').click(function (event) {
-        scatterplot.removeColor(this)
+        decolorize(this)
       })
 
       $('body').on('click', '.canvas-obsm-key', function (event) {
@@ -117,10 +159,6 @@
       $(document.body).on('click', '.btn-gene-select', function (event) {
         if ($(this).text() !== $('#color-scale-value').text() && matrixplot) matrixplot.genes(this)
       })
-    }
-
-    if ($('#spatial-container').length) {
-      const spatial = $('#spatial-container').spatial()
     }
   })
 })(jQuery)

@@ -1,23 +1,26 @@
-/* global Cookies */
+// /* global Cookies */
 /* global API_SERVER */
 (function ($) {
   $.fn.spatial = function (options) {
-    const defaults = {
-      backgroundColor: 'white', // the canvas background color
-      containerId: 'spatial-container', // the data point transparency
-    }
-    const settings = $.extend({}, defaults, options)
+    // const defaults = {
+    //   backgroundColor: 'white', // the canvas background color
+    //   containerId: 'spatial-container' // the data point transparency
+    // }
+    // const settings = $.extend({}, defaults, options)
     if (this.length > 1) {
       this.each(function () { $(this).cellatlas(options) })
       return this
     }
 
     const datasetId = this.attr('data-datasetId')
-    const imgElem =  $('#spatial-img')
-    let image = ''
+    const imgElem = $('#spatial-img')
     let xhrPool = []
 
-    const imgsrc = function(strings, image){
+    let colorScaleId
+    let colorScaleKey
+    let colorScaleType
+
+    const imgsrc = function (strings, image) {
       return `data:image/png;base64,${image}`
     }
 
@@ -36,10 +39,19 @@
       })
     }
 
-    const showError = function (id) {
-      $('#canvas-loader').html('<div class="btn-group mb-3"><a class="btn btn-white">Error</a></div>')
-      $('#canvas-controls').hide()
-      $('#loader').removeClass().empty()
+    // const startLoader = function () {
+    //   imgElem.hide()
+    //   $('#spatial-loader').show()
+    // }
+
+    // const endLoader = function () {
+    //   $('#spatial-loader').hide()
+    //   imgElem.show()
+    // }
+
+    const showError = function () {
+      $('#spatial-div').html('<div class="btn-group mb-3"><a class="btn btn-white">Error</a></div>')
+      $('#spatial-loader').hide()
     }
 
     const doAjax = function (url, async = true) {
@@ -68,15 +80,54 @@
     }
 
     this.initialize = function () {
-      loadPlot();
+      $('#spatial-loader').hide()
+      loadPlot()
       return this
     }
-    
+
+    this.redraw = function () {
+      loadPlot()
+    }
+
     const loadPlot = function () {
+      // startLoader()
       $.when(
         doAjax(API_SERVER + 'api/v1/datasets/' + datasetId + '/plotting/spatial').then(function (data) {
-          imgElem.attr("src", imgsrc`${data}`)
+          imgElem.attr('src', imgsrc`${data}`)
+          // endLoader()
         }, showError))
+    }
+
+    this.colorize = function (el, active) {
+      if (active) {
+        colorScaleKey = null
+        colorScaleId = null
+        colorScaleType = null
+      } else {
+        if (el.id === 'genes') {
+          colorScaleKey = el.selectedItems[0]
+          colorScaleId = 0
+          colorScaleType = 'gene'
+        } else if ($(el).hasClass('btn-gene-select')) {
+          colorScaleKey = $(el).text()
+          colorScaleId = 0
+          colorScaleType = 'gene'
+        } else {
+          colorScaleKey = $(el).data('name')
+          colorScaleId = $(el).data('id')
+          colorScaleType = $(el).data('type')
+        }
+      }
+      console.log(colorScaleId, colorScaleKey, colorScaleType)
+      abort()
+      setTimeout(function () { loadPlot() }, 100) // Defer to improve UX
+    }
+
+    this.decolorize = function () {
+      colorScaleId = null
+      colorScaleKey = null
+      colorScaleType = null
+      console.log(colorScaleId, colorScaleKey, colorScaleType)
     }
 
     return this.initialize()
