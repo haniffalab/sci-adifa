@@ -143,9 +143,17 @@ def create_app(test_config=None):
     @click.command("init-db")
     @with_appcontext
     def init_db_command():
-        """Clear existing data and create new tables."""
+        """Clear existing tables and create new tables."""
+        db.drop_all()
         db.create_all()
         click.echo("Initialized the database.")
+    
+    @click.command("update-db")
+    @with_appcontext
+    def update_db_command():
+        """Create new tables."""
+        db.create_all()
+        click.echo("Updated the database.")
 
     @click.command("autodiscover")
     @with_appcontext
@@ -156,6 +164,7 @@ def create_app(test_config=None):
         click.echo("Discovered Datasets.")
 
     app.cli.add_command(init_db_command)
+    app.cli.add_command(update_db_command)
     app.cli.add_command(autodiscover_command)
 
     return app
