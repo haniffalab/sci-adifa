@@ -147,7 +147,7 @@ def create_app(test_config=None):
         db.drop_all()
         db.create_all()
         click.echo("Initialized the database.")
-    
+
     @click.command("update-db")
     @with_appcontext
     def update_db_command():
