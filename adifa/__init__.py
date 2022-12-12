@@ -158,8 +158,18 @@ def create_app(test_config=None):
     @with_appcontext
     def init_db_command():
         click.echo(click.style("Starting...", fg="green"))
+        """Create new tables."""
         db.create_all()
         click.echo(click.style("Initialized the database", fg="blue"))
+        click.echo(click.style("Finished...", fg="green"))
+
+    @click.command("clear-init-db")
+    @with_appcontext
+    def clear_init_db_command():
+        """Clear existing tables and create new tables."""
+        db.drop_all()
+        db.create_all()
+        click.echo(click.style("Cleared and initialized the database", fg="blue"))
         click.echo(click.style("Finished...", fg="green"))
 
     @click.command("autodiscover")
@@ -183,6 +193,7 @@ def create_app(test_config=None):
         click.echo(click.style("Finished...", fg="green"))
 
     app.cli.add_command(init_db_command)
+    app.cli.add_command(clear_init_db_command)
     app.cli.add_command(autodiscover_command)
 
     return app
