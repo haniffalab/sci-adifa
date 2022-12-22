@@ -93,7 +93,10 @@
       // startLoader()
       $.when(
         doAjax(API_SERVER + 'api/v1/datasets/' + datasetId + '/plotting/spatial').then(function (data) {
+          console.log(data)
+          // imgElem.attr('src', data)
           imgElem.attr('src', imgsrc`${data}`)
+          console.log(imgsrc`${data}`)
           // endLoader()
         }, showError))
     }

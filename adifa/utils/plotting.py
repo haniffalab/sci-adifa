@@ -7,12 +7,17 @@ import pandas as pd
 import base64
 from io import BytesIO
 from matplotlib.figure import Figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 import numpy as np
 import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 import seaborn as sns
 import cv2
+
+from flask import url_for, Response
 
 from adifa import models
 from adifa.resources.errors import (
@@ -227,7 +232,6 @@ def get_spatial_plot(datasetId):
     embryo_outline = cv2.imread(f'{current_app.root_path}/static/images/Embryo_mask_sections_outlined.jpg')
 
     # Detect borders for masks
-    print(embryo_outline)
     embryo_grey = cv2.cvtColor(embryo_outline, cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(embryo_grey, 50, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -289,22 +293,22 @@ def get_spatial_plot(datasetId):
     mask12_color[np.all(mask12==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[11]))[0:3])
 
     # plot the final mask which holds all the other masks and their corresponding colors as well
-    plt.figure(figsize=(20,16))
+    fig = Figure(figsize=(5,3))
+    #ax = fig.subplots()
+    ax = fig
+    
+    # plt.figure()
 
     plt.imshow(mask12_color)
 
-    plt.axis('off')
+    # ax.axis('off')
 
-    cb = plt.colorbar(sm)
+    cb = plt.colorbar(ax)
     cb.ax.tick_params(labelsize=20)
-
-    if mode == 'manual':
-        plt.title('Manual values for every section', fontsize=40, y=1.05)
-        cb.set_label("Manual values", fontsize=30, rotation=270, labelpad=70)
         
         
-    elif mode == 'celltype_counts':
-        plt.title(f'Number of counts for celltype {celltype_to_plot}', fontsize=40, y=1.05)
+    if mode == 'celltype_counts':
+        #plt.title(f'Number of counts for celltype {celltype_to_plot}', fontsize=40, y=1.05)
 
         if scale == 'manual':
             cb.set_label("No. cells" + " (scale values representitive to manual set upper and lower thresholds)", fontsize=20, rotation=270, labelpad=70)
@@ -312,7 +316,7 @@ def get_spatial_plot(datasetId):
             cb.set_label("No. cells", fontsize=30, rotation=270, labelpad=70)
         
     elif mode == 'celltype_percentage_within_sections':
-        plt.title(f'Percentage of celltype {celltype_to_plot} compared to other celltypes within section', fontsize=40, y=1.05)
+        ax.title(f'Percentage of celltype {celltype_to_plot} compared to other celltypes within section', fontsize=40, y=1.05)
         
         if scale == 'manual':
             cb.set_label("Percentage %" + " (scale values representitive to manual set upper and lower thresholds)", fontsize=20, rotation=270, labelpad=70)
@@ -320,7 +324,7 @@ def get_spatial_plot(datasetId):
             cb.set_label("Percentage %", fontsize=30, rotation=270, labelpad=70)
         
     elif mode == 'celltype_percentage_across_sections':
-        plt.title(f'Percentage of  celltype {celltype_to_plot} compared across sections', fontsize=40, y=1.05)
+        ax.title(f'Percentage of  celltype {celltype_to_plot} compared across sections', fontsize=40, y=1.05)
         
         if scale == 'manual':
             cb.set_label("Percentage %" + " (scale values representitive to manual set upper and lower thresholds)", fontsize=20, rotation=270, labelpad=70)
@@ -328,21 +332,28 @@ def get_spatial_plot(datasetId):
             cb.set_label("Percentage %", fontsize=30, rotation=270, labelpad=70)
             
     elif mode == 'gene_expression':
-        plt.title(f'Mean gene expression of {gene_to_plot} for each section',fontsize=40, y=1.05)
+        ax.title(f'Mean gene expression of {gene_to_plot} for each section',fontsize=40, y=1.05)
         
         if scale == 'manual':
             cb.set_label("Expression" + " (scale values representitive to manual set upper and lower thresholds)", fontsize=20, rotation=270, labelpad=70)
         elif scale == 'auto':
             cb.set_label("Expression", fontsize=30, rotation=270, labelpad=70)
 
-    #plt.savefig('HO_plot.pdf')
+    plt.savefig(f'{current_app.root_path}/static/images/Plotting_elmer.png', dpi=100)
 
-    # fig = Figure()
+    #fig = Figure()
     # ax = fig.subplots()
     # ax.plot([1,2])
 
+    #img = mpimg.imread(f'{current_app.root_path}/static/images/Plotting_elmer.png')
+
     buf = BytesIO()
-    plt.savefig(buf, format="png")
+
+    #FigureCanvas(plt.gcf()).print_png(buf)
+    #return Response(buf.getvalue(), mimetype='image/png')
+    fig.savefig(buf, format="png")
     image = base64.b64encode(buf.getbuffer()).decode("ascii")
+    print(image)
 
     return image
+    # return url_for('static', filename='/images/Plotting_elmer.png')
