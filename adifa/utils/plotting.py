@@ -8,6 +8,12 @@ import base64
 from io import BytesIO
 from matplotlib.figure import Figure
 
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import seaborn as sns
+import cv2
+
 from adifa import models
 from adifa.resources.errors import (
     InvalidDatasetIdError,
