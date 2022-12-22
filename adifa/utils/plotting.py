@@ -115,7 +115,18 @@ def get_matrixplot(
 
 def get_spatial_plot(datasetId):
 
-    print(datasetId)
+    if not datasetId > 0:
+        raise InvalidDatasetIdError
+
+    try:
+        dataset = models.Dataset.query.get(datasetId)
+    except exc.SQLAlchemyError as e:
+        raise DatabaseOperationError
+
+    try:
+        adata = current_app.adata[dataset.filename]
+    except (ValueError, AttributeError) as e:
+        raise DatasetNotExistsError
 
     fig = Figure()
     ax = fig.subplots()
