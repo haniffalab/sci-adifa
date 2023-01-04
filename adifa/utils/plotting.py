@@ -11,9 +11,6 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 import numpy as np
 import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import seaborn as sns
 import cv2
 
@@ -165,7 +162,7 @@ def get_spatial_plot(datasetId):
         gene_expression_table.loc[clust] = adata[adata.obs[cat1].isin([clust]),:].X.mean(0)
 
     mode = 'celltype_percentage_across_sections'   # celltype_counts, celltype_percentage_within_sections, celltype_percentage_across_sections, gene_expression
-    cmap = plt.cm.viridis      # using premade colormaps e.g. viridis, plasma, inferno, magma, cividis, Reds
+    cmap = mpl.colormaps['viridis']     # using premade colormaps e.g. viridis, plasma, inferno, magma, cividis, Reds
     scale = 'auto'             # for the color bar: auto, manual
 
     #################################################################################
@@ -256,18 +253,17 @@ def get_spatial_plot(datasetId):
 
     if scale == 'auto':
         norm = mpl.colors.Normalize( vmin=min(values) , vmax=max(values) )
-        sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+        sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
         
     elif scale == 'manual':
         norm = mpl.colors.Normalize( vmin=scale_lower_value , vmax=scale_upper_value )
-        sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+        sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
 
     else:
         raise Exception('Scale option not correct. Please use either auto or manual')
         
     # Set the color for each mask 
     mask1_color = np.copy(embryo)
-    print(mask1_color.shape)
     mask1_color[np.all(mask1==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[0]))[0:3])
     mask2_color = np.copy(mask1_color)
     mask2_color[np.all(mask2==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[1]))[0:3])
@@ -293,67 +289,35 @@ def get_spatial_plot(datasetId):
     mask12_color[np.all(mask12==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[11]))[0:3])
 
     # plot the final mask which holds all the other masks and their corresponding colors as well
-    fig = Figure(figsize=(5,3))
-    #ax = fig.subplots()
-    ax = fig
-    
-    # plt.figure()
+    fig = Figure(figsize=(4,5))
+    ax1, ax2 = fig.subplots(nrows=2, gridspec_kw={"height_ratios":[1, 0.05]})
 
-    plt.imshow(mask12_color)
+    im = ax1.imshow(mask12_color, interpolation='nearest')
+    # im = fig.figimage(mask12_color)#, resize=True)
+    ax1.set_axis_off()
 
-    # ax.axis('off')
-
-    cb = plt.colorbar(ax)
-    cb.ax.tick_params(labelsize=20)
-        
-        
+    cb = fig.colorbar(im, cax=ax2, orientation='horizontal', pad=0.2)
+    cb.ax.tick_params(labelsize=10)
+                
     if mode == 'celltype_counts':
-        #plt.title(f'Number of counts for celltype {celltype_to_plot}', fontsize=40, y=1.05)
-
-        if scale == 'manual':
-            cb.set_label("No. cells" + " (scale values representitive to manual set upper and lower thresholds)", fontsize=20, rotation=270, labelpad=70)
-        elif scale == 'auto':
-            cb.set_label("No. cells", fontsize=30, rotation=270, labelpad=70)
+        fig.suptitle(f'Number of counts for celltype {celltype_to_plot}', fontsize=10, y=0.98, wrap=True)
+        cb.set_label("No. cells", fontsize=10)
         
     elif mode == 'celltype_percentage_within_sections':
-        ax.title(f'Percentage of celltype {celltype_to_plot} compared to other celltypes within section', fontsize=40, y=1.05)
-        
-        if scale == 'manual':
-            cb.set_label("Percentage %" + " (scale values representitive to manual set upper and lower thresholds)", fontsize=20, rotation=270, labelpad=70)
-        elif scale == 'auto':
-            cb.set_label("Percentage %", fontsize=30, rotation=270, labelpad=70)
+        fig.suptitle(f'Percentage of celltype {celltype_to_plot} compared to other celltypes within section', fontsize=10, y=0.98, wrap=True)
+        cb.set_label("Percentage %", fontsize=10)
         
     elif mode == 'celltype_percentage_across_sections':
-        ax.title(f'Percentage of  celltype {celltype_to_plot} compared across sections', fontsize=40, y=1.05)
-        
-        if scale == 'manual':
-            cb.set_label("Percentage %" + " (scale values representitive to manual set upper and lower thresholds)", fontsize=20, rotation=270, labelpad=70)
-        elif scale == 'auto':
-            cb.set_label("Percentage %", fontsize=30, rotation=270, labelpad=70)
+        fig.suptitle(f'Percentage of  celltype {celltype_to_plot} compared across sections', fontsize=10, y=0.98, wrap=True)
+        cb.set_label("Percentage %", fontsize=10)
             
     elif mode == 'gene_expression':
-        ax.title(f'Mean gene expression of {gene_to_plot} for each section',fontsize=40, y=1.05)
-        
-        if scale == 'manual':
-            cb.set_label("Expression" + " (scale values representitive to manual set upper and lower thresholds)", fontsize=20, rotation=270, labelpad=70)
-        elif scale == 'auto':
-            cb.set_label("Expression", fontsize=30, rotation=270, labelpad=70)
-
-    plt.savefig(f'{current_app.root_path}/static/images/Plotting_elmer.png', dpi=100)
-
-    #fig = Figure()
-    # ax = fig.subplots()
-    # ax.plot([1,2])
-
-    #img = mpimg.imread(f'{current_app.root_path}/static/images/Plotting_elmer.png')
+        fig.suptitle(f'Mean gene expression of {gene_to_plot} for each section',fontsize=10, y=0.98, wrap=True)
+        cb.set_label("Expression", fontsize=10)
 
     buf = BytesIO()
 
-    #FigureCanvas(plt.gcf()).print_png(buf)
-    #return Response(buf.getvalue(), mimetype='image/png')
     fig.savefig(buf, format="png")
     image = base64.b64encode(buf.getbuffer()).decode("ascii")
-    print(image)
 
     return image
-    # return url_for('static', filename='/images/Plotting_elmer.png')
