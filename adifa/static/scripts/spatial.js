@@ -33,11 +33,11 @@
       xhrPool = $.grep(xhrPool, function (x) { return x !== jqXHR })
     })
 
-    const abort = function () {
-      $.each(xhrPool, function (idx, jqXHR) {
-        jqXHR.abort()
-      })
-    }
+    // const abort = function () {
+    //   $.each(xhrPool, function (idx, jqXHR) {
+    //     jqXHR.abort()
+    //   })
+    // }
 
     // const startLoader = function () {
     //   imgElem.hide()
@@ -119,8 +119,7 @@
         }
       }
       console.log(colorScaleId, colorScaleKey, colorScaleType)
-      abort()
-      setTimeout(function () { loadPlot() }, 100) // Defer to improve UX
+      loadPlot(colorScaleKey)
     }
 
     this.decolorize = function () {
