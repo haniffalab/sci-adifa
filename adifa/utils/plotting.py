@@ -7,14 +7,10 @@ import pandas as pd
 import base64
 from io import BytesIO
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 import numpy as np
 import matplotlib as mpl
-import seaborn as sns
 import cv2
-
-from flask import url_for, Response
 
 from adifa import models
 from adifa.resources.errors import (
@@ -121,7 +117,7 @@ def get_matrixplot(
 
     return output
 
-def get_spatial_plot(datasetId):
+def get_spatial_plot(datasetId, cat="cell_labels_lvl2"):
 
     if not datasetId > 0:
         raise InvalidDatasetIdError
@@ -139,28 +135,11 @@ def get_spatial_plot(datasetId):
     # Calculate tables to hold potential data to plot
 
     cat1 = 'spatial_location'    # make this the column which the masks relate to i.e. 12 sections
-    cat2 = 'cell_labels_lvl2'  # change to annotations of interest
+    cat2 = cat  # change to annotations of interest
 
     adata.obs[cat1] = adata.obs[cat1].astype('category')
     adata.obs[cat2] = adata.obs[cat2].astype('category')
-
-    # counts table
-    cat1_labels = adata.obs[cat1]
-    cat2_labels = adata.obs[cat2]
-    counts_table = pd.crosstab(cat1_labels,cat2_labels)
-
-    # percentage_table_row table:
-    percentage_table_row = counts_table.T
-    percentage_table_row = (round((percentage_table_row/percentage_table_row.sum())*100,2)).T
-
-    # percentage_table_row table:
-    percentage_table_column = counts_table
-    percentage_table_column = (round((percentage_table_column/percentage_table_column.sum())*100,2))
-
-    gene_expression_table = pd.DataFrame(columns=adata.var_names, index=adata.obs[cat1].cat.categories)                                                                                                 
-    for clust in adata.obs[cat1].cat.categories:
-        gene_expression_table.loc[clust] = adata[adata.obs[cat1].isin([clust]),:].X.mean(0)
-
+    
     mode = 'celltype_percentage_across_sections'   # celltype_counts, celltype_percentage_within_sections, celltype_percentage_across_sections, gene_expression
     cmap = mpl.colormaps['viridis']     # using premade colormaps e.g. viridis, plasma, inferno, magma, cividis, Reds
     scale = 'auto'             # for the color bar: auto, manual
@@ -179,8 +158,13 @@ def get_spatial_plot(datasetId):
     scale_upper_value = 15
 
     #################################################################################
-        
+    
     if mode == 'celltype_counts':
+        # counts table
+        cat1_labels = adata.obs[cat1]
+        cat2_labels = adata.obs[cat2]
+        counts_table = pd.crosstab(cat1_labels,cat2_labels)
+
         df_of_values = counts_table[[celltype_to_plot]]
         values = []
         for col in df_of_values:
@@ -188,6 +172,14 @@ def get_spatial_plot(datasetId):
             values.extend(value)
         
     elif mode == 'celltype_percentage_within_sections':
+        # counts table
+        cat1_labels = adata.obs[cat1]
+        cat2_labels = adata.obs[cat2]
+        counts_table = pd.crosstab(cat1_labels,cat2_labels)
+
+        # percentage_table_row table:
+        percentage_table_row = round((counts_table.T/counts_table.sum(axis=1)).T*100,2)
+
         df_of_values = percentage_table_row[[celltype_to_plot]]
         values = []
         for col in df_of_values:
@@ -195,6 +187,14 @@ def get_spatial_plot(datasetId):
             values.extend(value)
 
     elif mode == 'celltype_percentage_across_sections':
+        # counts table
+        cat1_labels = adata.obs[cat1]
+        cat2_labels = adata.obs[cat2]
+        counts_table = pd.crosstab(cat1_labels,cat2_labels)
+
+        # percentage_table_row table:
+        percentage_table_column = round((counts_table/counts_table.sum())*100,2)
+
         df_of_values = percentage_table_column[[celltype_to_plot]]
         values = []
         for col in df_of_values:
@@ -202,6 +202,11 @@ def get_spatial_plot(datasetId):
             values.extend(value)
             
     elif mode == 'gene_expression':
+        pd.set_option('mode.chained_assignment', None)
+        gene_expression_table = pd.DataFrame(columns=adata.var_names, index=adata.obs[cat1].cat.categories)
+        for clust in gene_expression_table.index.to_list():
+            gene_expression_table.loc[clust, :] = adata[adata.obs[cat1].isin([clust]),:].X.mean(0)
+
         df_of_values = gene_expression_table[[gene_to_plot]]
         df_of_values = df_of_values.T
         values = []
