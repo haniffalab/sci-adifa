@@ -117,8 +117,8 @@ def get_matrixplot(
 
     return output
 
-def get_spatial_plot(datasetId, cat="cell_labels_lvl2"):
-
+def get_spatial_plot(datasetId, plot_value="MACROPHAGE",cat="cell_labels_lvl2", Mode='celltype_percentage_across_sections', color='plasma', scale_mode='auto', scale_max=15, scale_min=0):
+    # MACROPHAGE WT1
     if not datasetId > 0:
         raise InvalidDatasetIdError
 
@@ -140,32 +140,24 @@ def get_spatial_plot(datasetId, cat="cell_labels_lvl2"):
     adata.obs[cat1] = adata.obs[cat1].astype('category')
     adata.obs[cat2] = adata.obs[cat2].astype('category')
     
-    mode = 'celltype_percentage_across_sections'   # celltype_counts, celltype_percentage_within_sections, celltype_percentage_across_sections, gene_expression
-    cmap = mpl.colormaps['viridis']     # using premade colormaps e.g. viridis, plasma, inferno, magma, cividis, Reds
-    scale = 'auto'             # for the color bar: auto, manual
-
-    #################################################################################
-    # Optional depending on choise of mode
-
-    # if chose celltype_counts or celltype_percentage mode
-    celltype_to_plot = 'MACROPHAGE'
-
-    # if chose gene_expression mode
-    gene_to_plot = 'WT1'   # OR4F5, VCAM1, P2RY12, MLANA, PEML, TYRP1, SHH
-
-    # if chose scale manual
-    scale_lower_value = 0
-    scale_upper_value = 15
-
-    #################################################################################
+    mode = Mode   # celltype_counts, celltype_percentage_within_sections, celltype_percentage_across_sections, gene_expression
+    Cmap = mpl.colormaps[color]     # using premade colormaps e.g. viridis, plasma, inferno, magma, cividis, Reds
+    scale = scale_mode             # for the color bar: auto, manual
+    scale_lower_value = scale_min
+    scale_upper_value = scale_max
     
+
+    ###########################################
+
+    # Begin making plot
+
     if mode == 'celltype_counts':
         # counts table
         cat1_labels = adata.obs[cat1]
         cat2_labels = adata.obs[cat2]
         counts_table = pd.crosstab(cat1_labels,cat2_labels)
 
-        df_of_values = counts_table[[celltype_to_plot]]
+        df_of_values = counts_table[[plot_value]]
         values = []
         for col in df_of_values:
             value = list(df_of_values[col].values)
@@ -180,7 +172,7 @@ def get_spatial_plot(datasetId, cat="cell_labels_lvl2"):
         # percentage_table_row table:
         percentage_table_row = round((counts_table.T/counts_table.sum(axis=1)).T*100,2)
 
-        df_of_values = percentage_table_row[[celltype_to_plot]]
+        df_of_values = percentage_table_row[[plot_value]]
         values = []
         for col in df_of_values:
             value = list(df_of_values[col].values)
@@ -195,7 +187,7 @@ def get_spatial_plot(datasetId, cat="cell_labels_lvl2"):
         # percentage_table_row table:
         percentage_table_column = round((counts_table/counts_table.sum())*100,2)
 
-        df_of_values = percentage_table_column[[celltype_to_plot]]
+        df_of_values = percentage_table_column[[plot_value]]
         values = []
         for col in df_of_values:
             value = list(df_of_values[col].values)
@@ -207,7 +199,7 @@ def get_spatial_plot(datasetId, cat="cell_labels_lvl2"):
         for clust in gene_expression_table.index.to_list():
             gene_expression_table.loc[clust, :] = adata[adata.obs[cat1].isin([clust]),:].X.mean(0)
 
-        df_of_values = gene_expression_table[[gene_to_plot]]
+        df_of_values = gene_expression_table[[plot_value]]
         df_of_values = df_of_values.T
         values = []
         for col in df_of_values:
@@ -238,86 +230,61 @@ def get_spatial_plot(datasetId, cat="cell_labels_lvl2"):
     ret, thresh = cv2.threshold(embryo_grey, 50, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(embryo, contours, -1, (0,0,0), 3) # black
-    #cv2.drawContours(embryo, contours, -1, (255,255,255), 3) # black
 
     # set threshold for every mask
-    _, mask1 = cv2.threshold(mask1, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
-    _, mask2 = cv2.threshold(mask2, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
-    _, mask3 = cv2.threshold(mask3, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
-    _, mask4 = cv2.threshold(mask4, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
-    _, mask5 = cv2.threshold(mask5, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
-    _, mask6 = cv2.threshold(mask6, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
-    _, mask7 = cv2.threshold(mask7, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
-    _, mask8 = cv2.threshold(mask8, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
-    _, mask9 = cv2.threshold(mask9, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
-    _, mask10 = cv2.threshold(mask10, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
-    _, mask11 = cv2.threshold(mask11, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
-    _, mask12 = cv2.threshold(mask12, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
+    list_masks = [mask1,mask2,mask3,mask4,mask5,mask6,mask7,mask8,mask9,mask10,mask11,mask12]
+
+    count = 0
+    for mask in list_masks:
+        _, mask_keep = cv2.threshold(mask, thresh=180, maxval=255, type=cv2.THRESH_BINARY)
+        list_masks[count] = mask_keep.copy()
+        count+=1
 
     # create a color scale on the range of values inputted
 
     if scale == 'auto':
         norm = mpl.colors.Normalize( vmin=min(values) , vmax=max(values) )
-        sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
+        sm = mpl.cm.ScalarMappable(cmap=Cmap, norm=norm)
         
     elif scale == 'manual':
         norm = mpl.colors.Normalize( vmin=scale_lower_value , vmax=scale_upper_value )
-        sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
+        sm = mpl.cm.ScalarMappable(cmap=Cmap, norm=norm)
 
     else:
         raise Exception('Scale option not correct. Please use either auto or manual')
         
     # Set the color for each mask 
-    mask1_color = np.copy(embryo)
-    mask1_color[np.all(mask1==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[0]))[0:3])
-    mask2_color = np.copy(mask1_color)
-    mask2_color[np.all(mask2==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[1]))[0:3])
-    mask3_color = np.copy(mask2_color)
-    mask3_color[np.all(mask3==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[2]))[0:3])
-    mask4_color = np.copy(mask3_color)
-    mask4_color[np.all(mask4==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[3]))[0:3])
-    mask5_color = np.copy(mask4_color)
-    mask5_color[np.all(mask5==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[4]))[0:3])
-    mask6_color = np.copy(mask5_color)
-    mask6_color[np.all(mask6==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[5]))[0:3])
-    mask7_color = np.copy(mask6_color)
-    mask7_color[np.all(mask7==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[6]))[0:3])
-    mask8_color = np.copy(mask7_color)
-    mask8_color[np.all(mask8==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[7]))[0:3])
-    mask9_color = np.copy(mask8_color)
-    mask9_color[np.all(mask9==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[8]))[0:3])
-    mask10_color = np.copy(mask9_color)
-    mask10_color[np.all(mask10==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[9]))[0:3])
-    mask11_color = np.copy(mask10_color)
-    mask11_color[np.all(mask11==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[10]))[0:3])
-    mask12_color = np.copy(mask11_color)
-    mask12_color[np.all(mask12==255, -1)] = list(int((255*x)) for x in list(sm.to_rgba(values[11]))[0:3])
+    mask_color = np.copy(embryo)
+    count = 0
+    for mask in list_masks:
+        mask_color[(list_masks[count]==255).all(-1)] = list(int((255*x)) for x in list(sm.to_rgba(values[count]))[0:3])
+        count+=1
+
 
     # plot the final mask which holds all the other masks and their corresponding colors as well
     fig = Figure(figsize=(4,5))
     ax1, ax2 = fig.subplots(nrows=2, gridspec_kw={"height_ratios":[1, 0.05]})
 
-    im = ax1.imshow(mask12_color, interpolation='nearest')
-    # im = fig.figimage(mask12_color)#, resize=True)
+    im = ax1.imshow(mask_color, interpolation='nearest')
     ax1.set_axis_off()
 
-    cb = fig.colorbar(im, cax=ax2, orientation='horizontal', pad=0.2)
+    cb = fig.colorbar(sm, cax=ax2, orientation='horizontal', pad=0.2)
     cb.ax.tick_params(labelsize=10)
                 
     if mode == 'celltype_counts':
-        fig.suptitle(f'Number of counts for celltype {celltype_to_plot}', fontsize=10, y=0.98, wrap=True)
+        fig.suptitle(f'Number of counts for celltype {plot_value}', fontsize=10, y=0.98, wrap=True)
         cb.set_label("No. cells", fontsize=10)
         
     elif mode == 'celltype_percentage_within_sections':
-        fig.suptitle(f'Percentage of celltype {celltype_to_plot} compared to other celltypes within section', fontsize=10, y=0.98, wrap=True)
+        fig.suptitle(f'Percentage of celltype {plot_value} compared to other celltypes within section', fontsize=10, y=0.98, wrap=True)
         cb.set_label("Percentage %", fontsize=10)
         
     elif mode == 'celltype_percentage_across_sections':
-        fig.suptitle(f'Percentage of  celltype {celltype_to_plot} compared across sections', fontsize=10, y=0.98, wrap=True)
+        fig.suptitle(f'Percentage of  celltype {plot_value} compared across sections', fontsize=10, y=0.98, wrap=True)
         cb.set_label("Percentage %", fontsize=10)
             
     elif mode == 'gene_expression':
-        fig.suptitle(f'Mean gene expression of {gene_to_plot} for each section',fontsize=10, y=0.98, wrap=True)
+        fig.suptitle(f'Mean gene expression of {plot_value} for each section',fontsize=10, y=0.98, wrap=True)
         cb.set_label("Expression", fontsize=10)
 
     buf = BytesIO()
