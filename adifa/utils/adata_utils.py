@@ -191,12 +191,10 @@ def get_labels(datasetId, feature="", obs="", modality=""):
 
     if feature:
         try:
-            output = [0] * len(adata.obs.index)
-            # expression = adata[:,feature].X/max(1,adata[:,feature].X.max())
-            expression = adata[:, feature].X
-            (x, y, v) = find(expression)
-            for index, i in enumerate(x):
-                output[i] = str(round(v[index], 4))
+            feature_idx = adata.var_names.get_loc(feature)
+            output = [
+                round(float(x), 4) for x in adata.X[:, feature_idx].toarray().reshape(-1)
+            ]
         except KeyError:
             # @todo HANDLE ERROR
             output = [0] * len(adata.obs.index)
@@ -204,16 +202,14 @@ def get_labels(datasetId, feature="", obs="", modality=""):
             # @todo HANDLE ERROR
             output = [0] * len(adata.obs.index)
     elif obs:
-        output = []
-        for index, x in enumerate(adata.obs.index):
-            try:
-                output.append(str(adata.obs[obs][index]))
-            except KeyError:
-                # @todo HANDLE ERROR
-                output.append(0)
-            except IndexError:
-                # @todo HANDLE ERROR
-                output.append(0)
+        try:
+            output = adata.obs[obs].astype("string").tolist()
+        except KeyError:
+            # @todo HANDLE ERROR
+            output.append(0)
+        except IndexError:
+            # @todo HANDLE ERROR
+            output.append(0)
 
     return output
 

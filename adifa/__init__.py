@@ -119,7 +119,15 @@ def create_app(test_config=None):
         inspector = inspect(db.engine)
         # load datasets files
         if is_running_server and inspector.has_table("datasets"):
+            app.logger.info(
+                "Server is running. Datasets table exists. Loading files..."
+            )
             dataset_utils.load_files()
+        else:
+            if not is_running_server:
+                app.logger.warning("Server is not running")
+            if not inspector.has_table("datasets"):
+                app.logger.warning("No 'datasets' table")
 
     @app.context_processor
     def inject_datasets():
