@@ -129,8 +129,9 @@ def get_labels(datasetId, obsm, gene="", obs=""):
     if gene:
         try:
             # expression = adata[:,gene].X/max(1,adata[:,gene].X.max())
+            gene_idx = adata.var_names.get_loc(gene)
             output = [
-                round(float(x), 4) for x in adata[:, gene].X.toarray().reshape(-1)
+                round(float(x), 4) for x in adata.X[:, gene_idx].toarray().reshape(-1)
             ]
         except KeyError:
             # @todo HANDLE ERROR
