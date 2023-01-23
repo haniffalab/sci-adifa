@@ -1,4 +1,4 @@
-// /* global Cookies */
+/* global Cookies */
 /* global API_SERVER */
 (function ($) {
   $.fn.spatial = function (options) {
@@ -19,6 +19,10 @@
     let colorScaleId
     let colorScaleKey
     let colorScaleType
+
+    const active = {
+      dataset: {}
+    }
 
     const imgsrc = function (strings, image) {
       return `data:image/png;base64,${image}`
@@ -81,6 +85,20 @@
 
     this.initialize = function () {
       $('#spatial-loader').hide()
+
+      $.when(
+        doAjax(API_SERVER + 'api/v1/datasets/' + datasetId)).then(function (d1) {
+        // update active dataset
+        active.dataset = d1
+
+        // load Cookies
+        colorScaleId = Cookies.get('ds' + datasetId + '-obs-id') || null
+        colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name') || null
+        colorScaleType = Cookies.get('ds' + datasetId + '-obs-type') || null
+
+        loadPlot()
+      }, showError)
+
       loadPlot()
       return this
     }
@@ -91,8 +109,28 @@
 
     const loadPlot = function () {
       // startLoader()
+
+      const obsList = []
+      if (colorScaleKey && colorScaleType === 'categorical') {
+        const arr = active.dataset.data_obs[colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()].values
+        for (const k in arr) {
+          if (Object.prototype.hasOwnProperty.call(arr, k)) {
+            if ($('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + arr[k] + '"]').is(':checked')) {
+              obsList.push(arr[k])
+            }
+          }
+        }
+      }
+
       $.when(
-        doAjax(API_SERVER + 'api/v1/datasets/' + datasetId + '/plotting/spatial').then(function (data) {
+        doAjax(API_SERVER + 'api/v1/datasets/' + datasetId + '/plotting/spatial' +
+          (colorScaleKey
+            ? ('?cat=' + colorScaleKey) +
+            (obsList.length
+              ? ('&plot_value[]=' + obsList.join('&plot_value[]='))
+              : '')
+            : '')
+        ).then(function (data) {
           imgElem.attr('src', imgsrc`${data}`)
           // endLoader()
         }, showError))
@@ -119,7 +157,7 @@
         }
       }
       console.log(colorScaleId, colorScaleKey, colorScaleType)
-      loadPlot(colorScaleKey)
+      loadPlot()
     }
 
     this.decolorize = function () {

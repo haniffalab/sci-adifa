@@ -46,6 +46,14 @@
         <div class="col-lg-4 col-md-12 p-0 m-0">
           <div id="spatial-container" data-datasetId="{{ dataset.id }}" class="card card-small" style="height: 100%;">
             <div id="spatial-div" class="card-body mx-auto row d-flex flex-wrap align-items-center p-0">
+              <div id="spatial-controls">
+                <div class="btn-group mb-3 dropdown">
+                  <button id="spatial-mode" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-white dropdown-toggle"></button>
+                  <div id="spatial-mode-dropdown" aria-labelledby="spatial-mode" class="dropdown-menu" style="z-index: 10000;">
+                    <a id="spatial-mode-counts" href="#" data-name="counts" class="dropdown-item spatial-mode">Counts</a>
+                  </div>
+                </div>
+              </div>
               <!-- <div id="spatial-loader" class="spinner"><div class="double-bounce1"></div><div class="double-bounce2"></div></div> -->
               <img id="spatial-img" class="align-middle" style="max-width: 100%;"/>
             </div>
@@ -63,7 +71,7 @@
           {% include 'blocks/selector/genes.html' %}
         {% endif %}
       {% endblock %}
-      <div class="mt-2">
+      <div class="container mt-2">
         <div class="card card-small">
           <div class="card-body">
             <img id="spatial-ref" class="align-middle" style="max-width: 100%;" src="/images/Elmer_section_reference.png"/>

@@ -13,8 +13,13 @@ class Matrixplot(Resource):
 
         return get_matrixplot(id, var_names, groupby)
 
+
 class Spatial(Resource):
     def get(self, id):
-        
-        return get_spatial_plot(id)
+        cat = request.args.get("cat", None, type=str)
+        plot_value = request.args.getlist("plot_value[]", None)
 
+        if cat:
+            return get_spatial_plot(id, cat, plot_value)
+        else:
+            return get_spatial_plot(id)

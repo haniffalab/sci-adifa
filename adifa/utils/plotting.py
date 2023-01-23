@@ -48,7 +48,7 @@ def get_matrixplot(
     vmax=None,
     vcenter=None,
     norm=None,
-    **kwds
+    **kwds,
 ):
     if not datasetId > 0:
         raise InvalidDatasetIdError
@@ -117,7 +117,17 @@ def get_matrixplot(
 
     return output
 
-def get_spatial_plot(datasetId, plot_value=["MACROPHAGE","IMMUNE"],cat="cell_labels_lvl2", Mode='celltype_percentage_within_sections', color='viridis', scale_mode='auto', scale_max=15, scale_min=0):
+
+def get_spatial_plot(
+    datasetId,
+    plot_value=["MACROPHAGE", "IMMUNE"],
+    cat="cell_labels_lvl2",
+    Mode="celltype_percentage_within_sections",
+    color="viridis",
+    scale_mode="auto",
+    scale_max=15,
+    scale_min=0,
+):
 
     if not datasetId > 0:
         raise InvalidDatasetIdError
@@ -134,125 +144,163 @@ def get_spatial_plot(datasetId, plot_value=["MACROPHAGE","IMMUNE"],cat="cell_lab
 
     # Calculate tables to hold potential data to plot
 
-    cat1 = 'spatial_location'    # make this the column which the masks relate to i.e. 12 sections
+    cat1 = "spatial_location"  # make this the column which the masks relate to i.e. 12 sections
     cat2 = cat  # change to annotations of interest
-    
-    mode = Mode   # celltype_counts, celltype_percentage_within_sections, celltype_percentage_across_sections, gene_expression
-    Cmap = mpl.colormaps[color]     # using premade colormaps e.g. viridis, plasma, inferno, magma, cividis, Reds
-    scale = scale_mode             # for the color bar: auto, manual
+
+    mode = Mode  # celltype_counts, celltype_percentage_within_sections, celltype_percentage_across_sections, gene_expression
+    Cmap = mpl.colormaps[
+        color
+    ]  # using premade colormaps e.g. viridis, plasma, inferno, magma, cividis, Reds
+    scale = scale_mode  # for the color bar: auto, manual
     scale_lower_value = scale_min
     scale_upper_value = scale_max
-    
 
     ###########################################
 
     # Begin making plot
 
-    if mode == 'gene_expression':
-        df_of_values = (adata.varm['Sectional_gene_expression'].T)[plot_value]
+    if mode == "gene_expression":
+        df_of_values = (adata.varm["Sectional_gene_expression"].T)[plot_value]
         df_of_values = df_of_values.T
         values = []
         for col in df_of_values:
             value = list(df_of_values[col].values)
-            values.extend(value)  
+            values.extend(value)
 
-    elif mode in ['celltype_counts','celltype_percentage_within_sections','celltype_percentage_across_sections']:
+    elif mode in [
+        "celltype_counts",
+        "celltype_percentage_within_sections",
+        "celltype_percentage_across_sections",
+    ]:
 
         if len(plot_value) > 1:
-            adata.obs['combined_annotation'] = adata.obs[cat2].copy().astype(str)
+            adata.obs["combined_annotation"] = adata.obs[cat2].copy().astype(str)
             for value in plot_value:
-                adata.obs.loc[adata.obs[cat2].isin([value]), 'combined_annotation'] = 'combined_annotation'
-            cat2 = 'combined_annotation'
-            plot_value = ['combined_annotation']
+                adata.obs.loc[
+                    adata.obs[cat2].isin([value]), "combined_annotation"
+                ] = "combined_annotation"
+            cat2 = "combined_annotation"
+            plot_value = ["combined_annotation"]
 
-        adata.obs[cat1] = adata.obs[cat1].astype('category')
-        adata.obs[cat2] = adata.obs[cat2].astype('category')
+        adata.obs[cat1] = adata.obs[cat1].astype("category")
+        adata.obs[cat2] = adata.obs[cat2].astype("category")
 
         counts_table = pd.crosstab(adata.obs[cat1], adata.obs[cat2])
 
-        if mode == 'celltype_counts':
+        if mode == "celltype_counts":
             df_of_values = counts_table[plot_value]
             values = []
             for col in df_of_values:
                 value = list(df_of_values[col].values)
                 values.extend(value)
-        
 
-        elif mode == 'celltype_percentage_across_sections':
-            percentage_table_column = round((counts_table/counts_table.sum())*100,2)
+        elif mode == "celltype_percentage_across_sections":
+            percentage_table_column = round(
+                (counts_table / counts_table.sum()) * 100, 2
+            )
             df_of_values = percentage_table_column[plot_value]
             values = []
             for col in df_of_values:
                 value = list(df_of_values[col].values)
                 values.extend(value)
-    
-        elif mode == 'celltype_percentage_within_sections':
-            percentage_table_row = round((counts_table.T/counts_table.sum(axis=1)).T*100,2)
+
+        elif mode == "celltype_percentage_within_sections":
+            percentage_table_row = round(
+                (counts_table.T / counts_table.sum(axis=1)).T * 100, 2
+            )
             df_of_values = percentage_table_row[plot_value]
             values = []
             for col in df_of_values:
                 value = list(df_of_values[col].values)
                 values.extend(value)
-            
+
     else:
-        raise Exception('Mode option not correct. Please use one of the following: manual, celltype_counts, celltype_percentage or gene_expression')
+        raise Exception(
+            "Mode option not correct. Please use one of the following: manual, celltype_counts, celltype_percentage or gene_expression"
+        )
 
     #################################################################################
     # create a color scale on the range of values inputted
 
-    if scale == 'auto':
-        norm = mpl.colors.Normalize( vmin=min(values) , vmax=max(values) )
+    if scale == "auto":
+        norm = mpl.colors.Normalize(vmin=min(values), vmax=max(values))
         sm = mpl.cm.ScalarMappable(cmap=Cmap, norm=norm)
-        
-    elif scale == 'manual':
-        norm = mpl.colors.Normalize( vmin=scale_lower_value , vmax=scale_upper_value )
+
+    elif scale == "manual":
+        norm = mpl.colors.Normalize(vmin=scale_lower_value, vmax=scale_upper_value)
         sm = mpl.cm.ScalarMappable(cmap=Cmap, norm=norm)
 
     else:
-        raise Exception('Scale option not correct. Please use either auto or manual')
-     
+        raise Exception("Scale option not correct. Please use either auto or manual")
+
     #################################################################################
 
-    base_img = np.full(adata.uns['shape'], 255, dtype=np.uint8)
+    base_img = np.full(adata.uns["shape"], 255, dtype=np.uint8)
 
     count = 0
-    for key in adata.uns['polygons'].keys():
-        cv2.fillPoly(base_img, pts=tuple([adata.uns['polygons'][key][0]]), color=tuple(list(int((255*x)) for x in list(sm.to_rgba(values[count]))[0:3])))   
-        count+=1
+    for key in adata.uns["polygons"].keys():
+        cv2.fillPoly(
+            base_img,
+            pts=tuple([adata.uns["polygons"][key][0]]),
+            color=tuple(
+                list(int((255 * x)) for x in list(sm.to_rgba(values[count]))[0:3])
+            ),
+        )
+        count += 1
 
     #################################################################################
 
     # plot the final mask which holds all the other masks and their corresponding colors as well
-    fig = Figure(figsize=(4,5))
-    ax1, ax2 = fig.subplots(nrows=2, gridspec_kw={"height_ratios":[1, 0.05]})
+    fig = Figure(figsize=(4, 5))
+    ax1, ax2 = fig.subplots(nrows=2, gridspec_kw={"height_ratios": [1, 0.05]})
 
-    im = ax1.imshow(base_img, interpolation='nearest')
+    im = ax1.imshow(base_img, interpolation="nearest")
     ax1.set_axis_off()
 
-    cb = fig.colorbar(sm, cax=ax2, orientation='horizontal', pad=0.2)
+    cb = fig.colorbar(sm, cax=ax2, orientation="horizontal", pad=0.2)
     cb.ax.tick_params(labelsize=10)
 
     #################################################################################
 
-    if mode == 'gene_expression':
-        fig.suptitle(f'Mean gene expression of {plot_value[0]} for each section',fontsize=10, y=0.98, wrap=True)
+    if mode == "gene_expression":
+        fig.suptitle(
+            f"Mean gene expression of {plot_value[0]} for each section",
+            fontsize=10,
+            y=0.98,
+            wrap=True,
+        )
         cb.set_label("Expression", fontsize=10)
 
-    elif mode in ['celltype_counts','celltype_percentage_within_sections','celltype_percentage_across_sections']:
+    elif mode in [
+        "celltype_counts",
+        "celltype_percentage_within_sections",
+        "celltype_percentage_across_sections",
+    ]:
 
-        if mode == 'celltype_counts':
-            fig.suptitle(f'Number of counts for {plot_value[0]}', fontsize=10, y=0.98, wrap=True)
+        if mode == "celltype_counts":
+            fig.suptitle(
+                f"Number of counts for {plot_value[0]}", fontsize=10, y=0.98, wrap=True
+            )
             cb.set_label("No. cells", fontsize=10)
-        
-        elif mode == 'celltype_percentage_within_sections':
-            fig.suptitle(f'Percentage of {plot_value[0]} compared to other celltypes within section', fontsize=10, y=0.98, wrap=True)
+
+        elif mode == "celltype_percentage_within_sections":
+            fig.suptitle(
+                f"Percentage of {plot_value[0]} compared to other celltypes within section",
+                fontsize=10,
+                y=0.98,
+                wrap=True,
+            )
             cb.set_label("Percentage %", fontsize=10)
-        
-        elif mode == 'celltype_percentage_across_sections':
-            fig.suptitle(f'Percentage of {plot_value[0]} compared across sections', fontsize=10, y=0.98, wrap=True)
+
+        elif mode == "celltype_percentage_across_sections":
+            fig.suptitle(
+                f"Percentage of {plot_value[0]} compared across sections",
+                fontsize=10,
+                y=0.98,
+                wrap=True,
+            )
             cb.set_label("Percentage %", fontsize=10)
-            
-    
+
     #################################################################################
     buf = BytesIO()
 
