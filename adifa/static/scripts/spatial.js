@@ -54,7 +54,8 @@
     // }
 
     const showError = function () {
-      $('#spatial-div').html('<div class="btn-group mb-3"><a class="btn btn-white">Error</a></div>')
+      $('#spatial-div').hide()
+      $('#spatial-error').show()
       $('#spatial-loader').hide()
     }
 
@@ -84,6 +85,8 @@
     }
 
     this.initialize = function () {
+      $('#spatial-div').show()
+      $('#spatial-error').hide()
       $('#spatial-loader').hide()
 
       $.when(
@@ -109,6 +112,8 @@
 
     const loadPlot = function () {
       // startLoader()
+      $('#spatial-error').hide()
+      $('#spatial-div').show()
 
       const obsList = []
       if (colorScaleKey && colorScaleType === 'categorical') {
@@ -128,6 +133,9 @@
             ? ('?cat=' + colorScaleKey) +
             (obsList.length
               ? ('&plot_value[]=' + obsList.join('&plot_value[]='))
+              : '') +
+            (colorScaleType === 'gene'
+              ? ('&gene')
               : '')
             : '')
         ).then(function (data) {

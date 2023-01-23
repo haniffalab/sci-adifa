@@ -120,9 +120,9 @@ def get_matrixplot(
 
 def get_spatial_plot(
     datasetId,
-    plot_value=["MACROPHAGE", "IMMUNE"],
     cat="cell_labels_lvl2",
-    Mode="celltype_percentage_within_sections",
+    plot_value=["MACROPHAGE", "IMMUNE"],
+    mode="celltype_percentage_within_sections",
     color="viridis",
     scale_mode="auto",
     scale_max=15,
@@ -147,7 +147,6 @@ def get_spatial_plot(
     cat1 = "spatial_location"  # make this the column which the masks relate to i.e. 12 sections
     cat2 = cat  # change to annotations of interest
 
-    mode = Mode  # celltype_counts, celltype_percentage_within_sections, celltype_percentage_across_sections, gene_expression
     Cmap = mpl.colormaps[
         color
     ]  # using premade colormaps e.g. viridis, plasma, inferno, magma, cividis, Reds
@@ -161,11 +160,7 @@ def get_spatial_plot(
 
     if mode == "gene_expression":
         df_of_values = (adata.varm["Sectional_gene_expression"].T)[plot_value]
-        df_of_values = df_of_values.T
-        values = []
-        for col in df_of_values:
-            value = list(df_of_values[col].values)
-            values.extend(value)
+        values = list(df_of_values.values)
 
     elif mode in [
         "celltype_counts",
@@ -264,7 +259,7 @@ def get_spatial_plot(
 
     if mode == "gene_expression":
         fig.suptitle(
-            f"Mean gene expression of {plot_value[0]} for each section",
+            f"Mean gene expression of {plot_value} for each section",
             fontsize=10,
             y=0.98,
             wrap=True,
