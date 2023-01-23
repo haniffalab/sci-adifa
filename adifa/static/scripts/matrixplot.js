@@ -547,8 +547,12 @@
         if (colorScaleKey && !(colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() in active.dataset.data_obs)) {
           colorScaleKey = null
           colorScaleId = null
-          Cookies.remove('ds' + datasetId + '-obs-name')
-          Cookies.remove('ds' + datasetId + '-obs-id')
+          Cookies.remove('ds' + datasetId + '-obs-name', {
+            path: window.location.pathname
+          })
+          Cookies.remove('ds' + datasetId + '-obs-id', {
+            path: window.location.pathname
+          })
         }
 
         varList = varList.filter(function (n) {
@@ -561,7 +565,9 @@
             path: window.location.pathname
           })
         } else {
-          Cookies.remove('ds' + datasetId + '-var-list')
+          Cookies.remove('ds' + datasetId + '-var-list', {
+            path: window.location.pathname
+          })
         }
 
         loadData()
@@ -619,7 +625,9 @@
     this.resetGenes = function () {
       $('.btn-gene-select').removeClass('active')
       varList = []
-      Cookies.remove('ds' + datasetId + '-var-list')
+      Cookies.remove('ds' + datasetId + '-var-list', {
+        path: window.location.pathname
+      })
       // get data
       startLoader()
       loadData()
