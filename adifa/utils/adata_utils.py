@@ -2,7 +2,7 @@ import os
 import re
 
 from flask import current_app
-from scipy.sparse import find
+from scipy.sparse import spmatrix
 from sqlalchemy import exc
 import scanpy as sc
 import numpy as np
@@ -131,7 +131,12 @@ def get_labels(datasetId, obsm, gene="", obs=""):
             # expression = adata[:,gene].X/max(1,adata[:,gene].X.max())
             gene_idx = adata.var_names.get_loc(gene)
             output = [
-                round(float(x), 4) for x in adata.X[:, gene_idx].toarray().reshape(-1)
+                round(float(x), 4)
+                for x in (
+                    adata.X[:, gene_idx].toarray().reshape(-1)
+                    if isinstance(adata.X, spmatrix)
+                    else adata.X[:, gene_idx]
+                )
             ]
         except KeyError:
             # @todo HANDLE ERROR
