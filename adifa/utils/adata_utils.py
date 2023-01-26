@@ -3,7 +3,7 @@ import re
 import hashlib
 
 from flask import current_app
-from scipy.sparse import find
+from scipy.sparse import spmatrix
 from sqlalchemy import exc
 import muon as mu
 import scanpy as sc
@@ -193,7 +193,12 @@ def get_labels(datasetId, feature="", obs="", modality=""):
         try:
             feature_idx = adata.var_names.get_loc(feature)
             output = [
-                round(float(x), 4) for x in adata.X[:, feature_idx].toarray().reshape(-1)
+                round(float(x), 4)
+                for x in (
+                    adata.X[:, feature_idx].toarray().reshape(-1)
+                    if isinstance(adata.X, spmatrix)
+                    else adata.X[:, feature_idx]
+                )
             ]
         except KeyError:
             # @todo HANDLE ERROR
