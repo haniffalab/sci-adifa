@@ -14,11 +14,14 @@
 
     const datasetId = this.attr('data-datasetId')
     const imgElem = $('#spatial-img')
+    const spatialModes = ['counts', 'percentage_within_sections', 'percentage_across_sections', 'gene_expression']
     let xhrPool = []
 
     let colorScaleId
     let colorScaleKey
     let colorScaleType
+    let spatialMode
+    let prevObsMode
 
     const active = {
       dataset: {}
@@ -91,19 +94,44 @@
 
       $.when(
         doAjax(API_SERVER + 'api/v1/datasets/' + datasetId)).then(function (d1) {
-        // update active dataset
+      // update active dataset
         active.dataset = d1
 
         // load Cookies
         colorScaleId = Cookies.get('ds' + datasetId + '-obs-id') || null
         colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name') || null
         colorScaleType = Cookies.get('ds' + datasetId + '-obs-type') || null
+        spatialMode = Cookies.get('ds' + datasetId + '-spatial-mode') || null
+        if (spatialMode === null && colorScaleType && colorScaleKey) {
+          setMode(colorScaleType === 'gene' ? 'gene_expression' : 'counts')
+        }
+
+        populateModes()
 
         loadPlot()
       }, showError)
 
-      loadPlot()
       return this
+    }
+
+    const populateModes = function () {
+      spatialModes.forEach(function (mode) {
+        $('#spatial-mode-dropdown').append(
+              `<a id="spatial-mode-${mode}" href="#" data-name="${mode}" class="dropdown-item spatial-mode">${mode.replaceAll('_', ' ')}</a>`
+        )
+      })
+      disableModes()
+    }
+
+    const disableModes = function () {
+      spatialModes.forEach(function (mode) {
+        $(`#spatial-mode-${mode}`).attr('disabled', (
+          colorScaleType === 'gene' && mode !== 'gene_expression'
+            ? 'disabled'
+            : colorScaleType !== 'gene' && mode === 'gene_expression' ? 'disabled' : null
+        )
+        )
+      })
     }
 
     this.redraw = function () {
@@ -112,6 +140,7 @@
 
     const loadPlot = function () {
       // startLoader()
+      $('#spatial-mode').text(spatialMode ? spatialMode.replaceAll('_', ' ') : '')
       $('#spatial-error').hide()
       $('#spatial-div').show()
 
@@ -129,14 +158,14 @@
 
       $.when(
         doAjax(API_SERVER + 'api/v1/datasets/' + datasetId + '/plotting/spatial' +
-          (colorScaleKey
-            ? ('?cat=' + colorScaleKey) +
-            (obsList.length
-              ? ('&plot_value[]=' + obsList.join('&plot_value[]='))
-              : '') +
-            (colorScaleType === 'gene'
-              ? ('&gene')
-              : '')
+          (spatialMode
+            ? (('?mode=' + spatialMode) +
+              (colorScaleKey
+                ? colorScaleType === 'gene'
+                  ? ('&plot_value[]=' + [colorScaleKey])
+                  : ('&cat=' + colorScaleKey) +
+                    (obsList.length ? '&plot_value[]=' + obsList.join('&plot_value[]=') : '')
+                : ''))
             : '')
         ).then(function (data) {
           imgElem.attr('src', imgsrc`${data}`)
@@ -149,22 +178,27 @@
         colorScaleKey = null
         colorScaleId = null
         colorScaleType = null
+        spatialMode = null
       } else {
         if (el.id === 'genes') {
           colorScaleKey = el.selectedItems[0]
           colorScaleId = 0
           colorScaleType = 'gene'
+          setMode('gene_expression')
         } else if ($(el).hasClass('btn-gene-select')) {
           colorScaleKey = $(el).text()
           colorScaleId = 0
           colorScaleType = 'gene'
+          setMode('gene_expression')
         } else {
           colorScaleKey = $(el).data('name')
           colorScaleId = $(el).data('id')
           colorScaleType = $(el).data('type')
+          setMode(prevObsMode || 'counts')
         }
       }
       console.log(colorScaleId, colorScaleKey, colorScaleType)
+      disableModes()
       loadPlot()
     }
 
@@ -173,6 +207,25 @@
       colorScaleKey = null
       colorScaleType = null
       console.log(colorScaleId, colorScaleKey, colorScaleType)
+    }
+
+    this.changeMode = function (el) {
+      setMode($(el).data('name'))
+      loadPlot()
+    }
+
+    const setMode = function (mode) {
+      if (colorScaleKey) {
+        spatialMode = mode
+        Cookies.set('ds' + datasetId + '-spatial-mode', spatialMode, {
+          expires: 30,
+          sameSite: 'Strict',
+          path: window.location.pathname
+        })
+        if (mode !== 'gene_expression') {
+          prevObsMode = mode
+        }
+      }
     }
 
     return this.initialize()

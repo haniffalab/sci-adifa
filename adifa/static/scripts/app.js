@@ -14,6 +14,12 @@
     // Init spatial
     if ($('#spatial-container').length) {
       spatial = $('#spatial-container').spatial()
+
+      $('body').on('click', '.spatial-mode', function (event) {
+        if ($(this).attr('disabled') !== 'disabled') {
+          spatial.changeMode(this)
+        }
+      })
     }
 
     // Init scatterplot

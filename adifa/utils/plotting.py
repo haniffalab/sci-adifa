@@ -122,7 +122,7 @@ def get_spatial_plot(
     datasetId,
     cat="cell_labels_lvl2",
     plot_value=["MACROPHAGE", "IMMUNE"],
-    mode="celltype_percentage_within_sections",
+    mode="percentage_within_sections",
     color="viridis",
     scale_mode="auto",
     scale_max=15,
@@ -158,14 +158,18 @@ def get_spatial_plot(
 
     # Begin making plot
 
-    if mode == "gene_expression":
+    if not mode or not plot_value or not len(plot_value):
+        values = [0]*len(adata.obs[cat1])
+
+    elif mode == "gene_expression":
+        plot_value = plot_value[0]
         df_of_values = (adata.varm["Sectional_gene_expression"].T)[plot_value]
         values = list(df_of_values.values)
 
     elif mode in [
-        "celltype_counts",
-        "celltype_percentage_within_sections",
-        "celltype_percentage_across_sections",
+        "counts",
+        "percentage_within_sections",
+        "percentage_across_sections",
     ]:
 
         if len(plot_value) > 1:
@@ -182,14 +186,14 @@ def get_spatial_plot(
 
         counts_table = pd.crosstab(adata.obs[cat1], adata.obs[cat2])
 
-        if mode == "celltype_counts":
+        if mode == "counts":
             df_of_values = counts_table[plot_value]
             values = []
             for col in df_of_values:
                 value = list(df_of_values[col].values)
                 values.extend(value)
 
-        elif mode == "celltype_percentage_across_sections":
+        elif mode == "percentage_across_sections":
             percentage_table_column = round(
                 (counts_table / counts_table.sum()) * 100, 2
             )
@@ -199,7 +203,7 @@ def get_spatial_plot(
                 value = list(df_of_values[col].values)
                 values.extend(value)
 
-        elif mode == "celltype_percentage_within_sections":
+        elif mode == "percentage_within_sections":
             percentage_table_row = round(
                 (counts_table.T / counts_table.sum(axis=1)).T * 100, 2
             )
@@ -211,7 +215,7 @@ def get_spatial_plot(
 
     else:
         raise Exception(
-            "Mode option not correct. Please use one of the following: manual, celltype_counts, celltype_percentage or gene_expression"
+            "Mode option not correct. Please use one of the following: manual, counts, percentage or gene_expression"
         )
 
     #################################################################################
@@ -257,39 +261,35 @@ def get_spatial_plot(
 
     #################################################################################
 
-    if mode == "gene_expression":
-        fig.suptitle(
-            f"Mean gene expression of {plot_value} for each section",
-            fontsize=10,
-            y=0.98,
-            wrap=True,
-        )
-        cb.set_label("Expression", fontsize=10)
+    if mode and plot_value and len(plot_value):
 
-    elif mode in [
-        "celltype_counts",
-        "celltype_percentage_within_sections",
-        "celltype_percentage_across_sections",
-    ]:
-
-        if mode == "celltype_counts":
+        if mode == "gene_expression":
             fig.suptitle(
-                f"Number of counts for {plot_value[0]}", fontsize=10, y=0.98, wrap=True
+                f"Mean gene expression of {plot_value} for each section",
+                fontsize=10,
+                y=0.98,
+                wrap=True,
             )
-            cb.set_label("No. cells", fontsize=10)
+            cb.set_label("Expression", fontsize=10)
 
-        elif mode == "celltype_percentage_within_sections":
+        elif mode == "counts":
+                fig.suptitle(
+                    f"Number of counts for {plot_value[0]}", fontsize=10, y=0.98, wrap=True
+                )
+                cb.set_label("No. cells", fontsize=10)
+
+        elif mode == "percentage_within_sections":
             fig.suptitle(
-                f"Percentage of {plot_value[0]} compared to other celltypes within section",
+                f"Percentage of {plot_value[0]} within section",
                 fontsize=10,
                 y=0.98,
                 wrap=True,
             )
             cb.set_label("Percentage %", fontsize=10)
 
-        elif mode == "celltype_percentage_across_sections":
+        elif mode == "percentage_across_sections":
             fig.suptitle(
-                f"Percentage of {plot_value[0]} compared across sections",
+                f"Percentage of {plot_value[0]} across sections",
                 fontsize=10,
                 y=0.98,
                 wrap=True,

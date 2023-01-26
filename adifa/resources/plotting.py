@@ -16,13 +16,8 @@ class Matrixplot(Resource):
 
 class Spatial(Resource):
     def get(self, id):
+        mode = request.args.get("mode", None, type=str)
         cat = request.args.get("cat", None, type=str)
         plot_value = request.args.getlist("plot_value[]", None)
-        isGene = "gene" in request.args
 
-        if isGene and cat:
-            return get_spatial_plot(id, plot_value=cat, mode="gene_expression")
-        elif cat:
-            return get_spatial_plot(id, cat=cat, plot_value=plot_value)            
-        else:
-            return get_spatial_plot(id)
+        return get_spatial_plot(id, cat=cat, plot_value=plot_value, mode=mode)
