@@ -146,12 +146,7 @@ def get_labels(datasetId, obsm, gene="", obs=""):
             output = [0] * len(adata.obs.index)
     elif obs:
         try:
-            output = (
-                adata.obs[obs]
-                .fillna(np.nan)
-                .astype(str)
-                .tolist()
-            )
+            output = adata.obs[obs].fillna(np.nan).astype(str).tolist()
         except KeyError:
             # @todo HANDLE ERROR
             output = [0] * len(adata.obs.index)
