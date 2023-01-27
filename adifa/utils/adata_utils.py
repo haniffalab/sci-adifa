@@ -193,7 +193,7 @@ def get_labels(datasetId, feature="", obs="", modality=""):
         try:
             feature_idx = adata.var_names.get_loc(feature)
             output = [
-                round(float(x), 4)
+                str(round(float(x), 4))
                 for x in (
                     adata.X[:, feature_idx].toarray().reshape(-1)
                     if isinstance(adata.X, spmatrix)
@@ -208,13 +208,18 @@ def get_labels(datasetId, feature="", obs="", modality=""):
             output = [0] * len(adata.obs.index)
     elif obs:
         try:
-            output = adata.obs[obs].astype("string").tolist()
+            output = (
+                adata.obs[obs]
+                .fillna(np.nan)
+                .astype(str)
+                .tolist()
+            )
         except KeyError:
             # @todo HANDLE ERROR
-            output.append(0)
+            output = [0] * len(adata.obs.index)
         except IndexError:
             # @todo HANDLE ERROR
-            output.append(0)
+            output = [0] * len(adata.obs.index)
 
     return output
 
