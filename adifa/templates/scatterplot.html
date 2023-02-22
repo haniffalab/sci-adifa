@@ -15,6 +15,8 @@
 <script src="https://unpkg.com/@deck.gl/core@^8.0.0/debug.min.js"></script>
 <script src="https://d3js.org/d3.v6.js"></script>
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script> window.d3scale = window.d3; </script>
+<script src="https://cdn.plot.ly/plotly-2.18.0.min.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -56,7 +58,10 @@
                   </div>
                 </div>
                 <!-- <div id="spatial-loader" class="spinner"><div class="double-bounce1"></div><div class="double-bounce2"></div></div> -->
-                <img id="spatial-img" class="align-middle" style="max-width: 100%;"/>
+                <!-- <img id="spatial-img" class="align-middle" style="max-width: 100%;"/> -->
+                <div style="width: 100%;">
+                  <div id="spatial-plot" style="width: inherit;"></div>
+                </div>
               </div>
             </div>
         </div>
