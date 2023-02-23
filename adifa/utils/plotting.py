@@ -373,17 +373,21 @@ def get_spatial_plot(
                     X = gmeans[counter]
                 axes[counter].axvline(X, color="red", lw=2, alpha=1, ymax=0.1)
 
-                if counter == (len(patches) - 1):
-                    plt.text(
-                        x=gmeans[counter] - (gmeans[counter]) / 4,
-                        y=-0.05,
-                        s="Geometric mean",
-                        alpha=1,
-                        fontdict={"color": "r", "fontsize": "14"},
-                    )  # axes[counter]
-
+                #if counter == (len(patches) - 1):
+                #    plt.text(
+                #        x=gmeans[counter] - (gmeans[counter]) / 4,
+                #        y=-0.05,
+                #        s="Geometric mean",
+                #        alpha=1,
+                #        fontdict={"color": "r", "fontsize": "14"},
+                #    )  # axes[counter]
                 counter += 1
 
+            line1 = Line2D([], [], color='red', marker='|', linestyle='None',
+                              markersize=10, markeredgewidth=1.5, label='Geometric mean')
+    
+            legend2 = plt.legend(handles=[line1], title='Graphical overlays', bbox_to_anchor=(1.41, 0.25), labelspacing = 2, fontsize=12, title_fontsize=15)
+    
             plt.gca().add_artist(legend1)
 
             buf = BytesIO()
@@ -501,8 +505,22 @@ def get_spatial_plot(
         )
         cb.remove()
 
-    # Option 1 - make standard image
-    elif mode != "gene_expression" and len(plot_value) == 0:
+        # incase we want a legend in future
+        #Label = "Number of elements in {c} are {n}".format(c=cat2, n=adata.obs[cat2].count())
+        #legend_info = Line2D([], [], color='blue', marker="$\u24D8$", linestyle='None', markersize=10, label=Label)
+        #ax1.legend(
+        #    title=f"{cat2} information",
+        #    handles = [legend_info],
+        #    bbox_to_anchor=(1.1, -0.04), # 0.01
+        #    labelspacing=2,
+        #    fontsize=4,
+        #    title_fontsize=8,
+        #    prop={"size": 8},
+        #)  # 1.4, 1
+
+
+    # Option 1 - make standard image 
+    elif mode!="gene_expression" and len(plot_value) == 0:
         fig.suptitle(
             "Nothing selected to visualise",
             fontsize=10,
