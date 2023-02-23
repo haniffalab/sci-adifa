@@ -192,7 +192,7 @@ def get_spatial_plot(
 
     else:
         # check if string / category / object column in YYYY-MM-DD format and reassign dtype
-        if adata.obs[cat2].dtype == "category":
+        if adata.obs[cat2].dtype == "category" and pd.api.types.is_string_dtype(adata.obs[cat2]):
             col_date_test = []
             for i in adata.obs[cat2].unique():
                 if re.search(
@@ -413,9 +413,12 @@ def get_spatial_plot(
                     plot_value = ["combined_annotation"]
 
                 adata.obs[cat1] = adata.obs[cat1].astype("category")
+                adata.obs[cat2] = adata.obs[cat2].astype(str)
                 adata.obs[cat2] = adata.obs[cat2].astype("category")
 
                 counts_table = pd.crosstab(adata.obs[cat1], adata.obs[cat2])
+                print(counts_table.columns)
+                print(plot_value)
 
                 if mode == "counts":
                     df_of_values = counts_table[plot_value]
