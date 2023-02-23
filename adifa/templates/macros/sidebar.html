@@ -10,7 +10,7 @@
           </h4>
         </div>
         <div id="collapse{{loop.index}}" class="collapse m-4 obs-values" aria-labelledby="heading{{loop.index}}" data-parent="#obs-accordion" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{loop.index}}" data-type="{{ dataset.data_obs[ob]['type'] }}">
-          {% if dataset.data_obs[ob]['type'] == "categorical" %}
+          {% if dataset.data_obs[ob]['type'] in ["categorical","boolean","date"] %}
             {% if dataset.data_obs[ob]['is_truncated'] %}
               <div class="alert alert-warning" role="alert">
                 This observation has more than 100 values, and has been truncated to improve performance.

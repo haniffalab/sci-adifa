@@ -6,6 +6,7 @@ from scipy.sparse import spmatrix
 from sqlalchemy import exc
 import scanpy as sc
 import numpy as np
+import pandas as pd
 
 from adifa import models
 from adifa.resources.errors import (
@@ -247,22 +248,32 @@ def mode(d):
 def type_category(obs):
     categories = [str(i) for i in obs.cat.categories.values.flatten()]
 
+    if pd.api.types.is_string_dtype(obs.cat.categories.dtype):
+        if all(
+            obs.str.match(
+                "^(\d{4})-(0[1-9]|1[0-2]|[1-9])-([1-9]|0[1-9]|[1-2]\d|3[0-1])$"
+            )
+        ):
+            obs_type = "date"
+        else:
+            obs_type = "categorical"
+
     if len(categories) > 100:
         return {
-            "type": "categorical",
+            "type": obs_type,
             "is_truncated": True,
             "values": dict(enumerate(categories[:99], 1)),
         }
 
     return {
-        "type": "categorical",
+        "type": obs_type,
         "is_truncated": False,
         "values": dict(enumerate(categories, 1)),
     }
 
 
 def type_bool(obs):
-    return {"type": "categorical", "values": {0: "True", 1: "False"}}
+    return {"type": "boolean", "values": {0: "True", 1: "False"}}
 
 
 def type_numeric(obs):

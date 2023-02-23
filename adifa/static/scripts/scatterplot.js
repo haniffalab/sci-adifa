@@ -272,7 +272,7 @@
         return 100
       }
 
-      if (colorScaleType === 'categorical') {
+      if (['categorical', 'boolean', 'date'].includes(colorScaleType)) {
         const arr = active.dataset.data_obs[colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()].values
         const catColors = d3.scaleOrdinal().domain($.map(arr, (v, k) => v)).range(['#2f4f4f', '#2e8b57', '#7f0000', '#808000', '#483d8b', '#008000', '#000080', '#8b008b', '#b03060', '#ff0000', '#00ced1', '#ff8c00', '#ffff00', '#00ff00', '#8a2be2', '#00ff7f', '#dc143c', '#00bfff', '#f4a460', '#0000ff', '#f08080', '#adff2f', '#d8bfd8', '#ff00ff', '#1e90ff', '#90ee90', '#ff1493', '#7b68ee', '#ee82ee', '#ffdab9'])
         const checkboxCheck = {}

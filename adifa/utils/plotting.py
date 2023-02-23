@@ -176,7 +176,7 @@ def get_spatial_plot(
     # No input
     if (
         not mode
-        or (mode!="gene_expression" and not cat2)
+        or (mode != "gene_expression" and not cat2)
         or (
             cat2
             and adata.obs[cat2].dtype == "category"
@@ -192,15 +192,15 @@ def get_spatial_plot(
 
     else:
         # check if string / category / object column in YYYY-MM-DD format and reassign dtype
-        if adata.obs[cat2].dtype == "category" and pd.api.types.is_string_dtype(adata.obs[cat2]):
-            col_date_test = []
-            for i in adata.obs[cat2].unique():
-                if re.search(
-                    "^(\d{4})-(0[1-9]|1[0-2]|[1-9])-([1-9]|0[1-9]|[1-2]\d|3[0-1])$", i
-                ):
-                    col_date_test.append(True)
-                    if len(col_date_test) == len(adata.obs[cat2].unique()):
-                        adata.obs[cat2] = adata.obs[cat2].astype("datetime64[ns]")
+        if adata.obs[cat2].dtype == "category" and pd.api.types.is_string_dtype(
+            adata.obs[cat2].cat.categories.dtype
+        ):
+            if all(
+                adata.obs[cat2].str.match(
+                    "^(\d{4})-(0[1-9]|1[0-2]|[1-9])-([1-9]|0[1-9]|[1-2]\d|3[0-1])$"
+                )
+            ):
+                adata.obs[cat2] = adata.obs[cat2].astype("datetime64[ns]")
 
         # Input is datetime
         if adata.obs[cat2].dtype == "datetime64[ns]":
@@ -249,7 +249,7 @@ def get_spatial_plot(
             plot_df = plot_df.iloc[::-1]
 
             buf = plot_bool(plot_df, cat1, cat2, Cmap)
-            
+
             return base64.b64encode(buf.getvalue()).decode("ascii")
 
         # input is int or float
@@ -417,8 +417,6 @@ def get_spatial_plot(
                 adata.obs[cat2] = adata.obs[cat2].astype("category")
 
                 counts_table = pd.crosstab(adata.obs[cat1], adata.obs[cat2])
-                print(counts_table.columns)
-                print(plot_value)
 
                 if mode == "counts":
                     df_of_values = counts_table[plot_value]
@@ -459,9 +457,7 @@ def get_spatial_plot(
         sm = mpl.cm.ScalarMappable(cmap=Cmap, norm=norm)
 
     else:
-        raise Exception(
-            "Scale option not correct. Please use either auto or manual"
-        )
+        raise Exception("Scale option not correct. Please use either auto or manual")
 
     #################################################################################
 
@@ -492,7 +488,11 @@ def get_spatial_plot(
 
     #################################################################################
 
-    if mode!="gene_expression" and cat2 and len(plot_value) == len(adata.obs[cat2].unique()):
+    if (
+        mode != "gene_expression"
+        and cat2
+        and len(plot_value) == len(adata.obs[cat2].unique())
+    ):
         fig.suptitle(
             f"All categories of {cat2} selected!",
             fontsize=10,
@@ -501,8 +501,8 @@ def get_spatial_plot(
         )
         cb.remove()
 
-    # Option 1 - make standard image 
-    elif mode!="gene_expression" and len(plot_value) == 0:
+    # Option 1 - make standard image
+    elif mode != "gene_expression" and len(plot_value) == 0:
         fig.suptitle(
             "Nothing selected to visualise",
             fontsize=10,
@@ -512,7 +512,7 @@ def get_spatial_plot(
         cb.remove()
 
     # Option 2 - load in premade image
-    #elif mode!="gene_expression" and cat2 and len(plot_value) == 0:
+    # elif mode!="gene_expression" and cat2 and len(plot_value) == 0:
     #    plt.close()
 
     #    fig = Figure(figsize=(6, 8))
@@ -520,8 +520,6 @@ def get_spatial_plot(
     #    im = ax1.imshow(adata.uns['Start_img'], interpolation="nearest", aspect='auto')
     #    ax1.set_axis_off()
     #    cb.remove()
-
-
 
     else:
         if mode and plot_value and len(plot_value):
@@ -561,11 +559,6 @@ def get_spatial_plot(
                     wrap=True,
                 )
                 cb.set_label("Percentage %", fontsize=10)
-
-
-
-
-
 
     #################################################################################
     buf = BytesIO()
@@ -675,6 +668,7 @@ def plot_datetime(cat, dates, labels, plot_covid=False):
     plt.close()
 
     return buf
+
 
 def plot_bool(plot_df, cat1, cat2, cmap):
     ax = plot_df.plot(
