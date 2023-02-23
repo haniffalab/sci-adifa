@@ -246,7 +246,7 @@ def get_spatial_plot(
                 plot_df[s] = [t_percent, f_percent]
 
             plot_df = plot_df.T
-            plot_df.index = list(plot_df.index)[::-1]
+            plot_df = plot_df.iloc[::-1]
 
             buf = plot_bool(plot_df, cat1, cat2, Cmap)
             
@@ -498,6 +498,28 @@ def get_spatial_plot(
         )
         cb.remove()
 
+    # Option 1 - make standard image 
+    elif mode!="gene_expression" and len(plot_value) == 0:
+        fig.suptitle(
+            "Nothing selected to visualise",
+            fontsize=10,
+            y=0.98,
+            wrap=True,
+        )
+        cb.remove()
+
+    # Option 2 - load in premade image
+    #elif mode!="gene_expression" and cat2 and len(plot_value) == 0:
+    #    plt.close()
+
+    #    fig = Figure(figsize=(6, 8))
+    #    ax1= fig.subplots(nrows=1)
+    #    im = ax1.imshow(adata.uns['Start_img'], interpolation="nearest", aspect='auto')
+    #    ax1.set_axis_off()
+    #    cb.remove()
+
+
+
     else:
         if mode and plot_value and len(plot_value):
 
@@ -536,6 +558,11 @@ def get_spatial_plot(
                     wrap=True,
                 )
                 cb.set_label("Percentage %", fontsize=10)
+
+
+
+
+
 
     #################################################################################
     buf = BytesIO()
@@ -671,7 +698,7 @@ def plot_bool(plot_df, cat1, cat2, cmap):
 
     for tick in ax.yaxis.get_major_ticks():
         tick.label.set_position((-0.03, 0))
-        tick.label.set_fontsize(8)
+        tick.label.set_fontsize(10)
 
     ax.tick_params(left=False)
 
@@ -682,6 +709,7 @@ def plot_bool(plot_df, cat1, cat2, cmap):
         f"Boolean proportion percentage of {cat2} per anatomical section",
         fontsize=12,
         y=1.03,
+        wrap=True,
     )
 
     plt.legend(
