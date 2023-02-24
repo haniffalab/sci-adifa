@@ -255,32 +255,30 @@ def get_spatial_plot(
         # input is int or float
         elif adata.obs[cat2].dtype in ["float64", "int32", "int64"]:
 
-            if scale_log == True:
-                adata.obs["log_scaled_col"] = np.log10(adata.obs[cat2])
-                cat_use = "log_scaled_col"
-            else:
-                cat_use = cat2
+            cat_use = "log_scaled_col" if scale_log else cat
 
             x_lim_range = [
                 adata.obs[[cat_use, cat1]][cat_use].min(),
                 adata.obs[[cat_use, cat1]][cat_use].max(),
             ]
 
-            array = []
+            ticks_array = []
             ticks = np.linspace(
-                int(x_lim_range[0]), int(x_lim_range[1]), num=8, dtype=int
+                int(x_lim_range[0]), int(x_lim_range[1]), num=4, dtype=int
             )
-            array.append(ticks[0])
+            ticks_array.append(ticks[0])
 
             if scale_log == True:
+                adata.obs["log_scaled_col"] = np.log10(adata.obs[cat2])
                 for i in ticks[1:]:
-                    array.append(math.ceil(i))
+                    ticks_array.append(math.ceil(i))
             else:
                 for i in ticks[1:]:
-                    array.append(math.ceil(i / 100) * 100)
+                    ticks_array.append(math.ceil(i / 100) * 100)
 
             fig, axes = joypy.joyplot(
                 data=adata.obs[[cat_use, cat1]],
+                # ax=axes,
                 by=cat1,
                 colormap=Cmap,
                 fade=True,
@@ -288,32 +286,29 @@ def get_spatial_plot(
                 x_range=x_lim_range,
                 tails=0,
                 xlim="max",
-                figsize=(10, 10),
                 overlap=0,
-                ylabelsize=12,
-                xlabelsize=12,
+                figsize=(4, 5),
+                ylabelsize=10,
+                xlabelsize=10,
+                # xlabels=False
             )
 
-            plt.title(
-                f"Ridgeplot of the continual variable {cat2} across {cat1}",
-                fontsize=16,
-                y=1.03,
+            fig.suptitle(
+                f"{cat2} across {cat1}",
+                fontsize=10,
+                y=1.0
             )
-            axes[-1].set_xticks(array)
+
+            axes[-1].set_xticks(ticks_array, labels=[str(x) for x in ticks_array])
             if scale_log == True:
                 axes[-1].set_xlabel(
-                    f"log10 of {cat2}", fontsize=16, color="black", alpha=1
+                    f"log10 of {cat2}", fontsize=10, color="black", alpha=1
                 )
             else:
-                axes[-1].set_xlabel(cat2, fontsize=16, color="black", alpha=1)
+                axes[-1].set_xlabel(cat2, fontsize=10, color="black", alpha=1)
             axes[-1].xaxis.set_label_coords(0.5, -0.07)
 
-            axes[-1].yaxis.set_visible(True)
-            axes[-1].set_yticks([])
-            axes[-1].set_ylabel(cat1, fontsize=16, color="black", alpha=1)
-            axes[-1].yaxis.set_label_coords(-0.15, 0.5)
-
-            patches = [[]] * (len(axes) - 1)
+            patches = [[]] * len(adata.obs[cat1].unique())
             counter = 0
             for i in axes:
                 if counter > (len(patches) - 1):
@@ -326,7 +321,7 @@ def get_spatial_plot(
 
             counter = 0
             labels = list(adata.obs[cat1].unique())
-            lengend_patches = []
+            legend_patches = []
 
             gmeans = []
             for i in patches:
@@ -345,7 +340,7 @@ def get_spatial_plot(
                     )
                 )
                 gmeans.append(gmean_)
-                lengend_patches.append(
+                legend_patches.append(
                     mpatches.Patch(
                         color=i,
                         label=r"{a}:     {b},     {c},     {d}".format(
@@ -355,102 +350,103 @@ def get_spatial_plot(
                 )  #'
                 counter += 1
 
-            legend1 = plt.legend(
-                handles=lengend_patches,
+            legend1 = fig.legend(
+                handles=legend_patches,
                 title="Section:         std,        K,        GM",
-                bbox_to_anchor=(1.6, 1),
-                labelspacing=2,
-                fontsize=12,
-                title_fontsize=15,
+                loc="lower center",
+                bbox_to_anchor=(0.5, -0.59),
+                fontsize=10,
+                title_fontsize=10,
             )
-            plt.setp(legend1.get_title(), color="red")
+            # legend1.set_in_layout(True)
+            # # fig.setp(legend1.get_title(), color="red")
 
-            counter = 0
-            for i in patches:
-                if scale_log == True:
-                    X = np.log10(gmeans[counter])
-                else:
-                    X = gmeans[counter]
-                axes[counter].axvline(X, color="red", lw=2, alpha=1, ymax=0.1)
+            # counter = 0
+            # for i in patches:
+            #     if scale_log == True:
+            #         X = np.log10(gmeans[counter])
+            #     else:
+            #         X = gmeans[counter]
+            #     axes[counter].axvline(X, color="red", lw=2, alpha=1, ymax=0.1)
 
-                #if counter == (len(patches) - 1):
-                #    plt.text(
-                #        x=gmeans[counter] - (gmeans[counter]) / 4,
-                #        y=-0.05,
-                #        s="Geometric mean",
-                #        alpha=1,
-                #        fontdict={"color": "r", "fontsize": "14"},
-                #    )  # axes[counter]
-                counter += 1
+            #     #if counter == (len(patches) - 1):
+            #     #    plt.text(
+            #     #        x=gmeans[counter] - (gmeans[counter]) / 4,
+            #     #        y=-0.05,
+            #     #        s="Geometric mean",
+            #     #        alpha=1,
+            #     #        fontdict={"color": "r", "fontsize": "14"},
+            #     #    )  # axes[counter]
+            #     counter += 1
 
-            line1 = Line2D([], [], color='red', marker='|', linestyle='None',
-                              markersize=10, markeredgewidth=1.5, label='Geometric mean')
+            # line1 = Line2D([], [], color='red', marker='|', linestyle='None',
+            #                   markersize=10, markeredgewidth=1.5, label='Geometric mean')
     
-            legend2 = plt.legend(handles=[line1], title='Graphical overlays', bbox_to_anchor=(1.41, 0.25), labelspacing = 2, fontsize=12, title_fontsize=15)
+            # legend2 = fig.legend(handles=[line1], title='Graphical overlays', bbox_to_anchor=(1.41, 0.25), labelspacing = 2, fontsize=12, title_fontsize=15)
     
-            plt.gca().add_artist(legend1)
+            # plt.gca().add_artist(legend1)
 
             buf = BytesIO()
-            plt.savefig(buf, format="png")
-            buf.seek(0)
-            plt.close()
+            fig.savefig(buf, format="png", bbox_inches="tight")
             return base64.b64encode(buf.getvalue()).decode("ascii")
 
         # dtype is string/category/object
         else:
 
-            if len(plot_value) == len(
-                adata.obs[cat2].unique()
-            ):  # or len(plot_value) == 0:
-                values = [0] * len(adata.obs[cat2])
+            # if len(plot_value) == len(
+            #     adata.obs[cat2].unique()
+            # ):  # or len(plot_value) == 0:
+            #     values = [0] * len(adata.obs[cat2])
 
-            else:
-                if len(plot_value) > 1:
-                    adata.obs["combined_annotation"] = (
-                        adata.obs[cat2].copy().astype(str)
-                    )
-                    for value in plot_value:
-                        adata.obs.loc[
-                            adata.obs[cat2].isin([value]), "combined_annotation"
-                        ] = "combined_annotation"
-                    cat2 = "combined_annotation"
-                    plot_value = ["combined_annotation"]
+            # else:
+            if len(plot_value) > 1:
+                adata.obs["combined_annotation"] = (
+                    adata.obs[cat2].copy().astype(str)
+                )
+                for value in plot_value:
+                    adata.obs.loc[
+                        adata.obs[cat2].isin([value]), "combined_annotation"
+                    ] = "combined_annotation"
+                cat2 = "combined_annotation"
+                plot_value = ["combined_annotation"]
 
-                adata.obs[cat1] = adata.obs[cat1].astype("category")
-                adata.obs[cat2] = adata.obs[cat2].astype(str)
-                adata.obs[cat2] = adata.obs[cat2].astype("category")
+            adata.obs[cat1] = adata.obs[cat1].astype("category")
+            adata.obs[cat2] = adata.obs[cat2].astype(str)
+            adata.obs[cat2] = adata.obs[cat2].astype("category")
 
-                counts_table = pd.crosstab(adata.obs[cat1], adata.obs[cat2])
+            counts_table = pd.crosstab(adata.obs[cat1], adata.obs[cat2])
 
-                if mode == "counts":
-                    df_of_values = counts_table[plot_value]
-                    values = []
-                    for col in df_of_values:
-                        value = list(df_of_values[col].values)
-                        values.extend(value)
+            if mode == "counts":
+                df_of_values = counts_table[plot_value]
+                values = []
+                for col in df_of_values:
+                    value = list(df_of_values[col].values)
+                    values.extend(value)
 
-                elif mode == "percentage_across_sections":
-                    percentage_table_column = round(
-                        (counts_table / counts_table.sum()) * 100, 2
-                    )
-                    df_of_values = percentage_table_column[plot_value]
-                    values = []
-                    for col in df_of_values:
-                        value = list(df_of_values[col].values)
-                        values.extend(value)
+            elif mode == "percentage_across_sections":
+                percentage_table_column = round(
+                    (counts_table / counts_table.sum()) * 100, 2
+                )
+                df_of_values = percentage_table_column[plot_value]
+                values = []
+                for col in df_of_values:
+                    value = list(df_of_values[col].values)
+                    values.extend(value)
 
-                elif mode == "percentage_within_sections":
-                    percentage_table_row = round(
-                        (counts_table.T / counts_table.sum(axis=1)).T * 100, 2
-                    )
-                    df_of_values = percentage_table_row[plot_value]
-                    values = []
-                    for col in df_of_values:
-                        value = list(df_of_values[col].values)
-                        values.extend(value)
+            elif mode == "percentage_within_sections":
+                percentage_table_row = round(
+                    (counts_table.T / counts_table.sum(axis=1)).T * 100, 2
+                )
+                df_of_values = percentage_table_row[plot_value]
+                values = []
+                for col in df_of_values:
+                    value = list(df_of_values[col].values)
+                    values.extend(value)
 
     #################################################################################
     # create a color scale on the range of values inputted
+
+    # print(values)
 
     if scale == "auto":
         norm = mpl.colors.Normalize(vmin=min(values), vmax=max(values))
@@ -460,8 +456,9 @@ def get_spatial_plot(
         norm = mpl.colors.Normalize(vmin=scale_lower_value, vmax=scale_upper_value)
         sm = mpl.cm.ScalarMappable(cmap=Cmap, norm=norm)
 
-    else:
-        raise Exception("Scale option not correct. Please use either auto or manual")
+    print(min(values), max(values))
+    print(norm)
+    print(sm.get_clim())
 
     #################################################################################
 
@@ -492,18 +489,18 @@ def get_spatial_plot(
 
     #################################################################################
 
-    if (
-        mode != "gene_expression"
-        and cat2
-        and len(plot_value) == len(adata.obs[cat2].unique())
-    ):
-        fig.suptitle(
-            f"All categories of {cat2} selected!",
-            fontsize=10,
-            y=0.98,
-            wrap=True,
-        )
-        cb.remove()
+    # if (
+    #     mode != "gene_expression"
+    #     and cat2
+    #     and len(plot_value) == len(adata.obs[cat2].unique())
+    # ):
+    #     fig.suptitle(
+    #         f"All categories of {cat2} selected!",
+    #         fontsize=10,
+    #         y=0.98,
+    #         wrap=True,
+    #     )
+    #     cb.remove()
 
         # incase we want a legend in future
         #Label = "Number of elements in {c} are {n}".format(c=cat2, n=adata.obs[cat2].count())
@@ -520,7 +517,7 @@ def get_spatial_plot(
 
 
     # Option 1 - make standard image 
-    elif mode!="gene_expression" and len(plot_value) == 0:
+    if mode!="gene_expression" and len(plot_value) == 0:
         fig.suptitle(
             "Nothing selected to visualise",
             fontsize=10,
