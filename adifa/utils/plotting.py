@@ -143,8 +143,8 @@ def get_spatial_plot(
     scale_min=0,
     tick_no=8,
     scale_log=False,
-    plot_covid=True,
-    use_premade_info=True,
+    plot_covid=False,
+    use_premade_info=False,
     datetime_add_info_col="haniffa_ID",
 ):
 
@@ -175,13 +175,14 @@ def get_spatial_plot(
 
     # No input
     if (
-        not mode
+        (not mode
         or (mode != "gene_expression" and not cat2)
         or (
             cat2
             and adata.obs[cat2].dtype == "category"
             and (not plot_value or not len(plot_value))
-        )
+        ))
+        and mode != "proportion"
     ):
         values = [0] * len(adata.obs[cat1])
 
@@ -220,9 +221,11 @@ def get_spatial_plot(
                     .drop_duplicates()
                     .reset_index(drop=True)
                 ).set_index(cat3)
+
                 date_dict = {}
                 for i in df_new.index:
                     date_dict[i] = df_new.loc[i][0]
+
                 labels = [
                     "{0:%d %b %Y}:\n{1}".format(d, l)
                     for l, d in zip(date_dict.keys(), date_dict.values())
@@ -230,25 +233,6 @@ def get_spatial_plot(
                 dates = date_dict.values()
 
             buf = plot_datetime(cat2, dates, labels, plot_covid)
-
-            return base64.b64encode(buf.getvalue()).decode("ascii")
-
-        elif adata.obs[cat2].dtype == "bool":
-            sub_df = adata.obs[[cat1, cat2]]
-            plot_df = pd.DataFrame(index=["True", "False"])
-
-            for s in sub_df[cat1].unique():
-                df_sub = sub_df[sub_df[cat1].isin([s])]
-                true_counts = df_sub[cat2].sum()  # .apply(eval).astype('boolean')
-                total = len(df_sub[cat2])
-                t_percent = round((true_counts / total) * 100, 2)
-                f_percent = 100 - t_percent
-                plot_df[s] = [t_percent, f_percent]
-
-            plot_df = plot_df.T
-            plot_df = plot_df.iloc[::-1]
-
-            buf = plot_bool(plot_df, cat1, cat2, Cmap)
 
             return base64.b64encode(buf.getvalue()).decode("ascii")
 
@@ -264,7 +248,7 @@ def get_spatial_plot(
 
             ticks_array = []
             ticks = np.linspace(
-                int(x_lim_range[0]), int(x_lim_range[1]), num=4, dtype=int
+                float(x_lim_range[0]), float(x_lim_range[1]), num=4, dtype=float
             )
             ticks_array.append(ticks[0])
 
@@ -278,7 +262,6 @@ def get_spatial_plot(
 
             fig, axes = joypy.joyplot(
                 data=adata.obs[[cat_use, cat1]],
-                # ax=axes,
                 by=cat1,
                 colormap=Cmap,
                 fade=True,
@@ -290,7 +273,6 @@ def get_spatial_plot(
                 figsize=(4, 5),
                 ylabelsize=10,
                 xlabelsize=10,
-                # xlabels=False
             )
 
             fig.suptitle(
@@ -299,7 +281,7 @@ def get_spatial_plot(
                 y=1.0
             )
 
-            axes[-1].set_xticks(ticks_array, labels=[str(x) for x in ticks_array])
+            axes[-1].set_xticks(ticks_array, labels=["{:.1f}".format(x) for x in ticks_array])
             if scale_log == True:
                 axes[-1].set_xlabel(
                     f"log10 of {cat2}", fontsize=10, color="black", alpha=1
@@ -325,7 +307,7 @@ def get_spatial_plot(
 
             gmeans = []
             for i in patches:
-                std_ = int(
+                std_ = float(
                     adata.obs[adata.obs[cat1].isin([labels[counter]])][cat2].std()
                 )
                 kur_ = round(
@@ -334,7 +316,7 @@ def get_spatial_plot(
                     ),
                     2,
                 )
-                gmean_ = int(
+                gmean_ = float(
                     stats.gmean(
                         adata.obs[adata.obs[cat1].isin([labels[counter]])][cat2]
                     )
@@ -343,14 +325,14 @@ def get_spatial_plot(
                 legend_patches.append(
                     mpatches.Patch(
                         color=i,
-                        label=r"{a}:     {b},     {c},     {d}".format(
-                            a=labels[counter], b=std_, c=kur_, d=gmean_
+                        label="{}:     {:.2f},     {:.2f},     {:.2f}".format(
+                            labels[counter], std_, kur_, gmean_
                         ),
                     )
-                )  #'
+                )
                 counter += 1
 
-            legend1 = fig.legend(
+            fig.legend(
                 handles=legend_patches,
                 title="Section:         std,        K,        GM",
                 loc="lower center",
@@ -358,48 +340,27 @@ def get_spatial_plot(
                 fontsize=10,
                 title_fontsize=10,
             )
-            # legend1.set_in_layout(True)
-            # # fig.setp(legend1.get_title(), color="red")
 
-            # counter = 0
-            # for i in patches:
-            #     if scale_log == True:
-            #         X = np.log10(gmeans[counter])
-            #     else:
-            #         X = gmeans[counter]
-            #     axes[counter].axvline(X, color="red", lw=2, alpha=1, ymax=0.1)
+            for i in range(len(patches)):
+                if scale_log == True:
+                    X = np.log10(gmeans[i])
+                else:
+                    X = gmeans[i]
+                axes[i].axvline(X, color="red", lw=2, alpha=1, ymax=0.1)
 
-            #     #if counter == (len(patches) - 1):
-            #     #    plt.text(
-            #     #        x=gmeans[counter] - (gmeans[counter]) / 4,
-            #     #        y=-0.05,
-            #     #        s="Geometric mean",
-            #     #        alpha=1,
-            #     #        fontdict={"color": "r", "fontsize": "14"},
-            #     #    )  # axes[counter]
-            #     counter += 1
-
-            # line1 = Line2D([], [], color='red', marker='|', linestyle='None',
-            #                   markersize=10, markeredgewidth=1.5, label='Geometric mean')
+            line1 = Line2D([], [], color='red', marker='|', linestyle='None',
+                              markersize=10, markeredgewidth=1.5, label='Geometric mean')
     
-            # legend2 = fig.legend(handles=[line1], title='Graphical overlays', bbox_to_anchor=(1.41, 0.25), labelspacing = 2, fontsize=12, title_fontsize=15)
+            fig.legend(handles=[line1], loc="lower center", bbox_to_anchor=(0.5, -0.65), fontsize=10)
     
-            # plt.gca().add_artist(legend1)
-
             buf = BytesIO()
             fig.savefig(buf, format="png", bbox_inches="tight")
             return base64.b64encode(buf.getvalue()).decode("ascii")
-
-        # dtype is string/category/object
+        
+        # dtype is string/category/object/bool
         else:
 
-            # if len(plot_value) == len(
-            #     adata.obs[cat2].unique()
-            # ):  # or len(plot_value) == 0:
-            #     values = [0] * len(adata.obs[cat2])
-
-            # else:
-            if len(plot_value) > 1:
+            if mode != "proportion" and len(plot_value) > 1:
                 adata.obs["combined_annotation"] = (
                     adata.obs[cat2].copy().astype(str)
                 )
@@ -442,11 +403,12 @@ def get_spatial_plot(
                 for col in df_of_values:
                     value = list(df_of_values[col].values)
                     values.extend(value)
+            
+            elif mode == "proportion":
+                values = (counts_table["True"]/counts_table.sum(axis=1)*100).values
 
     #################################################################################
     # create a color scale on the range of values inputted
-
-    # print(values)
 
     if scale == "auto":
         norm = mpl.colors.Normalize(vmin=min(values), vmax=max(values))
@@ -456,9 +418,9 @@ def get_spatial_plot(
         norm = mpl.colors.Normalize(vmin=scale_lower_value, vmax=scale_upper_value)
         sm = mpl.cm.ScalarMappable(cmap=Cmap, norm=norm)
 
-    print(min(values), max(values))
-    print(norm)
-    print(sm.get_clim())
+    # print(min(values), max(values))
+    # print(norm)
+    # print(sm.get_clim())
 
     #################################################################################
 
@@ -517,7 +479,7 @@ def get_spatial_plot(
 
 
     # Option 1 - make standard image 
-    if mode!="gene_expression" and len(plot_value) == 0:
+    if mode not in ["gene_expression", "proportion"] and len(plot_value) == 0:
         fig.suptitle(
             "Nothing selected to visualise",
             fontsize=10,
@@ -537,7 +499,7 @@ def get_spatial_plot(
     #    cb.remove()
 
     else:
-        if mode and plot_value and len(plot_value):
+        if mode in ["gene_expression", "proportion"] or (mode and plot_value and len(plot_value)):
 
             if mode == "gene_expression":
                 fig.suptitle(
@@ -574,6 +536,15 @@ def get_spatial_plot(
                     wrap=True,
                 )
                 cb.set_label("Percentage %", fontsize=10)
+            
+            elif mode == "proportion":
+                fig.suptitle(
+                    f"Percentage of truthful {cat2} values within section",
+                    fontsize=10,
+                    y=0.98,
+                    wrap=True,
+                )
+                cb.set_label("Percentage %", fontsize=10)
 
     #################################################################################
     buf = BytesIO()
@@ -603,7 +574,7 @@ def plot_datetime(cat, dates, labels, plot_covid=False):
         start_date = (min(dates) - relativedelta(months=1)).replace(day=1)
         end_date = (max(dates) + relativedelta(months=1)).replace(day=1)
 
-    fig, ax = plt.subplots(figsize=(8, 5), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=(4, 5), constrained_layout=True)
     _ = ax.set_ylim(-2, 1.75)
     _ = ax.set_xlim(start_date, end_date)
     _ = ax.axhline(0, xmin=0, xmax=1, c="red", zorder=1)
@@ -623,10 +594,8 @@ def plot_datetime(cat, dates, labels, plot_covid=False):
             label_offsets[i],
             l,
             ha="center",
-            fontfamily="serif",
-            fontweight="bold",
             color="royalblue",
-            fontsize=12,
+            fontsize=10,
         )
 
     stems = np.zeros(len(dates))
@@ -642,10 +611,7 @@ def plot_datetime(cat, dates, labels, plot_covid=False):
 
     _ = ax.set_title(
         f"Timeline for {cat}",
-        fontweight="bold",
-        fontfamily="serif",
-        fontsize=16,
-        color="royalblue",
+        fontsize=10,
         y=1.1,
     )
 
@@ -671,70 +637,14 @@ def plot_datetime(cat, dates, labels, plot_covid=False):
         _ = ax.axvline(covid_start, ymin=0.6, ymax=0.7, c="purple", zorder=1)
         _ = ax.axvline(covid_end, ymin=0.6, ymax=0.7, c="purple", zorder=1)
         _ = ax.plot([covid_start, covid_end], [0.4, 0.4], linestyle="-", color="purple")
-        _ = ax.text(covid_start, 0.7, "Covid restrictions", color="purple", fontsize=14)
+        _ = ax.text(covid_start, 0.7, "Covid restrictions", color="purple", fontsize=10)
 
     # hide tick labels
     _ = ax.set_xticks([])
     _ = ax.set_yticks([])
 
     buf = BytesIO()
-    plt.savefig(buf, format="png")
-    buf.seek(0)
-    plt.close()
-
-    return buf
-
-
-def plot_bool(plot_df, cat1, cat2, cmap):
-    ax = plot_df.plot(
-        kind="barh", stacked=True, legend=False, figsize=(7, 5), cmap=cmap
-    )
-
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["bottom"].set_visible(False)
-    ax.spines["left"].set_visible(False)
-
-    for p in ax.patches:
-        width, height = p.get_width(), p.get_height()
-        x, y = p.get_xy()
-        ax.text(
-            x + width / 2,
-            y + height + 0.2,
-            "{:.2f}%".format(width),
-            horizontalalignment="center",
-            verticalalignment="center",
-            color="black",
-            fontsize=10,
-        )
-
-    for tick in ax.yaxis.get_major_ticks():
-        tick.label.set_position((-0.03, 0))
-        tick.label.set_fontsize(10)
-
-    ax.tick_params(left=False)
-
-    ax.set_xlabel("Percentage (%)", fontsize=8)
-    ax.set_ylabel(cat1, fontsize=10, color="black", alpha=1)
-
-    plt.title(
-        f"Boolean proportion percentage of {cat2} per anatomical section",
-        fontsize=12,
-        y=1.03,
-        wrap=True,
-    )
-
-    plt.legend(
-        title=f"{cat2}",
-        bbox_to_anchor=(0.6, 0.1),
-        labelspacing=2,
-        fontsize=8,
-        title_fontsize=10,
-        prop={"size": 15},
-    )  # 1.4, 1
-
-    buf = BytesIO()
-    plt.savefig(buf, format="png")
+    plt.savefig(buf, format="png", bbox_inches="tight")
     buf.seek(0)
     plt.close()
 
