@@ -395,14 +395,8 @@ def get_spatial_plot(
                     values.extend(value)
 
             elif mode == "percentage_within_sections":
-                percentage_table_row = round(
-                    (counts_table.T / counts_table.sum(axis=1)).T * 100, 2
-                )
-                df_of_values = percentage_table_row[plot_value]
-                values = []
-                for col in df_of_values:
-                    value = list(df_of_values[col].values)
-                    values.extend(value)
+                percentage_table_row = counts_table[plot_value].div(counts_table.sum(axis=1), axis=0)*100
+                values = percentage_table_row[plot_value].values.reshape(-1)
             
             elif mode == "proportion":
                 values = (counts_table["True"]/counts_table.sum(axis=1)*100).values
@@ -411,16 +405,14 @@ def get_spatial_plot(
     # create a color scale on the range of values inputted
 
     if scale == "auto":
-        norm = mpl.colors.Normalize(vmin=min(values), vmax=max(values))
+        vmax = max(values) if max(values) > 0 else 1
+        vmin = min(values) if min(values) != vmax else 0
+        norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
         sm = mpl.cm.ScalarMappable(cmap=Cmap, norm=norm)
 
     elif scale == "manual":
         norm = mpl.colors.Normalize(vmin=scale_lower_value, vmax=scale_upper_value)
         sm = mpl.cm.ScalarMappable(cmap=Cmap, norm=norm)
-
-    # print(min(values), max(values))
-    # print(norm)
-    # print(sm.get_clim())
 
     #################################################################################
 
@@ -451,32 +443,18 @@ def get_spatial_plot(
 
     #################################################################################
 
-    # if (
-    #     mode != "gene_expression"
-    #     and cat2
-    #     and len(plot_value) == len(adata.obs[cat2].unique())
-    # ):
-    #     fig.suptitle(
-    #         f"All categories of {cat2} selected!",
-    #         fontsize=10,
-    #         y=0.98,
-    #         wrap=True,
-    #     )
-    #     cb.remove()
-
-        # incase we want a legend in future
-        #Label = "Number of elements in {c} are {n}".format(c=cat2, n=adata.obs[cat2].count())
-        #legend_info = Line2D([], [], color='blue', marker="$\u24D8$", linestyle='None', markersize=10, label=Label)
-        #ax1.legend(
-        #    title=f"{cat2} information",
-        #    handles = [legend_info],
-        #    bbox_to_anchor=(1.1, -0.04), # 0.01
-        #    labelspacing=2,
-        #    fontsize=4,
-        #    title_fontsize=8,
-        #    prop={"size": 8},
-        #)  # 1.4, 1
-
+    # incase we want a legend in future
+    #Label = "Number of elements in {c} are {n}".format(c=cat2, n=adata.obs[cat2].count())
+    #legend_info = Line2D([], [], color='blue', marker="$\u24D8$", linestyle='None', markersize=10, label=Label)
+    #ax1.legend(
+    #    title=f"{cat2} information",
+    #    handles = [legend_info],
+    #    bbox_to_anchor=(1.1, -0.04), # 0.01
+    #    labelspacing=2,
+    #    fontsize=4,
+    #    title_fontsize=8,
+    #    prop={"size": 8},
+    #)  # 1.4, 1
 
     # Option 1 - make standard image 
     if mode not in ["gene_expression", "proportion"] and len(plot_value) == 0:
