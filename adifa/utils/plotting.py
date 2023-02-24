@@ -574,22 +574,23 @@ def plot_datetime(cat, dates, labels, plot_covid=False):
         start_date = (min(dates) - relativedelta(months=1)).replace(day=1)
         end_date = (max(dates) + relativedelta(months=1)).replace(day=1)
 
-    fig, ax = plt.subplots(figsize=(4, 5), constrained_layout=True)
-    _ = ax.set_ylim(-2, 1.75)
-    _ = ax.set_xlim(start_date, end_date)
-    _ = ax.axhline(0, xmin=0, xmax=1, c="red", zorder=1)
+    fig = Figure(figsize=(4, 5), constrained_layout=True)
+    ax = fig.subplots()
+    ax.set_ylim(-2, 1.75)
+    ax.set_xlim(start_date, end_date)
+    ax.axhline(0, xmin=0, xmax=1, c="red", zorder=1)
 
-    _ = ax.get_xaxis().set_major_locator(mdates.MonthLocator(interval=1))
-    _ = ax.get_xaxis().set_major_formatter(mdates.DateFormatter("%b %Y"))
+    ax.get_xaxis().set_major_locator(mdates.MonthLocator(interval=1))
+    ax.get_xaxis().set_major_formatter(mdates.DateFormatter("%b %Y"))
 
-    _ = ax.scatter(dates, np.zeros(len(dates)), s=120, c="green", zorder=2)
-    _ = ax.scatter(dates, np.zeros(len(dates)), s=30, c="darkgreen", zorder=3)
+    ax.scatter(dates, np.zeros(len(dates)), s=120, c="green", zorder=2)
+    ax.scatter(dates, np.zeros(len(dates)), s=30, c="darkgreen", zorder=3)
 
     label_offsets = np.zeros(len(dates))
     label_offsets[::2] = 1.4  # 0.35
     label_offsets[1::2] = -1.8  # -0.7
     for i, (l, d) in enumerate(zip(labels, dates)):
-        _ = ax.text(
+        ax.text(
             d,
             label_offsets[i],
             l,
@@ -602,14 +603,14 @@ def plot_datetime(cat, dates, labels, plot_covid=False):
     stems[::2] = 1  # 0.3
     stems[1::2] = -1  # -0.3
     markerline, stemline, baseline = ax.stem(dates, stems, use_line_collection=True)
-    _ = plt.setp(markerline, marker=",", color="green", markersize=5)
-    _ = plt.setp(stemline, color="green", linewidth=1.25)
+    markerline.set(marker=",", color="green", markersize=5)
+    stemline.set(color="green", linewidth=1.25)
 
     # hide lines around chart
     for spine in ["left", "top", "right", "bottom"]:
-        _ = ax.spines[spine].set_visible(False)
+        ax.spines[spine].set_visible(False)
 
-    _ = ax.set_title(
+    ax.set_title(
         f"Timeline for {cat}",
         fontsize=10,
         y=1.1,
@@ -622,30 +623,25 @@ def plot_datetime(cat, dates, labels, plot_covid=False):
         )
     ):
         x_axis_pos = datetime.date(*list(map(int, i.replace("-", " ").split(" "))))
-        _ = ax.axvline(x_axis_pos, ymin=0.5, ymax=0.57, c="black", zorder=1)
+        ax.axvline(x_axis_pos, ymin=0.5, ymax=0.57, c="black", zorder=1)
         if (x_axis_pos.strftime("%B")[:3]) == "Jan":
-            _ = ax.text(x_axis_pos, -0.3, x_axis_pos.strftime("%B")[:3])
-            _ = ax.text(x_axis_pos, 0.5, x_axis_pos.strftime("%Y"))
+            ax.text(x_axis_pos, -0.3, x_axis_pos.strftime("%B")[:3])
+            ax.text(x_axis_pos, 0.5, x_axis_pos.strftime("%Y"))
         else:
-            _ = ax.text(x_axis_pos, -0.3, x_axis_pos.strftime("%B")[:3])
+            ax.text(x_axis_pos, -0.3, x_axis_pos.strftime("%B")[:3])
 
     if plot_covid == True:
         # add covid line segment
-        x_min, x_max = ax.get_xlim()
-        ticks = [(tick - x_min) / (x_max - x_min) for tick in ax.get_xticks()]
-        tick_labels = ax.get_xticklabels()
-        _ = ax.axvline(covid_start, ymin=0.6, ymax=0.7, c="purple", zorder=1)
-        _ = ax.axvline(covid_end, ymin=0.6, ymax=0.7, c="purple", zorder=1)
-        _ = ax.plot([covid_start, covid_end], [0.4, 0.4], linestyle="-", color="purple")
-        _ = ax.text(covid_start, 0.7, "Covid restrictions", color="purple", fontsize=10)
+        ax.axvline(covid_start, ymin=0.6, ymax=0.7, c="purple", zorder=1)
+        ax.axvline(covid_end, ymin=0.6, ymax=0.7, c="purple", zorder=1)
+        ax.plot([covid_start, covid_end], [0.4, 0.4], linestyle="-", color="purple")
+        ax.text(covid_start, 0.7, "Covid restrictions", color="purple", fontsize=10)
 
     # hide tick labels
-    _ = ax.set_xticks([])
-    _ = ax.set_yticks([])
+    ax.set_xticks([])
+    ax.set_yticks([])
 
     buf = BytesIO()
-    plt.savefig(buf, format="png", bbox_inches="tight")
-    buf.seek(0)
-    plt.close()
+    fig.savefig(buf, format="png", bbox_inches="tight")
 
     return buf
