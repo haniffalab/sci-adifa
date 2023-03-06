@@ -15,7 +15,7 @@
 
     const datasetId = this.attr('data-datasetId')
     const imgElem = $('#spatial-img')
-    const spatialModes = ['counts', 'percentage_within_sections', 'percentage_across_sections', 'gene_expression']
+    const spatialModes = ['counts', 'percentage_within_sections', 'percentage_across_sections', 'gene_expression', 'distribution', 'date', 'proportion']
     let xhrPool = []
 
     let colorScaleId
@@ -126,12 +126,31 @@
 
     const disableModes = function () {
       spatialModes.forEach(function (mode) {
-        $(`#spatial-mode-${mode}`).attr('disabled', (
-          colorScaleType === 'gene' && mode !== 'gene_expression'
-            ? 'disabled'
-            : colorScaleType !== 'gene' && mode === 'gene_expression' ? 'disabled' : null
-        )
-        )
+        if (colorScaleType === 'gene') {
+          $(`#spatial-mode-${mode}`).css('display', (
+            mode === 'gene_expression' ? 'block' : 'none'
+          ))
+        } else if (colorScaleType === 'boolean') {
+          $(`#spatial-mode-${mode}`).css('display', (
+            mode === 'proportion' ? 'block' : 'none'
+          ))
+        } else if (colorScaleType === 'date') {
+          $(`#spatial-mode-${mode}`).css('display', (
+            mode === 'date' ? 'block' : 'none'
+          ))
+        } else if (colorScaleType === 'continuous') {
+          $(`#spatial-mode-${mode}`).css('display', (
+            mode === 'distribution' ? 'block' : 'none'
+          ))
+        } else if (colorScaleType === 'categorical') {
+          $(`#spatial-mode-${mode}`).css('display', (
+            ['counts', 'percentage_within_sections', 'percentage_across_sections'].includes(mode)
+              ? 'block'
+              : 'none'
+          ))
+        } else {
+          $(`#spatial-mode-${mode}`).css('display', 'none')
+        }
       })
     }
 
@@ -171,7 +190,7 @@
       $('#spatial-div').show()
 
       const obsList = []
-      if (colorScaleKey && colorScaleType === 'categorical') {
+      if (colorScaleKey && ['categorical', 'boolean', 'date'].includes(colorScaleType)) {
         const arr = active.dataset.data_obs[colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()].values
         for (const k in arr) {
           if (Object.prototype.hasOwnProperty.call(arr, k)) {
@@ -220,7 +239,15 @@
           colorScaleKey = $(el).data('name')
           colorScaleId = $(el).data('id')
           colorScaleType = $(el).data('type')
-          setMode(prevObsMode || 'counts')
+          if (colorScaleType === 'boolean') {
+            setMode('proportion')
+          } else if (colorScaleType === 'date') {
+            setMode('date')
+          } else if (colorScaleType === 'continuous') {
+            setMode('distribution')
+          } else {
+            setMode(prevObsMode || 'counts')
+          }
         }
       }
       console.log(colorScaleId, colorScaleKey, colorScaleType)
@@ -248,7 +275,7 @@
           sameSite: 'Strict',
           path: window.location.pathname
         })
-        if (mode !== 'gene_expression') {
+        if (!['gene_expression', 'distribution', 'date', 'proportion'].includes(mode)) {
           prevObsMode = mode
         }
       }
