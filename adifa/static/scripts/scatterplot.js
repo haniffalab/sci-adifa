@@ -297,11 +297,11 @@
         //   }
         // }
       } else if (colorScaleType === 'continuous') {
-        myColor = d3.scaleSequential().domain([active.dataset.data_obs[colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()].min, active.dataset.data_obs[colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()].max]).interpolator(d3.interpolateViridis)
+        myColor = d3scale.scaleSequential().domain([active.dataset.data_obs[colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()].min, active.dataset.data_obs[colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()].max]).interpolator(d3scale.interpolateViridis)
         $('#continuous-legend').empty()
         createLegend(myColor)
       } else if (colorScaleType === 'gene') {
-        myColor = d3.scaleSequential().domain([active.min, active.max]).interpolator(d3.interpolateViridis)
+        myColor = d3scale.scaleSequential().domain([active.min, active.max]).interpolator(d3scale.interpolateViridis)
         $('#continuous-legend').empty()
         createLegend(myColor)
       } else {
@@ -331,7 +331,7 @@
           return [d[0], d[1], 0]
         },
         getFillColor: function (d) {
-          const v = d3.rgb(myColor(d[2]))
+          const v = d3scale.rgb(myColor(d[2]))
           return [v.r, v.g, v.b]
           // return [160, 160, 180, 200]
         },
@@ -358,7 +358,7 @@
       const legendwidth = 80
       const margin = { top: 10, right: 60, bottom: 10, left: 0 }
 
-      const canvas = d3.select(selectorId)
+      const canvas = d3scale.select(selectorId)
         .style('height', legendheight + 'px')
         .style('width', '100%')// legendwidth + 'px')
         .style('position', 'absolute')
@@ -377,14 +377,14 @@
 
       const ctx = canvas.getContext('2d')
 
-      const legendscale = d3.scaleLinear()
+      const legendscale = d3scale.scaleLinear()
         .range([legendheight - margin.top - margin.bottom, 1])
         .domain(colorscale.domain())
 
       // image data hackery based on http://bl.ocks.org/mbostock/048d21cf747371b11884f75ad896e5a5
       const image = ctx.createImageData(1, legendheight)
-      d3.range(legendheight).forEach(function (i) {
-        const c = d3.rgb(colorscale(legendscale.invert(i)))
+      d3scale.range(legendheight).forEach(function (i) {
+        const c = d3scale.rgb(colorscale(legendscale.invert(i)))
         image.data[4 * i] = c.r
         image.data[4 * i + 1] = c.g
         image.data[4 * i + 2] = c.b
@@ -395,18 +395,18 @@
       // A simpler way to do the above, but possibly slower. keep in mind the legend width is stretched because the width attr of the canvas is 1
       // See http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
       /*
-              d3.range(legendheight).forEach(function(i) {
+              d3scale.range(legendheight).forEach(function(i) {
               ctx.fillStyle = colorscale(legendscale.invert(i));
               ctx.fillRect(0,i,1,1);
               });
               */
 
-      const legendaxis = d3.axisRight()
+      const legendaxis = d3scale.axisRight()
         .scale(legendscale)
         .tickSize(6)
         .ticks(6)
 
-      const svg = d3.select(selectorId)
+      const svg = d3scale.select(selectorId)
         .append('svg')
         .attr('height', (legendheight) + 'px')
         .attr('width', (legendwidth) + 'px')

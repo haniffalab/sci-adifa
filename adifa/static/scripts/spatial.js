@@ -14,7 +14,7 @@
     }
 
     const datasetId = this.attr('data-datasetId')
-    const imgElem = $('#spatial-img')
+    // const imgElem = $('#spatial-img')
     const spatialModes = ['counts', 'percentage_within_sections', 'percentage_across_sections', 'gene_expression', 'distribution', 'date', 'proportion']
     let xhrPool = []
 
@@ -28,9 +28,9 @@
       dataset: {}
     }
 
-    const imgsrc = function (strings, image) {
-      return `data:image/png;base64,${image}`
-    }
+    // const imgsrc = function (strings, image) {
+    //   return `data:image/png;base64,${image}`
+    // }
 
     const resources = {}
     // attach a function to be executed before an Ajax request is sent.
@@ -159,31 +159,6 @@
     }
 
     const loadPlot = function () {
-      const trace1 = {
-        x: [1, 2, 3, 4],
-        y: [10, 15, 13, 17],
-        mode: 'markers',
-        type: 'scatter'
-      }
-
-      const trace2 = {
-        x: [2, 3, 4, 5],
-        y: [16, 5, 11, 9],
-        mode: 'lines',
-        type: 'scatter'
-      }
-
-      const trace3 = {
-        x: [1, 2, 3, 4],
-        y: [12, 9, 15, 12],
-        mode: 'lines+markers',
-        type: 'scatter'
-      }
-
-      const data = [trace1, trace2, trace3]
-      // Plotly.newPlot($('#spatial-plot')[0], data)
-      Plotly.newPlot('spatial-plot', data)
-
       // startLoader()
       $('#spatial-mode').text(spatialMode ? spatialMode.replaceAll('_', ' ') : '')
       $('#spatial-error').hide()
@@ -212,8 +187,10 @@
                     (obsList.length ? '&plot_value[]=' + obsList.join('&plot_value[]=') : '')
                 : ''))
             : '')
-        ).then(function (data) {
-          imgElem.attr('src', imgsrc`${data}`)
+        ).then(function (dataString) {
+          // imgElem.attr('src', imgsrc`${data}`)
+          const data = JSON.parse(dataString)
+          Plotly.newPlot('spatial-plot', data.data, {}, { responsive: true })
           // endLoader()
         }, showError))
     }

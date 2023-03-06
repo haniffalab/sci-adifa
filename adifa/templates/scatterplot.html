@@ -47,9 +47,9 @@
         </div>
         <div class="col-lg-4 col-md-12 p-0 m-0">
           <div id="spatial-container" data-datasetId="{{ dataset.id }}" class="card card-small" style="height: 100%;">
-            <div class="card-body mx-auto row d-flex flex-wrap align-items-center p-0">
+            <div class="card-body mx-auto row d-flex flex-wrap align-items-center p-0" style="width: 100%;">
               <div id="spatial-error" class="btn-group mb-3"><a class="btn btn-white">Error</a></div>
-              <div id="spatial-div">
+              <div id="spatial-div" style="width: 100%;">
                 <div id="spatial-controls">
                   <div class="btn-group mb-3 dropdown">
                     <button id="spatial-mode" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="btn btn-white dropdown-toggle"></button>
@@ -59,9 +59,7 @@
                 </div>
                 <!-- <div id="spatial-loader" class="spinner"><div class="double-bounce1"></div><div class="double-bounce2"></div></div> -->
                 <!-- <img id="spatial-img" class="align-middle" style="max-width: 100%;"/> -->
-                <div style="width: 100%;">
-                  <div id="spatial-plot" style="width: inherit;"></div>
-                </div>
+                <div id="spatial-plot" style="width: 100%;"></div>
               </div>
             </div>
         </div>
