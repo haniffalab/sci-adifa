@@ -503,7 +503,7 @@ def get_spatial_plot(
             else:
                 if len(plot_value) == len(adata.obs[cat2].unique()):
                     title = 'All options in category selected'
-                    text='Nothing selected to display'
+                    text='To get more information try deselecting an option in the left side bar for {cat2}'
                 elif len(plot_value) == 0:
                     title = 'Nothing selected to visualise'
                     text = 'Nothing selected to display'
