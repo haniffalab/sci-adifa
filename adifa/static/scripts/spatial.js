@@ -190,7 +190,7 @@
         ).then(function (dataString) {
           // imgElem.attr('src', imgsrc`${data}`)
           const data = JSON.parse(dataString)
-          Plotly.newPlot('spatial-plot', data.data, data.layout, { responsive: true })
+          Plotly.newPlot('spatial-plot', data.data, data.layout, { responsive: true, displaylogo: false })
           // endLoader()
         }, showError))
     }
