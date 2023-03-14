@@ -7,28 +7,12 @@ from flask import current_app, flash
 from sqlalchemy import exc
 import scanpy as sc
 import pandas as pd
-import base64
-from io import BytesIO
-from matplotlib.figure import Figure
-
 import numpy as np
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 from matplotlib import cm
-import matplotlib.patches as mpatches
-from matplotlib.lines import Line2D
-import matplotlib.dates as mdates
-import cv2
-import joypy
-import math
-import scipy
-from scipy import stats
-import re
 import plotly.graph_objs as go
 import datetime
 from dateutil.relativedelta import relativedelta
-
-mpl.use("agg")
 
 from adifa import models
 from adifa.resources.errors import (

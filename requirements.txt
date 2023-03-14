@@ -2,7 +2,6 @@ Flask==2.1.2
 orjson==3.6.8
 Flask-RESTful==0.3.9
 scanpy==1.8.2
-joypy==0.2.6
 sqlalchemy<2.0
 Flask-SQLAlchemy==2.5.1
 python-dotenv==0.20.0
