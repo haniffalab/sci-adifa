@@ -374,7 +374,9 @@ def plot_polygons(
     fig.add_trace(colorbar_trace)
     fig.update_layout(title_text=wrap_text(title), title_x=0.5)
     fig.update_xaxes(visible=False, fixedrange=True)
-    fig.update_yaxes(visible=False, autorange="reversed", fixedrange=True)
+    fig.update_yaxes(
+        visible=False, autorange="reversed", fixedrange=True, scaleanchor="x"
+    )
     fig.update_layout(
         {"plot_bgcolor": "rgba(0,0,0,0)", "paper_bgcolor": "rgba(0,0,0,0)"}
     )

@@ -20,6 +20,10 @@
           spatial.changeMode(this)
         }
       })
+
+      $('body').on('click', '.spatial-colormap', function (event) {
+        spatial.changeColormap(this)
+      })
     }
 
     // Init scatterplot

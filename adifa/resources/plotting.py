@@ -19,5 +19,8 @@ class Spatial(Resource):
         mode = request.args.get("mode", None, type=str)
         cat = request.args.get("cat", None, type=str)
         plot_value = request.args.getlist("plot_value[]", None)
+        colormap = request.args.get("colormap", type=str)
 
-        return get_spatial_plot(id, cat=cat, plot_value=plot_value, mode=mode)
+        return get_spatial_plot(
+            id, cat=cat, plot_value=plot_value, mode=mode, colormap=colormap
+        )
