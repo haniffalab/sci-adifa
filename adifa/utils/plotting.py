@@ -1,4 +1,6 @@
 import json
+import textwrap
+from itertools import chain
 from functools import partial
 
 from flask import current_app, flash
@@ -209,7 +211,7 @@ def plot_gene_expression(adata, gene, cmap, colormap):
     df_of_values = (adata.varm["Sectional_gene_expression"].T)[gene]
     values = list(df_of_values.values)
 
-    title = f"Mean gene expression of {gene} for each section"
+    title = f"Mean gene expression of <br> {gene} <br> for each section"
     text_template = partial(
         "<br>".join(
             [
@@ -233,7 +235,7 @@ def plot_proportion(adata, cat1, cat2, cmap, colormap):
 
     values = (counts_table["True"] / counts_table.sum(axis=1) * 100).values
 
-    title = f"Percentage of truthful {cat2} values within section"
+    title = f"Percentage of truthful <br> {cat2} <br> values within section"
     text_template = partial(
         "<br>".join(
             [
@@ -266,7 +268,7 @@ def plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap):
         df_of_values = counts_table[plot_value]
         values = df_of_values.values.tolist()
 
-        title = f"Number of counts for {plot_value}"
+        title = f"Number of counts for <br> {plot_value}"
         text_template = partial(
             "<br>".join(
                 [
@@ -283,7 +285,7 @@ def plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap):
         percentage_table_column = round((counts_table / counts_table.sum()) * 100, 2)
         values = percentage_table_column[plot_value].values.tolist()
 
-        title = f"Percentage of {plot_value} across sections"
+        title = f"Percentage of <br> {plot_value} <br> across sections"
         text_template = partial(
             "<br>".join(
                 [
@@ -301,7 +303,7 @@ def plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap):
         )
         values = percentage_table_row.values.reshape(-1).tolist()
 
-        title = f"Percentage of {plot_value} compared within section"
+        title = f"Percentage of <br> {plot_value} <br> compared within section"
         text_template = partial(
             "<br>".join(
                 [
@@ -386,7 +388,7 @@ def plot_polygons(
         showlegend=False,
     )
     fig.add_trace(colorbar_trace)
-    fig.update_layout(title_text=title)
+    fig.update_layout(title_text=wrap_text(title), title_x=0.5)
     fig.update_xaxes(visible=False, fixedrange=True)
     fig.update_yaxes(visible=False, autorange="reversed", fixedrange=True)
     fig.update_layout(
@@ -417,7 +419,10 @@ def plot_distribution(adata, cat1, cat2, cmap, scale_log=False):
     fig.update_layout(
         xaxis_showgrid=False,
         xaxis_zeroline=False,
-        title_text=f"Ridgeplot of the continual variable {cat2} across {cat1}",
+        title_text=wrap_text(
+            f"Ridgeplot of continual variable <br> {cat2} <br> across {cat1}"
+        ),
+        title_x=0.5,
         xaxis_title=f"{cat2}",
         yaxis_title=f"{cat1}",
         showlegend=False,
@@ -610,3 +615,9 @@ def plot_date(
     fig.update_xaxes(type="date", dtick="M1")
 
     return fig.to_json()
+
+
+def wrap_text(text, width=45):
+    return "<br>".join(
+        list(chain(*[textwrap.wrap(x, width=width) for x in text.split("<br>")]))
+    )
