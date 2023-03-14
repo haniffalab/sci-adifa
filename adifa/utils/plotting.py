@@ -1,4 +1,5 @@
 import json
+from functools import partial
 
 from flask import current_app, flash
 from sqlalchemy import exc
@@ -166,166 +167,176 @@ def get_spatial_plot(
 
     cat1 = "spatial_location"  # make this the column which the masks relate to i.e. 12 sections
     cat2 = cat  # change to annotations of interest
-    cat3 = datetime_add_info_col
-    Cmap = mpl.colormaps[
+    cmap = mpl.colormaps[
         colormap
     ]  # using premade colormaps e.g. viridis, plasma, inferno, magma, cividis, Reds
     scale = scale_mode  # for the color bar: auto, manual
     scale_lower_value = scale_min
     scale_upper_value = scale_max
 
-    # No input
-    if (
-        not mode
-        or (mode != "gene_expression" and not cat2)
-        or (
-            cat2
-            and adata.obs[cat2].dtype == "category"
-            and (not plot_value or not len(plot_value))
-        )
-    ) and mode != "proportion":
-        values = [0] * len(adata.obs[cat1])
+    adata.obs[cat1] = adata.obs[cat1].astype("category")
 
-    elif mode == "gene_expression":
-        plot_value = plot_value[0]
-        df_of_values = (adata.varm["Sectional_gene_expression"].T)[plot_value]
-        values = list(df_of_values.values)
+    if not mode:
+        return plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap)
+    if mode in ["counts", "percentage_within_sections", "percentage_across_sections"]:
+        if len(plot_value) > 1:
+            adata.obs["combined_annotation"] = adata.obs[cat2].copy().astype(str)
+            for value in plot_value:
+                adata.obs.loc[
+                    adata.obs[cat2].isin([value]), "combined_annotation"
+                ] = "combined_annotation"
+            cat2 = "combined_annotation"
+            plot_value = "combined_annotation"
 
-    else:
-        # check if string / category / object column in YYYY-MM-DD format and reassign dtype
-        if adata.obs[cat2].dtype == "category" and pd.api.types.is_string_dtype(
-            adata.obs[cat2].cat.categories.dtype
-        ):
-            if all(
-                adata.obs[cat2].str.match(
-                    "^(\d{4})-(0[1-9]|1[0-2]|[1-9])-([1-9]|0[1-9]|[1-2]\d|3[0-1])$"
-                )
-            ):
-                adata.obs[cat2] = adata.obs[cat2].astype("datetime64[ns]")
-
-        # Input is datetime
-        if adata.obs[cat2].dtype == "datetime64[ns]":
-            if use_premade_info == True:
-                Dates = adata.uns[cat2]["dates"]
-                dates = []
-                for d in Dates:
-                    dates.append(datetime.date(*list(d)))
-                labels = [
-                    "{0:%d %b %Y}:\n{1}".format(d, l)
-                    for l, d in zip(adata.uns[cat2]["labels"], dates)
-                ]
-            else:
-                df_new = (
-                    (adata.obs[[cat3, cat2]])
-                    .reset_index(drop=True)
-                    .drop_duplicates()
-                    .reset_index(drop=True)
-                ).set_index(cat3)
-
-                date_dict = {}
-                for i in df_new.index:
-                    date_dict[i] = df_new.loc[i][0]
-
-                labels = [
-                    "{0:%d %b %Y}:\n{1}".format(d, l)
-                    for l, d in zip(date_dict.keys(), date_dict.values())
-                ]
-                dates = date_dict.values()
-                dates = [i.date() for i in dates]
-
-            fig = plot_datetime(cat2, dates, labels, plot_covid)
-
-            return fig.to_json()
-
-        # input is int or float
-        elif adata.obs[cat2].dtype in ["float64", "int32", "int64"]:
-
-            fig = go.Figure()
-
-            for index, section in enumerate(adata.obs[cat1].unique()):
-                values = (adata.obs[cat2][adata.obs[cat1].isin([section])]).values
-
-                if scale_log == True:
-                    values = np.log(values)
-
-                l = len(adata.obs[cat1].unique())
-                c = cm.get_cmap(Cmap, l)
-                fig.add_trace(
-                    go.Violin(x=values, line_color=f"rgb{c(index/l)[:3]}", name=section)
-                )
-
-            fig.update_traces(orientation="h", side="positive", width=2, points=False)
-            fig.update_layout(
-                xaxis_showgrid=False,
-                xaxis_zeroline=False,
-                title_text=f"Ridgeplot of the continual variable {cat2} across {cat1}",
-                xaxis_title=f"{cat2}",
-                yaxis_title=f"{cat1}",
-                showlegend=False,
-            )
-            fig.update_layout(
-                {"plot_bgcolor": "rgba(0,0,0,0)", "paper_bgcolor": "rgba(0,0,0,0)"}
-            )
-
-            return fig.to_json()
-
-        # dtype is string/category/object/bool
-        else:
-
-            if mode != "proportion" and len(plot_value) > 1:
-                adata.obs["combined_annotation"] = adata.obs[cat2].copy().astype(str)
-                for value in plot_value:
-                    adata.obs.loc[
-                        adata.obs[cat2].isin([value]), "combined_annotation"
-                    ] = "combined_annotation"
-                cat2 = "combined_annotation"
-                plot_value = ["combined_annotation"]
-
-            adata.obs[cat1] = adata.obs[cat1].astype("category")
             adata.obs[cat2] = adata.obs[cat2].astype(str).astype("category")
 
-            counts_table = pd.crosstab(adata.obs[cat1], adata.obs[cat2])
+        return plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap)
+    elif mode == "gene_expression":
+        return plot_gene_expression(adata, plot_value[0], cmap, colormap)
+    elif mode == "distribution":
+        return plot_distribution(adata, cat1, cat2, cmap, scale_log)
+    elif mode == "proportion":
+        return plot_proportion(adata, cat1, cat2, cmap, colormap)
+    elif mode == "date":
+        return plot_date(
+            adata, cat2, use_premade_info, plot_covid, datetime_add_info_col
+        )
+    else:
+        raise
 
-            if mode == "counts":
-                df_of_values = counts_table[plot_value]
-                values = []
-                for col in df_of_values:
-                    value = list(df_of_values[col].values)
-                    values.extend(value)
 
-            elif mode == "percentage_across_sections":
-                percentage_table_column = round(
-                    (counts_table / counts_table.sum()) * 100, 2
-                )
-                df_of_values = percentage_table_column[plot_value]
-                values = []
-                for col in df_of_values:
-                    value = list(df_of_values[col].values)
-                    values.extend(value)
+def plot_gene_expression(adata, gene, cmap, colormap):
+    df_of_values = (adata.varm["Sectional_gene_expression"].T)[gene]
+    values = list(df_of_values.values)
 
-            elif mode == "percentage_within_sections":
-                percentage_table_row = (
-                    counts_table[plot_value].div(counts_table.sum(axis=1), axis=0) * 100
-                )
-                values = percentage_table_row[plot_value].values.reshape(-1)
+    title = f"Mean gene expression of {gene} for each section"
+    text_template = partial(
+        "<br>".join(
+            [
+                "<b>{key}</b>",
+                "",
+                "Section mean gene expression value: {gene}",
+            ]
+        ).format,
+        gene=gene,
+    )
 
-            elif mode == "proportion":
-                values = (counts_table["True"] / counts_table.sum(axis=1) * 100).values
+    return plot_polygons(adata, values, title, cmap, colormap, text_template)
 
-    #################################################################################
-    # create a color scale on the range of values inputted
+
+def plot_proportion(adata, cat1, cat2, cmap, colormap):
+
+    adata.obs[cat1] = adata.obs[cat1].astype("category")
+    adata.obs[cat2] = adata.obs[cat2].astype(str).astype("category")
+
+    counts_table = pd.crosstab(adata.obs[cat1], adata.obs[cat2])
+
+    values = (counts_table["True"] / counts_table.sum(axis=1) * 100).values
+
+    title = f"Percentage of truthful {cat2} values within section"
+    text_template = partial(
+        "<br>".join(
+            [
+                "<b>{key}</b>",
+                "",
+                "{value:.2f}% of the cells within {key} are true for {cat2}",
+            ]
+        ).format,
+        cat2=cat2,
+    )
+
+    return plot_polygons(adata, values, title, cmap, colormap, text_template)
+
+
+def plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap):
+
+    if not mode or not plot_value or not len(plot_value):
+        values = [0] * len(adata.obs[cat1])
+        title = "Nothing selected to visualise"
+
+        return plot_polygons(adata, values, title, cmap, colormap)
+    elif isinstance(plot_value, list):
+        plot_value = plot_value[0]
+
+    assert adata.obs[cat2].dtype == "category"
+
+    counts_table = pd.crosstab(adata.obs[cat1], adata.obs[cat2])
+
+    if mode == "counts":
+        df_of_values = counts_table[plot_value]
+        values = df_of_values.values.tolist()
+
+        title = f"Number of counts for {plot_value}"
+        text_template = partial(
+            "<br>".join(
+                [
+                    "<b>{key}</b>",
+                    "",
+                    "Number of {plot_value} cells in {key}:\t{value} cells",
+                    "Total number of {plot_value} cells in data:\t{sum_values} cells",
+                ]
+            ).format,
+            plot_value=plot_value,
+        )
+
+    elif mode == "percentage_across_sections":
+        percentage_table_column = round((counts_table / counts_table.sum()) * 100, 2)
+        values = percentage_table_column[plot_value].values.tolist()
+
+        title = f"Percentage of {plot_value} across sections"
+        text_template = partial(
+            "<br>".join(
+                [
+                    "<b>{key}</b>",
+                    "",
+                    "{key} contains {value:.2f}% of the cells for {plot_value}",
+                ]
+            ).format,
+            plot_value=plot_value,
+        )
+
+    elif mode == "percentage_within_sections":
+        percentage_table_row = (
+            counts_table[plot_value].div(counts_table.sum(axis=1), axis=0) * 100
+        )
+        values = percentage_table_row.values.reshape(-1).tolist()
+
+        title = f"Percentage of {plot_value} compared within section"
+        text_template = partial(
+            "<br>".join(
+                [
+                    "<b>{key}</b>",
+                    "",
+                    "{plot_value} represents {value:.2f}% of the cells within {key}",
+                ]
+            ).format,
+            plot_value=plot_value,
+        )
+
+    return plot_polygons(adata, values, title, cmap, colormap, text_template)
+
+
+def plot_polygons(
+    adata,
+    values,
+    title,
+    cmap,
+    colormap="viridis",
+    text_template=None,
+    scale="auto",
+    scale_lower_value=0,
+    scale_upper_value=100,
+):
 
     if scale == "auto":
         vmax = max(values) if max(values) > 0 else 1
         vmin = min(values) if min(values) != vmax else 0
         norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
-        sm = mpl.cm.ScalarMappable(cmap=Cmap, norm=norm)
+        sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
 
     elif scale == "manual":
         norm = mpl.colors.Normalize(vmin=scale_lower_value, vmax=scale_upper_value)
-        sm = mpl.cm.ScalarMappable(cmap=Cmap, norm=norm)
-
-    #################################################################################
+        sm = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
 
     fig = go.Figure()
 
@@ -350,71 +361,13 @@ def get_spatial_plot(
                 % tuple(list(int((255 * x)) for x in list(sm.to_rgba(values[i]))[0:3]))
             ),
             hoveron="fills",
-            # text=text,
-            # hoverinfo="text+x+y",
-            hoverinfo="x+y",
-            # title = title
+            text=text_template(key=key, value=values[i], sum_values=sum(values))
+            if text_template
+            else None,
+            hoverinfo="text+x+y",
+            # hoverinfo="x+y",
         )
         fig.add_trace(polygon0)
-
-    if mode not in ["gene_expression", "proportion"] and len(plot_value) == 0:
-        title = "Nothing selected to visualise"
-
-    else:
-        if mode in ["gene_expression", "proportion"] or (
-            mode and plot_value and len(plot_value)
-        ):
-
-            if mode == "gene_expression":
-                title = f"Mean gene expression of {plot_value[0]} for each section"
-                # text = "<br>".join(
-                #     [
-                #         f"<b>{key}</b>",
-                #         "",
-                #         f"Section mean gene expression value: {plot_value[0]}",
-                #     ]
-                # )
-
-            elif mode == "counts":
-                title = f"Number of counts for {plot_value[0]}"
-                # text = "<br>".join(
-                #     [
-                #         f"<b>{key}</b>",
-                #         "",
-                #         f"Number of {plot_value[0]} cells in {key}:    {values[count]} cells",
-                #         f"Total number of {plot_value[0]} cells in data:    {sum(values)} cells",
-                #     ]
-                # )
-
-            elif mode == "percentage_within_sections":
-                title = f"Percentage of {plot_value[0]} compared within section"
-                # text = "<br>".join(
-                #     [
-                #         f"<b>{key}</b>",
-                #         "",
-                #         f"{plot_value[0]} represents {values[count]}% of the cells within {key}",
-                #     ]
-                # )
-
-            elif mode == "percentage_across_sections":
-                title = f"Percentage of {plot_value[0]} across sections"
-                # text = "<br>".join(
-                #     [
-                #         f"<b>{key}</b>",
-                #         "",
-                #         f"{key} contains {values[count]}% of the cells for {plot_value[0]}",
-                #     ]
-                # )
-
-            elif mode == "proportion":
-                title = f"Percentage of truthful {cat2} values within section"
-                # text = "<br>".join(
-                #     [
-                #         f"<b>{key}</b>",
-                #         "",
-                #         f"{round(values[count],2)}% (2dp) of the cells within {key} are true for {cat2}",
-                #     ]
-                # )
 
     colorbar_trace = go.Scatter(
         x=[None],
@@ -443,7 +396,77 @@ def get_spatial_plot(
     return fig.to_json()
 
 
-def plot_datetime(cat2, dates, labels, plot_covid=False):
+def plot_distribution(adata, cat1, cat2, cmap, scale_log=False):
+    assert adata.obs[cat2].dtype in ["float64", "int32", "int64"]
+
+    fig = go.Figure()
+
+    for index, section in enumerate(adata.obs[cat1].unique()):
+        values = (adata.obs[cat2][adata.obs[cat1].isin([section])]).values
+
+        if scale_log == True:
+            values = np.log(values)
+
+        l = len(adata.obs[cat1].unique())
+        c = cm.get_cmap(cmap, l)
+        fig.add_trace(
+            go.Violin(x=values, line_color=f"rgb{c(index/l)[:3]}", name=section)
+        )
+
+    fig.update_traces(orientation="h", side="positive", width=2, points=False)
+    fig.update_layout(
+        xaxis_showgrid=False,
+        xaxis_zeroline=False,
+        title_text=f"Ridgeplot of the continual variable {cat2} across {cat1}",
+        xaxis_title=f"{cat2}",
+        yaxis_title=f"{cat1}",
+        showlegend=False,
+    )
+    fig.update_layout(
+        {"plot_bgcolor": "rgba(0,0,0,0)", "paper_bgcolor": "rgba(0,0,0,0)"}
+    )
+
+    return fig.to_json()
+
+
+def plot_date(
+    adata,
+    cat2,
+    use_premade_info=True,
+    plot_covid=False,
+    datetime_add_info_col="haniffa_ID",
+):
+
+    adata.obs[cat2] = adata.obs[cat2].astype("datetime64[ns]")
+
+    if use_premade_info == True:
+        Dates = adata.uns[cat2]["dates"]
+        dates = []
+        for d in Dates:
+            dates.append(datetime.date(*list(d)))
+        labels = [
+            "{0:%d %b %Y}:\n{1}".format(d, l)
+            for l, d in zip(adata.uns[cat2]["labels"], dates)
+        ]
+    else:
+        df_new = (
+            (adata.obs[[datetime_add_info_col, cat2]])
+            .reset_index(drop=True)
+            .drop_duplicates()
+            .reset_index(drop=True)
+        ).set_index(datetime_add_info_col)
+
+        date_dict = {}
+        for i in df_new.index:
+            date_dict[i] = df_new.loc[i][0]
+
+        labels = [
+            "{0:%d %b %Y}:\n{1}".format(d, l)
+            for l, d in zip(date_dict.keys(), date_dict.values())
+        ]
+        dates = date_dict.values()
+        dates = [i.date() for i in dates]
+
     if plot_covid == True:
         covid_start = datetime.date(2020, 3, 23)
         covid_end = datetime.date(2022, 2, 24)
@@ -586,4 +609,4 @@ def plot_datetime(cat2, dates, labels, plot_covid=False):
     )
     fig.update_xaxes(type="date", dtick="M1")
 
-    return fig
+    return fig.to_json()
