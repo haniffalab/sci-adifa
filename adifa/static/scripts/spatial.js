@@ -221,10 +221,7 @@
 
     this.colorize = function (el, active) {
       if (active) {
-        colorScaleKey = null
-        colorScaleId = null
-        colorScaleType = null
-        spatialMode = null
+        this.decolorize()
       } else {
         if (el.id === 'genes') {
           colorScaleKey = el.selectedItems[0]
@@ -250,17 +247,32 @@
             setMode(prevObsMode || 'counts')
           }
         }
+        disableModes()
+        loadPlot()
       }
-      console.log(colorScaleId, colorScaleKey, colorScaleType)
-      disableModes()
-      loadPlot()
     }
 
     this.decolorize = function () {
       colorScaleId = null
       colorScaleKey = null
       colorScaleType = null
-      console.log(colorScaleId, colorScaleKey, colorScaleType)
+      spatialMode = null
+
+      Cookies.remove('ds' + datasetId + '-obs-id', {
+        path: window.location.pathname
+      })
+      Cookies.remove('ds' + datasetId + '-obs-name', {
+        path: window.location.pathname
+      })
+      Cookies.remove('ds' + datasetId + '-obs-type', {
+        path: window.location.pathname
+      })
+      Cookies.remove('ds' + datasetId + '-spatial-mode', {
+        path: window.location.pathname
+      })
+
+      disableModes()
+      loadPlot()
     }
 
     this.changeMode = function (el) {
