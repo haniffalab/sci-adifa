@@ -129,11 +129,12 @@ def get_spatial_plot(
     scale_mode="auto",
     scale_max=15,
     scale_min=0,
-    tick_no=8,
+    #tick_no=8,
     scale_log=False,
     plot_covid=True,
     use_premade_info=True,
     datetime_add_info_col="haniffa_ID",
+    mask_set = 'head_body'   #'12_sections' (original),'head_body' (example 2),'multi_head_body' (example with multiple polygons having the same "name" e.g. head_0 and head_1 are 2 polygons but get coloured and have the same values )
 ):
 
     if not datasetId > 0:
@@ -151,7 +152,7 @@ def get_spatial_plot(
 
     # Check settings defined in function input
 
-    cat1 = "spatial_location"  # make this the column which the masks relate to i.e. 12 sections
+    cat1 = adata.uns['Mask_selector'][mask_set]  # informs which column in .obs to use relative to the masks set selected
     cat2 = cat  # change to annotations of interest
     cmap = mpl.colormaps[
         colormap
@@ -163,7 +164,7 @@ def get_spatial_plot(
     adata.obs[cat1] = adata.obs[cat1].astype("category")
 
     if not mode:
-        return plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap)
+        return plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_set)
     if mode in ["counts", "percentage_within_sections", "percentage_across_sections"]:
         if len(plot_value) > 1:
             adata.obs["combined_annotation"] = adata.obs[cat2].copy().astype(str)
@@ -176,13 +177,13 @@ def get_spatial_plot(
 
             adata.obs[cat2] = adata.obs[cat2].astype(str).astype("category")
 
-        return plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap)
+        return plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_set)
     elif mode == "gene_expression":
         return plot_gene_expression(adata, plot_value[0], cmap, colormap)
     elif mode == "distribution":
         return plot_distribution(adata, cat1, cat2, cmap, scale_log)
     elif mode == "proportion":
-        return plot_proportion(adata, cat1, cat2, cmap, colormap)
+        return plot_proportion(adata, cat1, cat2, cmap, colormap, mask_set)
     elif mode == "date":
         return plot_date(
             adata, cat2, use_premade_info, plot_covid, datetime_add_info_col
@@ -191,8 +192,8 @@ def get_spatial_plot(
         raise
 
 
-def plot_gene_expression(adata, gene, cmap, colormap):
-    df_of_values = (adata.varm["Sectional_gene_expression"].T)[gene]
+def plot_gene_expression(adata, gene, cmap, colormap, mask_set):
+    df_of_values = (adata.varm[mask_set + "_Sectional_gene_expression"].T)[gene]
     values = list(df_of_values.values)
 
     title = f"Mean gene expression of <br> {gene} <br> for each section"
@@ -210,7 +211,7 @@ def plot_gene_expression(adata, gene, cmap, colormap):
     return plot_polygons(adata, values, title, cmap, colormap, text_template)
 
 
-def plot_proportion(adata, cat1, cat2, cmap, colormap):
+def plot_proportion(adata, cat1, cat2, cmap, colormap, mask_set):
 
     adata.obs[cat1] = adata.obs[cat1].astype("category")
     adata.obs[cat2] = adata.obs[cat2].astype(str).astype("category")
@@ -234,7 +235,7 @@ def plot_proportion(adata, cat1, cat2, cmap, colormap):
     return plot_polygons(adata, values, title, cmap, colormap, text_template)
 
 
-def plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap):
+def plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_set):
 
     if not mode or not plot_value or not len(plot_value):
         values = [0] * len(adata.obs[cat1])
@@ -299,11 +300,13 @@ def plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap):
             plot_value=plot_value,
         )
 
-    return plot_polygons(adata, values, title, cmap, colormap, text_template)
+    return plot_polygons(adata, values, title, cmap, colormap, text_template, cat1, mask_set)
 
 
 def plot_polygons(
     adata,
+    cat1,
+    mask_set,
     values,
     title,
     cmap,
@@ -313,6 +316,8 @@ def plot_polygons(
     scale_lower_value=0,
     scale_upper_value=100,
 ):
+
+    values_dict = dict(zip(adata.obs[cat1].unique(),values))
 
     if scale == "auto":
         vmax = max(values) if max(values) > 0 else 1
@@ -326,10 +331,10 @@ def plot_polygons(
 
     fig = go.Figure()
 
-    for i, key in enumerate(adata.uns["polygons"].keys()):
+    for i, key in enumerate(adata.uns[mask_set + "_polygons"].keys()):
         polygon0 = go.Scatter(
-            x=list(*adata.uns["polygons"][key][:, :, 0, 0]),
-            y=list(*adata.uns["polygons"][key][:, :, 0, 1]),
+            x=list(*adata.uns[mask_set + "_polygons"][key][:, :, 0, 0]),
+            y=list(*adata.uns[mask_set + "_polygons"][key][:, :, 0, 1]),
             showlegend=False,
             mode="lines",
             fill="toself",
@@ -337,14 +342,14 @@ def plot_polygons(
                 color=(
                     "#%02x%02x%02x"
                     % tuple(
-                        list(int((255 * x)) for x in list(sm.to_rgba(values[i]))[0:3])
+                        list(int((255 * x)) for x in list(sm.to_rgba([val for k, val in values_dict.items() if k in key][0]))[0:3])
                     )
                 ),
                 width=1,
             ),
             fillcolor=(
                 "#%02x%02x%02x"
-                % tuple(list(int((255 * x)) for x in list(sm.to_rgba(values[i]))[0:3]))
+                % tuple(list(int((255 * x)) for x in list(sm.to_rgba([val for k, val in values_dict.items() if k in key][0]))[0:3]))
             ),
             hoveron="fills",
             text=text_template(key=key, value=values[i], sum_values=sum(values))
