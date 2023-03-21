@@ -16,7 +16,7 @@
     const datasetId = this.attr('data-datasetId')
     // const imgElem = $('#spatial-img')
     const spatialModes = ['counts', 'percentage_within_sections', 'percentage_across_sections', 'gene_expression', 'distribution', 'date', 'proportion']
-    const colormaps = ['viridis', 'inferno', 'jet','RdBu','hot',]
+    const colormaps = ['viridis', 'inferno', 'jet','RdBu']
     let xhrPool = []
 
     let colorScaleId
