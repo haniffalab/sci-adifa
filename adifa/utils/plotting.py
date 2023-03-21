@@ -134,7 +134,7 @@ def get_spatial_plot(
     plot_covid=True,
     use_premade_info=True,
     datetime_add_info_col="haniffa_ID",
-    mask_set = 'head_body'   #'12_sections' (original),'head_body' (example 2),'multi_head_body' (example with multiple polygons having the same "name" e.g. head_0 and head_1 are 2 polygons but get coloured and have the same values )
+    mask_set = 'multi_head_body'   #'12_sections' (original),'head_body' (example 2),'multi_head_body' (example with multiple polygons having the same "name" e.g. head_0 and head_1 are 2 polygons but get coloured and have the same values )
 ):
 
     if not datasetId > 0:
@@ -179,9 +179,9 @@ def get_spatial_plot(
 
         return plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_set)
     elif mode == "gene_expression":
-        return plot_gene_expression(adata, plot_value[0], cmap, colormap)
+        return plot_gene_expression(adata, cat1, mask_set, plot_value[0], cmap, colormap)
     elif mode == "distribution":
-        return plot_distribution(adata, cat1, cat2, cmap, scale_log)
+        return plot_distribution(adata, cat1, cat2, cmap, scale_log, mask_set)
     elif mode == "proportion":
         return plot_proportion(adata, cat1, cat2, cmap, colormap, mask_set)
     elif mode == "date":
@@ -192,7 +192,7 @@ def get_spatial_plot(
         raise
 
 
-def plot_gene_expression(adata, gene, cmap, colormap, mask_set):
+def plot_gene_expression(adata, cat1, mask_set, gene, cmap, colormap):
     df_of_values = (adata.varm[mask_set + "_Sectional_gene_expression"].T)[gene]
     values = list(df_of_values.values)
 
@@ -202,13 +202,12 @@ def plot_gene_expression(adata, gene, cmap, colormap, mask_set):
             [
                 "<b>{key}</b>",
                 "",
-                "Section mean gene expression value: {gene}",
+                "Section mean gene expression value: {value:.3f}",
             ]
         ).format,
-        gene=gene,
     )
 
-    return plot_polygons(adata, values, title, cmap, colormap, text_template)
+    return plot_polygons(adata, cat1, mask_set, values, title, cmap, colormap, text_template)
 
 
 def plot_proportion(adata, cat1, cat2, cmap, colormap, mask_set):
@@ -232,7 +231,7 @@ def plot_proportion(adata, cat1, cat2, cmap, colormap, mask_set):
         cat2=cat2,
     )
 
-    return plot_polygons(adata, values, title, cmap, colormap, text_template)
+    return plot_polygons(adata, cat1, mask_set, values, title, cmap, colormap, text_template)
 
 
 def plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_set):
@@ -241,7 +240,7 @@ def plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_s
         values = [0] * len(adata.obs[cat1])
         title = "Nothing selected to visualise"
 
-        return plot_polygons(adata, values, title, cmap, colormap)
+        return plot_polygons(adata, cat1, mask_set, values, title, cmap, colormap)
     elif isinstance(plot_value, list):
         plot_value = plot_value[0]
 
@@ -300,7 +299,7 @@ def plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_s
             plot_value=plot_value,
         )
 
-    return plot_polygons(adata, values, title, cmap, colormap, text_template, cat1, mask_set)
+    return plot_polygons(adata, cat1, mask_set, values, title, cmap, colormap, text_template)
 
 
 def plot_polygons(
@@ -317,6 +316,10 @@ def plot_polygons(
     scale_upper_value=100,
 ):
 
+    print(cat1)
+    print(values)
+
+
     values_dict = dict(zip(adata.obs[cat1].unique(),values))
 
     if scale == "auto":
@@ -332,6 +335,8 @@ def plot_polygons(
     fig = go.Figure()
 
     for i, key in enumerate(adata.uns[mask_set + "_polygons"].keys()):
+        
+        
         polygon0 = go.Scatter(
             x=list(*adata.uns[mask_set + "_polygons"][key][:, :, 0, 0]),
             y=list(*adata.uns[mask_set + "_polygons"][key][:, :, 0, 1]),
@@ -352,7 +357,7 @@ def plot_polygons(
                 % tuple(list(int((255 * x)) for x in list(sm.to_rgba([val for k, val in values_dict.items() if k in key][0]))[0:3]))
             ),
             hoveron="fills",
-            text=text_template(key=key, value=values[i], sum_values=sum(values))
+            text=text_template(key=key, value=[val for k, val in values_dict.items() if k in key][0], sum_values=sum(values))
             if text_template
             else None,
             hoverinfo="text+x+y",
