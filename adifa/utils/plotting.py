@@ -134,7 +134,7 @@ def get_spatial_plot(
     plot_covid=True,
     use_premade_info=True,
     datetime_add_info_col="haniffa_ID",
-    mask_set = 'multi_head_body'   #'12_sections' (original),'head_body' (example 2),'multi_head_body' (example with multiple polygons having the same "name" e.g. head_0 and head_1 are 2 polygons but get coloured and have the same values )
+    mask_set = '12_sections'   #'12_sections' (original),'head_body' (example 2),'multi_head_body' (example with multiple polygons having the same "name" e.g. head_0 and head_1 are 2 polygons but get coloured and have the same values )
 ):
 
     if not datasetId > 0:
@@ -181,7 +181,7 @@ def get_spatial_plot(
     elif mode == "gene_expression":
         return plot_gene_expression(adata, cat1, mask_set, plot_value[0], cmap, colormap)
     elif mode == "distribution":
-        return plot_distribution(adata, cat1, cat2, cmap, scale_log, mask_set)
+        return plot_distribution(adata, cat1, cat2, cmap, scale_log)
     elif mode == "proportion":
         return plot_proportion(adata, cat1, cat2, cmap, colormap, mask_set)
     elif mode == "date":
