@@ -441,13 +441,13 @@ def plot_date(
     adata.obs[cat2] = adata.obs[cat2].astype("datetime64[ns]")
 
     if use_premade_info == True:
-        Dates = adata.uns[cat2]["dates"]
+        Dates = adata.uns['pre_made_date_col_' + cat2]["dates"]
         dates = []
         for d in Dates:
             dates.append(datetime.date(*list(d)))
         labels = [
             "{0:%d %b %Y}:\n{1}".format(d, l)
-            for l, d in zip(adata.uns[cat2]["labels"], dates)
+            for l, d in zip(adata.uns['pre_made_date_col_' + cat2]["labels"], dates)
         ]
     else:
         df_new = (
