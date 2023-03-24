@@ -415,14 +415,39 @@ def plot_distribution(adata, cat1, cat2, cmap, scale_log=False):
     for index, section in enumerate(adata.obs[cat1].unique()):
         values = (adata.obs[cat2][adata.obs[cat1].isin([section])]).values
 
+
+        #hover_info_text = "<br>".join(["<b>{section}</b>",
+        #    "",
+        #    f"Min value: {min(values)}",
+        #    f"Max value: {max(values)}",
+        #    f"Mean value: {np.mean(values)}",
+        #    f"Median value: {np.median(values)}"])
+
+        #hover_info_text = partial(
+        #    "<br>".join(
+        #        [
+        #            "<b>{section}</b>",
+        #            "",
+        #            f"Min value: {min(values)}",
+        #            f"Max value: {max(values)}",
+        #            f"Mean value: {np.mean(values)}",
+        #            f"Median value: {np.median(values)}",
+        #        ]
+        #    )
+        #)
+
+
         if scale_log == True:
             values = np.log(values)
 
         l = len(adata.obs[cat1].unique())
         c = cm.get_cmap(cmap, l)
         fig.add_trace(
-            go.Violin(x=values, line_color=f"rgb{c(index/l)[:3]}", name=section)
-        )
+            go.Violin(x=values, line_color=f"rgb{c(index/l)[:3]}", name=section,
+            hoverinfo = "none",   # seems to be an issue with plotly violin that it shows all stats if use x or same number boxes as y and won't update text properly 
+            #hovertemplate=hover_info_text,
+            #hovertext = hover_info_text
+            ))
 
     fig.update_traces(orientation="h", side="positive", width=2, points=False)
     fig.update_layout(
@@ -434,7 +459,8 @@ def plot_distribution(adata, cat1, cat2, cmap, scale_log=False):
         title_x=0.5,
         xaxis_title=f"{cat2}",
         yaxis_title=f"{cat1}",
-        showlegend=False,
+        showlegend=True,
+        legend = dict(font = dict(size = 8, color = "black"))
     )
     fig.update_layout(
         {"plot_bgcolor": "rgba(0,0,0,0)", "paper_bgcolor": "rgba(0,0,0,0)"}
