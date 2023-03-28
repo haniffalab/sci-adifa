@@ -14,12 +14,10 @@
     }
 
     const datasetId = this.attr('data-datasetId')
-    // const imgElem = $('#spatial-img')
     const spatialModes = ['counts', 'percentage_within_sections', 'percentage_across_sections', 'gene_expression', 'distribution', 'date', 'proportion']
-    const colormaps = ['viridis', 'inferno', 'jet','RdBu']
+    const colormaps = ['viridis', 'inferno', 'jet', 'RdBu']
     let xhrPool = []
 
-    let colorScaleId
     let colorScaleKey
     let colorScaleType
     let spatialMode
@@ -29,10 +27,6 @@
     const active = {
       dataset: {}
     }
-
-    // const imgsrc = function (strings, image) {
-    //   return `data:image/png;base64,${image}`
-    // }
 
     const resources = {}
     // attach a function to be executed before an Ajax request is sent.
@@ -104,7 +98,6 @@
         active.dataset = d1
 
         // load Cookies
-        colorScaleId = Cookies.get('ds' + datasetId + '-obs-id') || null
         colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name') || null
         colorScaleType = Cookies.get('ds' + datasetId + '-obs-type') || null
         spatialMode = Cookies.get('ds' + datasetId + '-spatial-mode') || null
@@ -128,10 +121,10 @@
               `<a id="spatial-mode-${mode}" href="#" data-name="${mode}" class="dropdown-item spatial-mode">${mode.replaceAll('_', ' ')}</a>`
         )
       })
-      disableModes()
+      displayModes()
     }
 
-    const disableModes = function () {
+    const displayModes = function () {
       spatialModes.forEach(function (mode) {
         if (colorScaleType === 'gene') {
           $(`#spatial-mode-${mode}`).css('display', (
@@ -159,6 +152,14 @@
           $(`#spatial-mode-${mode}`).css('display', 'none')
         }
       })
+    }
+
+    const displayControls = function () {
+      if (spatialMode === 'distribution') {
+        $('#spatial-log-scale').show()
+      } else {
+        $('#spatial-log-scale').hide()
+      }
     }
 
     const populateColormaps = function () {
@@ -194,6 +195,11 @@
       const params = []
       if (spatialMode) {
         params.push('mode=' + spatialMode)
+        if (spatialMode === 'distribution') {
+          if ($('#btn-check-log-scale').prop('checked')) {
+            params.push('scale_log=true')
+          }
+        }
         if (colorScaleKey) {
           if (colorScaleType === 'gene') {
             params.push('plot_value[]=' + [colorScaleKey])
@@ -225,17 +231,14 @@
       } else {
         if (el.id === 'genes') {
           colorScaleKey = el.selectedItems[0]
-          colorScaleId = 0
           colorScaleType = 'gene'
           setMode('gene_expression')
         } else if ($(el).hasClass('btn-gene-select')) {
           colorScaleKey = $(el).text()
-          colorScaleId = 0
           colorScaleType = 'gene'
           setMode('gene_expression')
         } else {
           colorScaleKey = $(el).data('name')
-          colorScaleId = $(el).data('id')
           colorScaleType = $(el).data('type')
           if (colorScaleType === 'boolean') {
             setMode('proportion')
@@ -247,13 +250,12 @@
             setMode(prevObsMode || 'counts')
           }
         }
-        disableModes()
+        displayModes()
         loadPlot()
       }
     }
 
     this.decolorize = function () {
-      colorScaleId = null
       colorScaleKey = null
       colorScaleType = null
       spatialMode = null
@@ -271,7 +273,8 @@
         path: window.location.pathname
       })
 
-      disableModes()
+      displayModes()
+      displayControls()
       loadPlot()
     }
 
@@ -292,6 +295,7 @@
           prevObsMode = mode
         }
       }
+      displayControls()
     }
 
     this.changeColormap = function (el) {

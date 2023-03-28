@@ -24,6 +24,11 @@
       $('body').on('click', '.spatial-colormap', function (event) {
         spatial.changeColormap(this)
       })
+
+      // 'Distribution' mode log scale switch
+      $('body').on('change', '#btn-check-log-scale', function (event) {
+        spatial.redraw()
+      })
     }
 
     // Init scatterplot

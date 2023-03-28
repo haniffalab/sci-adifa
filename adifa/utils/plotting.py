@@ -329,10 +329,6 @@ def plot_polygons(
     scale_upper_value=100,
 ):
 
-    print(cat1)
-    print(values)
-
-
     values_dict = dict(zip(adata.obs[cat1].unique(),values))
 
     if scale == "auto":

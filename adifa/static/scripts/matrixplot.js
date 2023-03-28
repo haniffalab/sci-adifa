@@ -650,6 +650,7 @@
 
     $('.select2-gene-search').select2({
       placeholder: 'Search by name',
+      width: '100%',
       // closeOnSelect: false,
       sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
       ajax: {
@@ -681,6 +682,7 @@
 
     $('.select2-disease-search').select2({
       placeholder: 'Search for diseases',
+      width: '100%',
       sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
       ajax: {
         url: API_SERVER + 'api/v1/datasets/' + datasetId + '/search/diseases',
