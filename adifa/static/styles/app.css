@@ -9,6 +9,11 @@ body {
 	font-family: Poppins,Arial,sans-serif;
 }
 
+.page-title {
+	float: left;
+	text-align: left;
+}
+
 /*!
 Chosen, a Select Box Enhancer for jQuery and Prototype
 by Patrick Filler for Harvest, http://getharvest.com
