@@ -435,6 +435,9 @@ def plot_distribution(adata, cat1, cat2, cmap, scale_log=False):
 
         if scale_log == True:
             values = np.log(values)
+            x_title = f"{cat2} (log)"
+        else:
+            x_title = f"{cat2}"
 
         l = len(adata.obs[cat1].unique())
         c = cm.get_cmap(cmap, l)
@@ -453,7 +456,7 @@ def plot_distribution(adata, cat1, cat2, cmap, scale_log=False):
             f"Ridgeplot of continual variable <br> {cat2} <br> across {cat1}"
         ),
         title_x=0.5,
-        xaxis_title=f"{cat2}",
+        xaxis_title=x_title,
         yaxis_title=f"{cat1}",
         showlegend=True,
         legend = dict(font = dict(size = 8, color = "black"))

@@ -15,7 +15,7 @@
 
     const datasetId = this.attr('data-datasetId')
     const spatialModes = ['counts', 'percentage_within_sections', 'percentage_across_sections', 'gene_expression', 'distribution', 'date', 'proportion']
-    const colormaps = ['viridis', 'inferno', 'jet', 'RdBu']
+    const colormaps = ['viridis', 'plasma', 'inferno', 'jet', 'RdBu']
     let xhrPool = []
 
     let colorScaleKey
