@@ -434,8 +434,8 @@ def plot_distribution(adata, cat1, cat2, cmap, scale_log=False):
 
 
         if scale_log == True:
-            values = np.log(values)
-            x_title = f"{cat2} (log)"
+            values = np.log1p(values)
+            x_title = f"{cat2} (log(x+1))"
         else:
             x_title = f"{cat2}"
 
