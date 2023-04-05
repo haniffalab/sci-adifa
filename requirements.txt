@@ -1,6 +1,7 @@
 Flask==2.1.2
 orjson==3.6.8
 Flask-RESTful==0.3.9
+matplotlib<3.7
 scanpy==1.8.2
 sqlalchemy<2.0
 Flask-SQLAlchemy==2.5.1
