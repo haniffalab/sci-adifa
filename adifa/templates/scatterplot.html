@@ -48,10 +48,10 @@
         <div class="col-lg-5 col-md-12 p-0 m-0">
           <div id="spatial-container" data-datasetId="{{ dataset.id }}" class="card card-small" style="height: 100%;">
             <div class="card-body mx-auto row d-flex flex-wrap align-items-center p-0" style="width: 100%;">
-              <div id="spatial-error" class="btn-group mb-3"><a class="btn btn-white">Error</a></div>
+              <div id="spatial-error" class="btn-group mb-3 d-none"><a class="btn btn-white">Error</a></div>
               <div id="spatial-div" style="width: 100%;">
                 <div id="spatial-controls">
-                  <div class="btn-group mb-3">
+                  <div id="distribution-controls" class="btn-group mb-3 d-none">
                     <div id="spatial-log-scale" class="spatial-log-scale">
                       <input type="checkbox" class="btn-check" id="btn-check-log-scale" autocomplete="off">
                       <label class="btn btn-outline-info px-2" for="btn-check-log-scale">Log scale</label>

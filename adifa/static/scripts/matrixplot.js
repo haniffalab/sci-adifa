@@ -78,7 +78,7 @@
     }
 
     const showError = function (error) {
-      if (!(error.status === 0 && error.statusText === "abort")){
+      if (!(error.status === 0 && error.statusText === 'abort')) {
         if (error.statusText) {
           $('#matrixplot-alert').removeClass('d-none').append(
             $('<div/>')
@@ -563,8 +563,8 @@
         : ['ALB', 'AFP', 'C3', 'HP', 'SAA1', 'RARRES2', 'LRP1', 'NR1H4', 'NNMT', 'HPD', 'CES2', 'C1R', 'AOX1', 'GLUL']
 
       $('#palette').val(colorScale)
-      
-        // get data
+
+      // get data
       startLoader()
       $.when(
         doAjax(API_SERVER + 'api/v1/datasets/' + datasetId)).then(function (d) {

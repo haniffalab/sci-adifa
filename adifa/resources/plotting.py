@@ -1,5 +1,3 @@
-import json
-
 from flask import request
 from flask_restful import Resource
 
@@ -20,8 +18,15 @@ class Spatial(Resource):
         cat = request.args.get("cat", None, type=str)
         plot_value = request.args.getlist("plot_value[]", None)
         colormap = request.args.get("colormap", type=str)
-        scale_log = request.args.get("scale_log", False, type=lambda v: v.lower() == 'true')
+        scale_log = request.args.get(
+            "scale_log", False, type=lambda v: v.lower() == "true"
+        )
 
         return get_spatial_plot(
-            id, cat=cat, plot_value=plot_value, mode=mode, colormap=colormap, scale_log=scale_log
+            id,
+            cat=cat,
+            plot_value=plot_value,
+            mode=mode,
+            colormap=colormap,
+            scale_log=scale_log,
         )

@@ -17,15 +17,15 @@
             <div class="list-group-item justify-content-between align-items-center"
               data-toggle="collapse" data-target="#collapse-{{ob}}" aria-controls="collapse-{{ob}}">
               <h4>
-                <i class="fa fa-plus-square"></i>&nbsp;&nbsp;{{ dataset.data_obs[ob]['name'] }}
+                <i class="fa fa-plus-square"></i>&nbsp;&nbsp;{{ ob_item.name }}
               </h4>
             </div>
 
             <div id="collapse-{{ob}}" class="collapse m-4 obs-values" aria-labelledby="heading-{{ob}}"
-              data-parent="#obs-accordion" data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{ob}}"
-              data-type="{{ dataset.data_obs[ob]['type'] }}"> 
-              {% if dataset.data_obs[ob]['type'] in ["categorical","boolean","date"] %}
-                {% if dataset.data_obs[ob]['is_truncated'] %}
+              data-parent="#obs-accordion" data-name="{{ ob_item.name }}" data-id="{{ob}}"
+              data-type="{{ ob_item.type }}"> 
+              {% if ob_item.type in ["categorical","boolean","date"] %}
+                {% if ob_item.is_truncated %}
                   <div class="alert alert-warning" role="alert"> 
                     This observation has more than 100 values, and has been truncated to improve performance.
                   </div>
@@ -34,16 +34,16 @@
                   <a class="btn btn-sm btn-white checkall" data-id="{{ob}}"><i class="far fa-2x fa-check-square"></i></a>
                   <a class="btn btn-sm btn-white uncheckall" data-id="{{ob}}"><i class="far fa-2x fa-square"></i></a>
                   <a class="btn btn-sm btn-white colourise" id="colourise{{ob}}"
-                    data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{ob}}"
-                    data-type="{{ dataset.data_obs[ob]['type'] }}"><i class="fa fa-2x fa-tint"></i></a>
+                    data-name="{{ ob_item.name }}" data-id="{{ob}}"
+                    data-type="{{ ob_item.type }}"><i class="fa fa-2x fa-tint"></i></a>
                 </div>
 
               <div class="list-group list-group-flush">
-                {% for key, value in dataset.data_obs[ob]['values'].items()|sort(attribute=1) %}
+                {% for key, value in ob_item['values'].items()|sort(attribute=1) %}
                   <div class="list-group-item p-1">
                     <div id="obs-list-{{ob}}" class="row">
                       <div class="col-9">
-                        <label class="label-checkbox">{{dataset.data_obs[ob]['values'][key]}} <input class="obs_value_cb"
+                        <label class="label-checkbox">{{ob_item['values'][key]}} <input class="obs_value_cb"
                             id="obs-{{ob}}-value-{{key}}" type="checkbox" name="obs-{{value}}" value="{{value}}"
                             checked="checked">
                           <span class="checkmark"></span>
@@ -56,35 +56,35 @@
                   </div>
                 {% endfor %}
               </div>
-              {% elif dataset.data_obs[ob]['type'] == "continuous" %}
+              {% elif ob_item.type == "continuous" %}
                 <div class="btn-group btn-group-toggle mb-4" role="group">
                   <a class="btn btn-sm btn-white colourise" id="colourise{{ob}}"
-                    data-name="{{ dataset.data_obs[ob]['name'] }}" data-id="{{ob}}"
-                    data-type="{{ dataset.data_obs[ob]['type'] }}"><i class="fa fa-2x fa-tint"></i></a>
+                    data-name="{{ ob_item.name }}" data-id="{{ob}}"
+                    data-type="{{ ob_item.type }}"><i class="fa fa-2x fa-tint"></i></a>
                 </div>
                 <div class="list-group list-group-flush">
                   <div class="list-group-item p-1">
                     <div class="row">
                       <div class="col-6"> Minimum </div>
-                      <div class="col-6 text-right"> {{ dataset.data_obs[ob]['min'] }} </div>
+                      <div class="col-6 text-right"> {{ ob.min }} </div>
                     </div>
                   </div>
                   <div class="list-group-item p-1">
                     <div class="row">
                       <div class="col-6"> Maximum </div>
-                      <div class="col-6 text-right"> {{ dataset.data_obs[ob]['max'] }} </div>
+                      <div class="col-6 text-right"> {{ ob.max }} </div>
                     </div>
                   </div>
                   <div class="list-group-item p-1">
                     <div class="row">
                       <div class="col-6"> Mean </div>
-                      <div class="col-6 text-right"> {{ dataset.data_obs[ob]['mean'] }} </div>
+                      <div class="col-6 text-right"> {{ ob.mean }} </div>
                     </div>
                   </div>
                   <div class="list-group-item p-1">
                     <div class="row">
                       <div class="col-6"> Median </div>
-                      <div class="col-6 text-right"> {{ dataset.data_obs[ob]['median'] }} </div>
+                      <div class="col-6 text-right"> {{ ob.median }} </div>
                     </div>
                   </div>
                 </div>

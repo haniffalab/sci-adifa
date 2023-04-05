@@ -55,7 +55,7 @@
 
     const showError = function () {
       $('#spatial-div').hide()
-      $('#spatial-error').show()
+      $('#spatial-error').removeClass('d-none')
       $('#spatial-loader').hide()
     }
 
@@ -86,7 +86,7 @@
 
     this.initialize = function () {
       $('#spatial-div').show()
-      $('#spatial-error').hide()
+      $('#spatial-error').addClass('d-none')
       $('#spatial-loader').hide()
 
       populateModes()
@@ -156,9 +156,9 @@
 
     const displayControls = function () {
       if (spatialMode === 'distribution') {
-        $('#spatial-log-scale').show()
+        $('#distribution-controls').removeClass('d-none')
       } else {
-        $('#spatial-log-scale').hide()
+        $('#distribution-controls').addClass('d-none')
       }
     }
 
@@ -177,7 +177,7 @@
     const loadPlot = function () {
       // startLoader()
       $('#spatial-mode').text(spatialMode ? spatialMode.replaceAll('_', ' ') : '')
-      $('#spatial-error').hide()
+      $('#spatial-error').addClass('d-none')
       $('#spatial-div').show()
 
       const obsList = []

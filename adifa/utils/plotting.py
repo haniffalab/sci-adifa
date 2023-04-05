@@ -3,7 +3,7 @@ import textwrap
 from itertools import chain
 from functools import partial
 
-from flask import current_app, flash
+from flask import current_app
 from sqlalchemy import exc
 import scanpy as sc
 import pandas as pd
@@ -129,12 +129,12 @@ def get_spatial_plot(
     scale_mode="auto",
     scale_max=15,
     scale_min=0,
-    #tick_no=8,
+    # tick_no=8,
     scale_log=False,
     plot_covid=True,
     use_premade_info=True,
     datetime_add_info_col="haniffa_ID",
-    mask_set = '12_sections'   #'12_sections' (original),'head_body' (example 2),'multi_head_body' (example with multiple polygons having the same "name" e.g. head_0 and head_1 are 2 polygons but get coloured and have the same values )
+    mask_set="12_sections",  # '12_sections' (original),'head_body' (example 2),'multi_head_body' (example with multiple polygons having the same "name" e.g. head_0 and head_1 are 2 polygons but get coloured and have the same values )
 ):
 
     if not datasetId > 0:
@@ -152,7 +152,9 @@ def get_spatial_plot(
 
     # Check settings defined in function input
 
-    cat1 = adata.uns['Mask_selector'][mask_set]  # informs which column in .obs to use relative to the masks set selected
+    cat1 = adata.uns["Mask_selector"][
+        mask_set
+    ]  # informs which column in .obs to use relative to the masks set selected
     cat2 = cat  # change to annotations of interest
     cmap = mpl.colormaps[
         colormap
@@ -164,7 +166,9 @@ def get_spatial_plot(
     adata.obs[cat1] = adata.obs[cat1].astype("category")
 
     if not mode:
-        return plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_set)
+        return plot_categorical(
+            adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_set
+        )
     if mode in ["counts", "percentage_within_sections", "percentage_across_sections"]:
         if len(plot_value) > 1:
             adata.obs["combined_annotation"] = adata.obs[cat2].copy().astype(str)
@@ -177,9 +181,13 @@ def get_spatial_plot(
 
             adata.obs[cat2] = adata.obs[cat2].astype(str).astype("category")
 
-        return plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_set)
+        return plot_categorical(
+            adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_set
+        )
     elif mode == "gene_expression":
-        return plot_gene_expression(adata, cat1, mask_set, plot_value[0], cmap, colormap)
+        return plot_gene_expression(
+            adata, cat1, mask_set, plot_value[0], cmap, colormap
+        )
     elif mode == "distribution":
         return plot_distribution(adata, cat1, cat2, cmap, scale_log)
     elif mode == "proportion":
@@ -207,7 +215,9 @@ def plot_gene_expression(adata, cat1, mask_set, gene, cmap, colormap):
         ).format,
     )
 
-    return plot_polygons(adata, cat1, mask_set, values, title, cmap, colormap, text_template)
+    return plot_polygons(
+        adata, cat1, mask_set, values, title, cmap, colormap, text_template
+    )
 
 
 def plot_proportion(adata, cat1, cat2, cmap, colormap, mask_set, plot_value):
@@ -217,7 +227,7 @@ def plot_proportion(adata, cat1, cat2, cmap, colormap, mask_set, plot_value):
         title = "Nothing selected to visualise"
 
         return plot_polygons(adata, cat1, mask_set, values, title, cmap, colormap)
-    
+
     else:
         adata.obs[cat1] = adata.obs[cat1].astype("category")
         adata.obs[cat2] = adata.obs[cat2].astype(str).astype("category")
@@ -230,9 +240,13 @@ def plot_proportion(adata, cat1, cat2, cmap, colormap, mask_set, plot_value):
             return plot_polygons(adata, cat1, mask_set, values, title, cmap, colormap)
 
         else:
-            values = (counts_table[plot_value[0]] / counts_table.sum(axis=1) * 100).values
+            values = (
+                counts_table[plot_value[0]] / counts_table.sum(axis=1) * 100
+            ).values
 
-            title = f"Percentage of {plot_value[0]} <br> {cat2} <br> values within section"
+            title = (
+                f"Percentage of {plot_value[0]} <br> {cat2} <br> values within section"
+            )
             text_template = partial(
                 "<br>".join(
                     [
@@ -244,7 +258,9 @@ def plot_proportion(adata, cat1, cat2, cmap, colormap, mask_set, plot_value):
                 cat2=cat2,
             )
 
-            return plot_polygons(adata, cat1, mask_set, values, title, cmap, colormap, text_template)
+            return plot_polygons(
+                adata, cat1, mask_set, values, title, cmap, colormap, text_template
+            )
 
 
 def plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_set):
@@ -312,7 +328,9 @@ def plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_s
             plot_value=plot_value,
         )
 
-    return plot_polygons(adata, cat1, mask_set, values, title, cmap, colormap, text_template)
+    return plot_polygons(
+        adata, cat1, mask_set, values, title, cmap, colormap, text_template
+    )
 
 
 def plot_polygons(
@@ -329,7 +347,7 @@ def plot_polygons(
     scale_upper_value=100,
 ):
 
-    values_dict = dict(zip(adata.obs[cat1].unique(),values))
+    values_dict = dict(zip(adata.obs[cat1].unique(), values))
 
     if scale == "auto":
         vmax = max(values) if max(values) > 0 else 1
@@ -344,8 +362,7 @@ def plot_polygons(
     fig = go.Figure()
 
     for i, key in enumerate(adata.uns[mask_set + "_polygons"].keys()):
-        
-        
+
         polygon0 = go.Scatter(
             x=list(*adata.uns[mask_set + "_polygons"][key][:, :, 0, 0]),
             y=list(*adata.uns[mask_set + "_polygons"][key][:, :, 0, 1]),
@@ -356,17 +373,39 @@ def plot_polygons(
                 color=(
                     "#%02x%02x%02x"
                     % tuple(
-                        list(int((255 * x)) for x in list(sm.to_rgba([val for k, val in values_dict.items() if k in key][0]))[0:3])
+                        list(
+                            int((255 * x))
+                            for x in list(
+                                sm.to_rgba(
+                                    [val for k, val in values_dict.items() if k in key][
+                                        0
+                                    ]
+                                )
+                            )[0:3]
+                        )
                     )
                 ),
                 width=1,
             ),
             fillcolor=(
                 "#%02x%02x%02x"
-                % tuple(list(int((255 * x)) for x in list(sm.to_rgba([val for k, val in values_dict.items() if k in key][0]))[0:3]))
+                % tuple(
+                    list(
+                        int((255 * x))
+                        for x in list(
+                            sm.to_rgba(
+                                [val for k, val in values_dict.items() if k in key][0]
+                            )
+                        )[0:3]
+                    )
+                )
             ),
             hoveron="fills",
-            text=text_template(key=key, value=[val for k, val in values_dict.items() if k in key][0], sum_values=sum(values))
+            text=text_template(
+                key=key,
+                value=[val for k, val in values_dict.items() if k in key][0],
+                sum_values=sum(values),
+            )
             if text_template
             else None,
             hoverinfo="text+x+y",
@@ -411,15 +450,14 @@ def plot_distribution(adata, cat1, cat2, cmap, scale_log=False):
     for index, section in enumerate(adata.obs[cat1].unique()):
         values = (adata.obs[cat2][adata.obs[cat1].isin([section])]).values
 
-
-        #hover_info_text = "<br>".join(["<b>{section}</b>",
+        # hover_info_text = "<br>".join(["<b>{section}</b>",
         #    "",
         #    f"Min value: {min(values)}",
         #    f"Max value: {max(values)}",
         #    f"Mean value: {np.mean(values)}",
         #    f"Median value: {np.median(values)}"])
 
-        #hover_info_text = partial(
+        # hover_info_text = partial(
         #    "<br>".join(
         #        [
         #            "<b>{section}</b>",
@@ -430,8 +468,7 @@ def plot_distribution(adata, cat1, cat2, cmap, scale_log=False):
         #            f"Median value: {np.median(values)}",
         #        ]
         #    )
-        #)
-
+        # )
 
         if scale_log == True:
             values = np.log1p(values)
@@ -442,11 +479,15 @@ def plot_distribution(adata, cat1, cat2, cmap, scale_log=False):
         l = len(adata.obs[cat1].unique())
         c = cm.get_cmap(cmap, l)
         fig.add_trace(
-            go.Violin(x=values, line_color=f"rgb{c(index/l)[:3]}", name=section,
-            hoverinfo = "none",   # seems to be an issue with plotly violin that it shows all stats if use x or same number boxes as y and won't update text properly 
-            #hovertemplate=hover_info_text,
-            #hovertext = hover_info_text
-            ))
+            go.Violin(
+                x=values,
+                line_color=f"rgb{c(index/l)[:3]}",
+                name=section,
+                hoverinfo="none",  # seems to be an issue with plotly violin that it shows all stats if use x or same number boxes as y and won't update text properly
+                # hovertemplate=hover_info_text,
+                # hovertext = hover_info_text
+            )
+        )
 
     fig.update_traces(orientation="h", side="positive", width=2, points=False)
     fig.update_layout(
@@ -459,7 +500,7 @@ def plot_distribution(adata, cat1, cat2, cmap, scale_log=False):
         xaxis_title=x_title,
         yaxis_title=f"{cat1}",
         showlegend=True,
-        legend = dict(font = dict(size = 8, color = "black"))
+        legend=dict(font=dict(size=8, color="black")),
     )
     fig.update_layout(
         {"plot_bgcolor": "rgba(0,0,0,0)", "paper_bgcolor": "rgba(0,0,0,0)"}
@@ -479,13 +520,13 @@ def plot_date(
     adata.obs[cat2] = adata.obs[cat2].astype("datetime64[ns]")
 
     if use_premade_info == True:
-        Dates = adata.uns['pre_made_date_col_' + cat2]["dates"]
+        Dates = adata.uns["pre_made_date_col_" + cat2]["dates"]
         dates = []
         for d in Dates:
             dates.append(datetime.date(*list(d)))
         labels = [
             "{0:%d %b %Y}:\n{1}".format(d, l)
-            for l, d in zip(adata.uns['pre_made_date_col_' + cat2]["labels"], dates)
+            for l, d in zip(adata.uns["pre_made_date_col_" + cat2]["labels"], dates)
         ]
     else:
         df_new = (

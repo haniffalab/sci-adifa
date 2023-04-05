@@ -1,6 +1,3 @@
-import os
-import base64
-from io import BytesIO
 from signal import SIG_DFL
 
 from flask import (
@@ -16,7 +13,6 @@ from flask import (
     url_for,
 )
 from sqlalchemy import exc
-from matplotlib.figure import Figure
 
 from adifa import models
 
