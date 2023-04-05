@@ -27,6 +27,12 @@ def get_annotations(adata):
         "complex": type_numeric,
     }
 
+    obs_cat = {}
+    if "column_ordering" in adata.uns:
+        for k in adata.uns["column_ordering"]:
+            for v in adata.uns["column_ordering"][k]:
+                obs_cat[v] = k
+
     for name in adata.obs:
         # Map numpy dtype to a simple type for switching
         dtype = re.sub(r"[^a-zA-Z]", "", adata.obs[name].dtype.name)
@@ -36,6 +42,7 @@ def get_annotations(adata):
         slug = re.sub(r"[^a-zA-Z0-9]", "", name).lower()
         annotations["obs"][slug] = func(adata.obs[name])
         annotations["obs"][slug]["name"] = name
+        annotations["obs"][slug]["category"] = obs_cat.get(name, "")
 
     annotations["obsm"] = adata.obsm_keys()
     annotations["var"] = adata.var_names.tolist()
@@ -194,7 +201,7 @@ def categorised_expr(datasetId, cat, gene, func="mean"):
         expr = grouping.median()
 
     # counts = grouping.count()/grouping.count().sum()
-    #'count': counts.loc[group,gene]
+    # 'count': counts.loc[group,gene]
     output = [
         {"gene": gene, "cat": group, "expr": float(expr.loc[group, gene])}
         for group in grouping.groups.keys()

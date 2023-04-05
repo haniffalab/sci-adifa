@@ -104,12 +104,12 @@
       })
 
       $('.checkall').click(function (event) {
-        $('#collapse' + $(this).data('id')).find('input[type=checkbox]').prop('checked', true)
+        $('#collapse-' + $(this).data('id')).find('input[type=checkbox]').prop('checked', true)
         setTimeout(function () { redraw() }, 100) // Defer to improve UX
       })
 
       $('.uncheckall').click(function (event) {
-        $('#collapse' + $(this).data('id')).find('input[type=checkbox]').prop('checked', false)
+        $('#collapse-' + $(this).data('id')).find('input[type=checkbox]').prop('checked', false)
         setTimeout(function () { redraw() }, 100) // Defer to improve UX
       })
 
