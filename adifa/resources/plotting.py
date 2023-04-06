@@ -14,6 +14,7 @@ class Matrixplot(Resource):
 
 class Spatial(Resource):
     def get(self, id):
+        mask = request.args.get("mask", type=str)
         mode = request.args.get("mode", None, type=str)
         cat = request.args.get("cat", None, type=str)
         plot_value = request.args.getlist("plot_value[]", None)
@@ -24,6 +25,7 @@ class Spatial(Resource):
 
         return get_spatial_plot(
             id,
+            mask=mask,
             cat=cat,
             plot_value=plot_value,
             mode=mode,

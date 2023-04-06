@@ -23,6 +23,13 @@ class Coordinates(Resource):
         return adata_utils.get_coordinates(datasetId, obsm)
 
 
+class Masks(Resource):
+    def get(self):
+        datasetId = request.args.get("datasetId", 0, type=int)
+
+        return adata_utils.get_masks(datasetId)
+
+
 class Labels(Resource):
     def get(self):
         datasetId = request.args.get("datasetId", 0, type=int)

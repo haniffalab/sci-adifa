@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import Union
 import json
 import textwrap
 from itertools import chain
@@ -121,20 +123,20 @@ def get_matrixplot(
 
 
 def get_spatial_plot(
-    datasetId,
-    cat="cell_labels_lvl2",
-    plot_value=["MACROPHAGE", "IMMUNE"],
-    mode="percentage_within_sections",
-    colormap="viridis",
-    scale_mode="auto",
-    scale_max=15,
-    scale_min=0,
-    # tick_no=8,
-    scale_log=False,
-    plot_covid=True,
-    use_premade_info=True,
-    datetime_add_info_col="haniffa_ID",
-    mask_set="12_sections",  # '12_sections' (original),'head_body' (example 2),'multi_head_body' (example with multiple polygons having the same "name" e.g. head_0 and head_1 are 2 polygons but get coloured and have the same values )
+    datasetId: int,
+    mask: str,
+    mode: str = None,
+    cat: str = None,
+    plot_value: list[str] = [],
+    colormap: str = "viridis",
+    scale_mode: str = "auto",
+    scale_max: int = 15,
+    scale_min: int = 0,
+    # tick_no: int = 8,
+    scale_log: bool = False,
+    plot_covid: bool = True,
+    use_premade_info: bool = True,
+    datetime_add_info_col: str = "haniffa_ID",
 ):
 
     if not datasetId > 0:
@@ -152,9 +154,7 @@ def get_spatial_plot(
 
     # Check settings defined in function input
 
-    cat1 = adata.uns["Mask_selector"][
-        mask_set
-    ]  # informs which column in .obs to use relative to the masks set selected
+    cat1 = adata.uns["masks"][mask]["obs"]
     cat2 = cat  # change to annotations of interest
     cmap = mpl.colormaps[
         colormap
@@ -167,7 +167,7 @@ def get_spatial_plot(
 
     if not mode:
         return plot_categorical(
-            adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_set
+            adata, mode, cat1, cat2, plot_value, cmap, colormap, mask
         )
     if mode in ["counts", "percentage_within_sections", "percentage_across_sections"]:
         if len(plot_value) > 1:
@@ -182,16 +182,14 @@ def get_spatial_plot(
             adata.obs[cat2] = adata.obs[cat2].astype(str).astype("category")
 
         return plot_categorical(
-            adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_set
+            adata, mode, cat1, cat2, plot_value, cmap, colormap, mask
         )
     elif mode == "gene_expression":
-        return plot_gene_expression(
-            adata, cat1, mask_set, plot_value[0], cmap, colormap
-        )
+        return plot_gene_expression(adata, cat1, mask, plot_value[0], cmap, colormap)
     elif mode == "distribution":
         return plot_distribution(adata, cat1, cat2, cmap, scale_log)
     elif mode == "proportion":
-        return plot_proportion(adata, cat1, cat2, cmap, colormap, mask_set, plot_value)
+        return plot_proportion(adata, cat1, cat2, cmap, colormap, mask, plot_value)
     elif mode == "date":
         return plot_date(
             adata, cat2, use_premade_info, plot_covid, datetime_add_info_col
@@ -200,8 +198,10 @@ def get_spatial_plot(
         raise
 
 
-def plot_gene_expression(adata, cat1, mask_set, gene, cmap, colormap):
-    df_of_values = (adata.varm[mask_set + "_Sectional_gene_expression"].T)[gene]
+def plot_gene_expression(
+    adata: sc.AnnData, cat1: str, mask: str, gene: str, cmap, colormap: str
+):
+    df_of_values = (adata.varm[adata.uns["masks"][mask]["varm"]].T)[gene]
     values = list(df_of_values.values)
 
     title = f"Mean gene expression of <br> {gene} <br> for each section"
@@ -216,17 +216,25 @@ def plot_gene_expression(adata, cat1, mask_set, gene, cmap, colormap):
     )
 
     return plot_polygons(
-        adata, cat1, mask_set, values, title, cmap, colormap, text_template
+        adata, cat1, mask, values, title, cmap, colormap, text_template
     )
 
 
-def plot_proportion(adata, cat1, cat2, cmap, colormap, mask_set, plot_value):
+def plot_proportion(
+    adata: sc.AnnData,
+    cat1: str,
+    cat2: str,
+    cmap,
+    colormap: str,
+    mask: str,
+    plot_value: list[str],
+):
 
     if not plot_value or not len(plot_value):
         values = [0] * len(adata.obs[cat1])
         title = "Nothing selected to visualise"
 
-        return plot_polygons(adata, cat1, mask_set, values, title, cmap, colormap)
+        return plot_polygons(adata, cat1, mask, values, title, cmap, colormap)
 
     else:
         adata.obs[cat1] = adata.obs[cat1].astype("category")
@@ -237,7 +245,7 @@ def plot_proportion(adata, cat1, cat2, cmap, colormap, mask_set, plot_value):
         if len(plot_value) > 1:
             values = [1] * len(adata.obs[cat1])
             title = "Selected to visualise both true and false counts"
-            return plot_polygons(adata, cat1, mask_set, values, title, cmap, colormap)
+            return plot_polygons(adata, cat1, mask, values, title, cmap, colormap)
 
         else:
             values = (
@@ -259,17 +267,26 @@ def plot_proportion(adata, cat1, cat2, cmap, colormap, mask_set, plot_value):
             )
 
             return plot_polygons(
-                adata, cat1, mask_set, values, title, cmap, colormap, text_template
+                adata, cat1, mask, values, title, cmap, colormap, text_template
             )
 
 
-def plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_set):
+def plot_categorical(
+    adata: sc.AnnData,
+    mode: str,
+    cat1: str,
+    cat2: str,
+    plot_value: Union[list[str], str],
+    cmap,
+    colormap: str,
+    mask: str,
+):
 
     if not mode or not plot_value or not len(plot_value):
         values = [0] * len(adata.obs[cat1])
         title = "Nothing selected to visualise"
 
-        return plot_polygons(adata, cat1, mask_set, values, title, cmap, colormap)
+        return plot_polygons(adata, cat1, mask, values, title, cmap, colormap)
     elif isinstance(plot_value, list):
         plot_value = plot_value[0]
 
@@ -329,22 +346,22 @@ def plot_categorical(adata, mode, cat1, cat2, plot_value, cmap, colormap, mask_s
         )
 
     return plot_polygons(
-        adata, cat1, mask_set, values, title, cmap, colormap, text_template
+        adata, cat1, mask, values, title, cmap, colormap, text_template
     )
 
 
 def plot_polygons(
-    adata,
-    cat1,
-    mask_set,
-    values,
-    title,
+    adata: sc.AnnData,
+    cat1: str,
+    mask: str,
+    values: list[str],
+    title: str,
     cmap,
-    colormap="viridis",
+    colormap: str = "viridis",
     text_template=None,
-    scale="auto",
-    scale_lower_value=0,
-    scale_upper_value=100,
+    scale: str = "auto",
+    scale_lower_value: int = 0,
+    scale_upper_value: int = 100,
 ):
 
     values_dict = dict(zip(adata.obs[cat1].unique(), values))
@@ -361,11 +378,11 @@ def plot_polygons(
 
     fig = go.Figure()
 
-    for i, key in enumerate(adata.uns[mask_set + "_polygons"].keys()):
+    for i, key in enumerate(adata.uns["masks"][mask]["polygons"].keys()):
 
         polygon0 = go.Scatter(
-            x=list(*adata.uns[mask_set + "_polygons"][key][:, :, 0, 0]),
-            y=list(*adata.uns[mask_set + "_polygons"][key][:, :, 0, 1]),
+            x=list(*adata.uns["masks"][mask]["polygons"][key][:, :, 0, 0]),
+            y=list(*adata.uns["masks"][mask]["polygons"][key][:, :, 0, 1]),
             showlegend=False,
             mode="lines",
             fill="toself",
@@ -442,7 +459,9 @@ def plot_polygons(
     return fig.to_json()
 
 
-def plot_distribution(adata, cat1, cat2, cmap, scale_log=False):
+def plot_distribution(
+    adata: sc.AnnData, cat1: str, cat2: str, cmap, scale_log: bool = False
+):
     assert adata.obs[cat2].dtype in ["float64", "int32", "int64"]
 
     fig = go.Figure()
@@ -510,11 +529,11 @@ def plot_distribution(adata, cat1, cat2, cmap, scale_log=False):
 
 
 def plot_date(
-    adata,
-    cat2,
-    use_premade_info=True,
-    plot_covid=False,
-    datetime_add_info_col="haniffa_ID",
+    adata: sc.AnnData,
+    cat2: str,
+    use_premade_info: bool = True,
+    plot_covid: bool = False,
+    datetime_add_info_col: str = "haniffa_ID",
 ):
 
     adata.obs[cat2] = adata.obs[cat2].astype("datetime64[ns]")
@@ -692,7 +711,7 @@ def plot_date(
     return fig.to_json()
 
 
-def wrap_text(text, width=45):
+def wrap_text(text: str, width: int = 45):
     return "<br>".join(
         list(chain(*[textwrap.wrap(x, width=width) for x in text.split("<br>")]))
     )

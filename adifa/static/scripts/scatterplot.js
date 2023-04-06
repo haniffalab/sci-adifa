@@ -263,7 +263,7 @@
         $('.btn-gene-select').removeClass('active')
       }
       if (colorScaleId) {
-        $('#collapse' + colorScaleId).collapse('show')
+        $('#collapse-' + colorScaleId).collapse('show')
         $('#colourise' + colorScaleId).addClass('active')
       }
 

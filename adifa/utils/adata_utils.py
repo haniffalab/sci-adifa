@@ -17,7 +17,7 @@ from adifa.resources.errors import (
 
 
 def get_annotations(adata):
-    annotations = {"obs": {}, "obsm": [], "var": []}
+    annotations = {"obs": {}, "obsm": [], "var": [], "has_masks": False}
 
     switcher = {
         "category": type_category,
@@ -46,6 +46,9 @@ def get_annotations(adata):
 
     annotations["obsm"] = adata.obsm_keys()
     annotations["var"] = adata.var_names.tolist()
+
+    if "masks" in adata.uns and len(adata.uns["masks"].keys()):
+        annotations["has_masks"] = True
 
     return annotations
 
@@ -128,6 +131,16 @@ def get_coordinates(datasetId, obsm):
         output.append([round(num, 4) for num in x[:2].tolist()])
 
     return output
+
+
+def get_masks(datasetId):
+    dataset = models.Dataset.query.get(datasetId)
+    adata = current_app.adata[dataset.filename]
+
+    if "masks" in adata.uns:
+        return list(adata.uns["masks"].keys())
+    else:
+        return []
 
 
 def get_labels(datasetId, obsm, gene="", obs=""):

@@ -186,7 +186,7 @@
         $('.btn-gene-select').removeClass('active')
       }
       if (colorScaleId) {
-        $('#collapse' + colorScaleId).collapse('show')
+        $('#collapse-' + colorScaleId).collapse('show')
       }
       if (varList.length) {
         varList.forEach(function (v) {
@@ -218,6 +218,14 @@
           }
         })
       }
+
+      const groupedValues = Object.fromEntries(
+        Object.entries(active.data.values_df)
+          .map(([k, v]) =>
+            ([[k], Object.fromEntries(
+              myGroups.map((g) => ([[g], v[g]]))
+            )]
+            )))
 
       let svg = d3.select('#canvas_plot')
         .append('svg')
@@ -325,7 +333,7 @@
 
       let uid = 0
       svg.selectAll()
-        .data(Object.entries(active.data.values_df), function (d) { return d[1] })
+        .data(Object.entries(groupedValues), function (d) { return d[1] })
         .enter()
         .selectAll()
         .data(function (d, i) {

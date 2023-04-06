@@ -21,6 +21,10 @@
         }
       })
 
+      $('body').on('click', '.spatial-mask', function (event) {
+        spatial.changeMask(this)
+      })
+
       $('body').on('click', '.spatial-colormap', function (event) {
         spatial.changeColormap(this)
       })
@@ -99,7 +103,6 @@
       })
 
       $('.obs_value_cb').click(function (event) {
-        console.log('individual obs clicked')
         setTimeout(function () { redraw() }, 100) // Defer to improve UX
       })
 
@@ -158,12 +161,12 @@
       })
 
       $('.checkall').click(function (event) {
-        $('#collapse' + $(this).data('id')).find('input[type=checkbox]').prop('checked', true)
+        $('#collapse-' + $(this).data('id')).find('input[type=checkbox]').prop('checked', true)
         setTimeout(function () { matrixplot.redraw() }, 100) // Defer to improve UX
       })
 
       $('.uncheckall').click(function (event) {
-        $('#collapse' + $(this).data('id')).find('input[type=checkbox]').prop('checked', false)
+        $('#collapse-' + $(this).data('id')).find('input[type=checkbox]').prop('checked', false)
         setTimeout(function () { matrixplot.redraw() }, 100) // Defer to improve UX
       })
 

@@ -18,6 +18,8 @@
     const colormaps = ['viridis', 'plasma', 'inferno', 'jet', 'RdBu']
     let xhrPool = []
 
+    let masks
+    let mask
     let colorScaleKey
     let colorScaleType
     let spatialMode
@@ -93,20 +95,26 @@
       populateColormaps()
 
       $.when(
-        doAjax(API_SERVER + 'api/v1/datasets/' + datasetId)).then(function (d1) {
+        doAjax(API_SERVER + 'api/v1/datasets/' + datasetId),
+        doAjax(API_SERVER + 'api/v1/masks?datasetId=' + datasetId)).then(function (d, m) {
       // update active dataset
-        active.dataset = d1
+        active.dataset = d[0]
+        masks = m[0]
+
+        populateMasks()
 
         // load Cookies
         colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name') || null
         colorScaleType = Cookies.get('ds' + datasetId + '-obs-type') || null
         spatialMode = Cookies.get('ds' + datasetId + '-spatial-mode') || null
+        mask = Cookies.get('ds' + datasetId + '-spatial-mask') || masks[0]
         colormap = Cookies.get('ds' + datasetId + '-spatial-cm') || colormaps[0]
         if (spatialMode === null && colorScaleType && colorScaleKey) {
           setMode(colorScaleType === 'gene' ? 'gene_expression' : 'counts')
         } else if (spatialMode && colorScaleType && colorScaleKey) {
           setMode(colorScaleType === 'gene' ? 'gene_expression' : spatialMode)
         }
+        setMask(mask)
         setColormap(colormap)
 
         loadPlot()
@@ -115,10 +123,18 @@
       return this
     }
 
+    const populateMasks = function () {
+      masks.forEach(function (mask) {
+        $('#spatial-mask-dropdown').append(
+          `<a id="spatial-mask-${mask}" href="#" data-name="${mask}" class="dropdown-item spatial-mask">${mask.replaceAll('_', ' ')}</a>`
+        )
+      })
+    }
+
     const populateModes = function () {
       spatialModes.forEach(function (mode) {
         $('#spatial-mode-dropdown').append(
-              `<a id="spatial-mode-${mode}" href="#" data-name="${mode}" class="dropdown-item spatial-mode">${mode.replaceAll('_', ' ')}</a>`
+          `<a id="spatial-mode-${mode}" href="#" data-name="${mode}" class="dropdown-item spatial-mode">${mode.replaceAll('_', ' ')}</a>`
         )
       })
       displayModes()
@@ -177,6 +193,7 @@
     const loadPlot = function () {
       // startLoader()
       $('#spatial-mode').text(spatialMode ? spatialMode.replaceAll('_', ' ') : '')
+      $('#spatial-mask').text(mask ? mask.replaceAll('_', ' ') : '')
       $('#spatial-error').addClass('d-none')
       $('#spatial-div').show()
 
@@ -193,6 +210,7 @@
       }
 
       const params = []
+      params.push('mask=' + mask)
       if (spatialMode) {
         params.push('mode=' + spatialMode)
         if (spatialMode === 'distribution') {
@@ -296,6 +314,20 @@
         }
       }
       displayControls()
+    }
+
+    this.changeMask = function (el) {
+      setMask($(el).data('name'))
+      loadPlot()
+    }
+
+    const setMask = function (m) {
+      mask = m
+      Cookies.set('ds' + datasetId + '-spatial-mask', mask, {
+        expires: 30,
+        sameSite: 'Strict',
+        path: window.location.pathname
+      })
     }
 
     this.changeColormap = function (el) {
