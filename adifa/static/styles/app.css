@@ -803,6 +803,16 @@ dl.row {
 	padding: 0.5rem 0;
 }
 
+.obs-radio input,
+.obs-radio label {
+	cursor: pointer;
+}
+
+.obs-radio input {
+	margin-left: 0;
+	margin-top: .25em;
+}
+
 
 .gene-sidebar .gene-sidebar-title {
 	text-transform: uppercase;

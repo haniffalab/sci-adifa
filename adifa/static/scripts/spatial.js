@@ -14,7 +14,7 @@
     }
 
     const datasetId = this.attr('data-datasetId')
-    const spatialModes = ['counts', 'percentage_within_sections', 'percentage_across_sections', 'gene_expression', 'distribution', 'date', 'proportion']
+    const spatialModes = ['counts', 'percentage_within_sections', 'percentage_across_sections', 'gene_expression', 'distribution', 'date', 'proportion_within_sections', 'proportion_across_sections']
     const colormaps = ['viridis', 'plasma', 'inferno', 'jet', 'RdBu']
     let xhrPool = []
 
@@ -23,7 +23,7 @@
     let colorScaleKey
     let colorScaleType
     let spatialMode
-    let prevObsMode
+    const prevObsMode = { categorical: null, boolean: null }
     let colormap
 
     const active = {
@@ -148,7 +148,7 @@
           ))
         } else if (colorScaleType === 'boolean') {
           $(`#spatial-mode-${mode}`).css('display', (
-            mode === 'proportion' ? 'block' : 'none'
+            ['proportion_within_sections', 'proportion_across_sections'].includes(mode) ? 'block' : 'none'
           ))
         } else if (colorScaleType === 'date') {
           $(`#spatial-mode-${mode}`).css('display', (
@@ -198,7 +198,7 @@
       $('#spatial-div').show()
 
       const obsList = []
-      if (colorScaleKey && ['categorical', 'boolean', 'date'].includes(colorScaleType)) {
+      if (colorScaleKey && ['categorical', 'date'].includes(colorScaleType)) {
         const arr = active.dataset.data_obs[colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()].values
         for (const k in arr) {
           if (Object.prototype.hasOwnProperty.call(arr, k)) {
@@ -207,6 +207,8 @@
             }
           }
         }
+      } else if (colorScaleKey && colorScaleType === 'boolean') {
+        obsList.push($('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + '"]:checked').val())
       }
 
       const params = []
@@ -259,13 +261,13 @@
           colorScaleKey = $(el).data('name')
           colorScaleType = $(el).data('type')
           if (colorScaleType === 'boolean') {
-            setMode('proportion')
+            setMode(prevObsMode[colorScaleType] || 'proportion_within_sections')
           } else if (colorScaleType === 'date') {
             setMode('date')
           } else if (colorScaleType === 'continuous') {
             setMode('distribution')
-          } else {
-            setMode(prevObsMode || 'counts')
+          } else if (colorScaleType === 'categorical') {
+            setMode(prevObsMode[colorScaleType] || 'counts')
           }
         }
         displayModes()
@@ -309,8 +311,8 @@
           sameSite: 'Strict',
           path: window.location.pathname
         })
-        if (!['gene_expression', 'distribution', 'date', 'proportion'].includes(mode)) {
-          prevObsMode = mode
+        if (!['gene_expression', 'distribution', 'date'].includes(mode)) {
+          prevObsMode[colorScaleType] = mode
         }
       }
       displayControls()

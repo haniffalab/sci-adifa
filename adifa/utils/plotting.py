@@ -188,8 +188,8 @@ def get_spatial_plot(
         return plot_gene_expression(adata, cat1, mask, plot_value[0], cmap, colormap)
     elif mode == "distribution":
         return plot_distribution(adata, cat1, cat2, cmap, scale_log)
-    elif mode == "proportion":
-        return plot_proportion(adata, cat1, cat2, cmap, colormap, mask, plot_value)
+    elif mode in ["proportion_within_sections", "proportion_across_sections"]:
+        return plot_proportion(adata, mode, cat1, cat2, cmap, colormap, mask, plot_value[0])
     elif mode == "date":
         return plot_date(
             adata, cat2, use_premade_info, plot_covid, datetime_add_info_col
@@ -222,15 +222,16 @@ def plot_gene_expression(
 
 def plot_proportion(
     adata: sc.AnnData,
+    mode: str,
     cat1: str,
     cat2: str,
     cmap,
     colormap: str,
     mask: str,
-    plot_value: list[str],
+    plot_value: str,
 ):
 
-    if not plot_value or not len(plot_value):
+    if not plot_value:
         values = [0] * len(adata.obs[cat1])
         title = "Nothing selected to visualise"
 
@@ -242,33 +243,50 @@ def plot_proportion(
 
         counts_table = pd.crosstab(adata.obs[cat1], adata.obs[cat2])
 
-        if len(plot_value) > 1:
-            values = [1] * len(adata.obs[cat1])
-            title = "Selected to visualise both true and false counts"
-            return plot_polygons(adata, cat1, mask, values, title, cmap, colormap)
+        if mode == "proportion_within_sections":
 
-        else:
             values = (
-                counts_table[plot_value[0]] / counts_table.sum(axis=1) * 100
+                counts_table[plot_value] / counts_table.sum(axis=1) * 100
             ).values
 
             title = (
-                f"Percentage of {plot_value[0]} <br> {cat2} <br> values within section"
+                f"Percentage of {plot_value} <br> {cat2} <br> values within section"
             )
             text_template = partial(
                 "<br>".join(
                     [
                         "<b>{key}</b>",
                         "",
-                        "{value:.2f}% of the cells within {key} are true for {cat2}",
+                        "{value:.2f}% of the cells within {key} are{b} {cat2}",
                     ]
                 ).format,
                 cat2=cat2,
+                b="" if plot_value == "True" else " not"
+            )
+        
+        elif mode == "proportion_across_sections":
+            values = (
+                counts_table / counts_table.sum() * 100
+            )[plot_value].values
+
+            title = (
+                f"Percentage of {plot_value} <br> {cat2} <br> values across sections"
+            )
+            text_template = partial(
+                "<br>".join(
+                    [
+                        "<b>{key}</b>",
+                        "",
+                        "{key} contains {value:.2f}% of the cells which are{b} {cat2}",
+                    ]
+                ).format,
+                cat2=cat2,
+                b="" if plot_value == "True" else " not"
             )
 
-            return plot_polygons(
-                adata, cat1, mask, values, title, cmap, colormap, text_template
-            )
+        return plot_polygons(
+            adata, cat1, mask, values, title, cmap, colormap, text_template
+        )
 
 
 def plot_categorical(
@@ -672,7 +690,7 @@ def plot_date(
                 )
             )
 
-    if plot_covid == True:
+    if plot_covid:
         fig.add_vline(
             x=covid_start, y0=0.55, y1=0.65, line_width=1, line_color="purple"
         )
