@@ -134,7 +134,7 @@ def get_spatial_plot(
     scale_min: int = 0,
     # tick_no: int = 8,
     scale_log: bool = False,
-    plot_covid: bool = True,
+    plot_covid: bool = False,
     use_premade_info: bool = True,
     datetime_add_info_col: str = "haniffa_ID",
 ):
@@ -508,8 +508,8 @@ def plot_distribution(
         # )
 
         if scale_log == True:
-            values = np.log1p(values)
-            x_title = f"{cat2} (log(x+1))"
+            values = np.log(np.square(values))
+            x_title = f"{cat2} (log(x^2))"
         else:
             x_title = f"{cat2}"
 
@@ -557,13 +557,13 @@ def plot_date(
     adata.obs[cat2] = adata.obs[cat2].astype("datetime64[ns]")
 
     if use_premade_info == True:
-        Dates = adata.uns["pre_made_date_col_" + cat2]["dates"]
+        Dates = adata.uns["premade_date_information"][cat2]["dates"]
         dates = []
         for d in Dates:
             dates.append(datetime.date(*list(d)))
         labels = [
             "{0:%d %b %Y}:\n{1}".format(d, l)
-            for l, d in zip(adata.uns["pre_made_date_col_" + cat2]["labels"], dates)
+            for l, d in zip(adata.uns["premade_date_information"][cat2]["labels"], dates)
         ]
     else:
         df_new = (
@@ -601,15 +601,15 @@ def plot_date(
         start_date = (min(dates) - relativedelta(months=1)).replace(day=1)
         end_date = (max(dates) + relativedelta(months=1)).replace(day=1)
 
-    stems = np.zeros(len(dates))
-    stems[::2] = 1  # 0.3
-    stems[1::2] = -1  # -0.3
+    #stems = np.zeros(len(dates))
+    #stems[::2] = 1  # 0.3
+    #stems[1::2] = -1  # -0.3
 
     data = [
         go.Scatter(
             x=dates,
-            # y = np.zeros(len(dates)),
-            y=stems,
+            y = np.zeros(len(dates)),
+            #y=stems,
             mode="markers",
             marker=dict(color="red"),
             text=labels,
@@ -627,68 +627,75 @@ def plot_date(
                 x0=i,
                 y0=0,
                 x1=i,
-                y1=stems[dates.index(i)],
+                y1=-1,
                 line=dict(color="black", width=1),
             )
             for i in dates
         ],
-        title=f"Timeline for {cat2}",
     )
 
     # Plot the chart
     fig = go.Figure(data, layout)
 
-    fig.add_hline(y=0)
+    #fig.add_hline(y=0)
+
+    fig.update_layout(title={
+        'text' : f'Timeline for {cat2}',
+        'y' : 0.9,
+        'x' : 0.5,
+        'xanchor' : 'center',
+        'yanchor' : 'top'
+    })
 
     # add month ticks and labels
-    for i in list(
-        (pd.date_range(start=start_date, end=end_date, freq="1MS")).map(
-            lambda d: str(d.date())
-        )
-    ):
-        x_axis_pos = datetime.date(*list(map(int, i.replace("-", " ").split(" "))))
-        fig.add_vline(x=x_axis_pos, y0=0.45, y1=0.55, line_width=1, line_color="black")
-        if (x_axis_pos.strftime("%B")[:3]) == "Jan":
-            fig.add_annotation(
-                dict(
-                    font=dict(color="black", size=7),
-                    x=x_axis_pos,
-                    y=-0.3,
-                    showarrow=False,
-                    text=x_axis_pos.strftime("%B")[:3],
-                    textangle=0,
-                    xanchor="left",
-                    xref="x",
-                    yref="y",
-                )
-            )
-            fig.add_annotation(
-                dict(
-                    font=dict(color="black", size=10),
-                    x=x_axis_pos,
-                    y=0.5,
-                    showarrow=False,
-                    text=x_axis_pos.strftime("%Y"),
-                    textangle=0,
-                    xanchor="left",
-                    xref="x",
-                    yref="y",
-                )
-            )
-        else:
-            fig.add_annotation(
-                dict(
-                    font=dict(color="black", size=7),
-                    x=x_axis_pos,
-                    y=-0.3,
-                    showarrow=False,
-                    text=x_axis_pos.strftime("%B")[:3],
-                    textangle=0,
-                    xanchor="left",
-                    xref="x",
-                    yref="y",
-                )
-            )
+    #for i in list(
+    #    (pd.date_range(start=start_date, end=end_date, freq="1MS")).map(
+    #        lambda d: str(d.date())
+    #    )
+    #):
+    #    x_axis_pos = datetime.date(*list(map(int, i.replace("-", " ").split(" "))))
+    #    fig.add_vline(x=x_axis_pos, y0=0.45, y1=0.55, line_width=1, line_color="black")
+    #    if (x_axis_pos.strftime("%B")[:3]) == "Jan":
+    #        fig.add_annotation(
+    #            dict(
+    #                font=dict(color="black", size=7),
+    #                x=x_axis_pos,
+    #                y=-0.3,
+    #                showarrow=False,
+    #                text=x_axis_pos.strftime("%B")[:3],
+    #                textangle=0,
+    #                xanchor="left",
+    #                xref="x",
+    #                yref="y",
+    #            )
+    #        )
+    #        fig.add_annotation(
+    #            dict(
+    #                font=dict(color="black", size=10),
+    #                x=x_axis_pos,
+    #                y=0.5,
+    #                showarrow=False,
+    #                text=x_axis_pos.strftime("%Y"),
+    #                textangle=0,
+    #                xanchor="left",
+    #                xref="x",
+    #                yref="y",
+    #            )
+    #        )
+    #    else:
+    #        fig.add_annotation(
+    #            dict(
+    #                font=dict(color="black", size=7),
+    #                x=x_axis_pos,
+    #                y=-0.3,
+    #                showarrow=False,
+    #                text=x_axis_pos.strftime("%B")[:3],
+    #                textangle=0,
+    #                xanchor="left",
+    #                xref="x",
+    #                yref="y",
+    #            )
+    #        )
 
     if plot_covid:
         fig.add_vline(
@@ -719,12 +726,13 @@ def plot_date(
             )
         )
 
-    fig.update_xaxes(visible=False, fixedrange=True)
+    fig.update_xaxes(showline=True, linewidth=2, linecolor='black', visible=True, fixedrange=False, autorange=True,  rangeslider=dict(autorange=True,thickness=0.3, bgcolor="#e4f7fe"))
     fig.update_yaxes(visible=False, fixedrange=True)
     fig.update_layout(
-        {"plot_bgcolor": "rgba(0,0,0,0)", "paper_bgcolor": "rgba(0,0,0,0)"}
+        {"plot_bgcolor": "rgba(0,0,0,0)", "paper_bgcolor": "rgba(0,0,0,0)"},
+        autosize=True
     )
-    fig.update_xaxes(type="date", dtick="M1")
+    fig.update_xaxes(type="date")
 
     return fig.to_json()
 
