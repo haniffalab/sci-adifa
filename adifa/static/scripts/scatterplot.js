@@ -279,7 +279,11 @@
         for (const k in arr) {
           if (Object.prototype.hasOwnProperty.call(arr, k)) {
             document.getElementById(colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + '-' + k).style.backgroundColor = catColors(arr[k])
-            checkboxCheck[arr[k]] = $('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + arr[k] + '"]').is(':checked')
+            if (colorScaleType === 'boolean') {
+              checkboxCheck[arr[k]] = arr[k] === $('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + '"]:checked').val()
+            } else {
+              checkboxCheck[arr[k]] = $('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + arr[k] + '"]').is(':checked')
+            }
           }
         }
         myColor = function (d) { // Public Method
