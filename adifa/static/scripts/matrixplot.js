@@ -491,9 +491,10 @@
           .append(
             $('<div/>')
               .attr('id', 'canvas-controls')
+              .attr('class', 'd-flex justify-content-end flex-row flex-wrap mt-3 py-3 px-3 w-100 gap-1')
               .append(
                 $('<div/>')
-                  .addClass('btn-group mb-3 mr-1')
+                  .addClass('btn-group mr-1')
                   .append(
                     $('<select/>')
                       .attr('id', 'palette')
@@ -528,7 +529,7 @@
                           .text('Cool'))))
               .append(
                 $('<div/>')
-                  .addClass('btn-group mb-3 mr-1')
+                  .addClass('btn-group mr-1')
                   .append(
                     $('<a/>')
                       .attr('id', 'canvas-zoom-plus')
