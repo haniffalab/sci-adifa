@@ -107,7 +107,8 @@
         colorScaleKey = Cookies.get('ds' + datasetId + '-obs-name') || null
         colorScaleType = Cookies.get('ds' + datasetId + '-obs-type') || null
         spatialMode = Cookies.get('ds' + datasetId + '-spatial-mode') || null
-        mask = Cookies.get('ds' + datasetId + '-spatial-mask') || masks[0]
+        mask = Cookies.get('ds' + datasetId + '-spatial-mask') || null
+        mask = mask && masks.includes(mask) ? mask : masks[0]
         colormap = Cookies.get('ds' + datasetId + '-spatial-cm') || colormaps[0]
         if (spatialMode === null && colorScaleType && colorScaleKey) {
           setMode(colorScaleType === 'gene' ? 'gene_expression' : 'counts')
@@ -134,7 +135,7 @@
     const populateModes = function () {
       spatialModes.forEach(function (mode) {
         $('#spatial-mode-dropdown').append(
-          `<a id="spatial-mode-${mode}" href="#" data-name="${mode}" class="dropdown-item spatial-mode">${mode.replaceAll('_', ' ')}</a>`
+          `<a id="spatial-mode-${mode}" href="#" data-name="${mode}" class="dropdown-item spatial-mode">${mode.replaceAll('_', ' ').replace('percentage', '%').replace('proportion', '%')}</a>`
         )
       })
       displayModes()
@@ -192,7 +193,7 @@
 
     const loadPlot = function () {
       // startLoader()
-      $('#spatial-mode').text(spatialMode ? spatialMode.replaceAll('_', ' ') : '')
+      $('#spatial-mode').text(spatialMode ? spatialMode.replaceAll('_', ' ').replace('percentage', '%').replace('proportion', '%') : '')
       $('#spatial-mask').text(mask ? mask.replaceAll('_', ' ') : '')
       $('#spatial-error').addClass('d-none')
       $('#spatial-div').show()

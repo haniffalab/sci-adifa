@@ -436,11 +436,11 @@ def plot_polygons(
                 )
             ),
             hoveron="fills",
-            text=text_template(
+            text=wrap_text(text_template(
                 key=key,
                 value=[val for k, val in values_dict.items() if k in key][0],
                 sum_values=sum(values),
-            )
+            ))
             if text_template
             else None,
             hoverinfo="text+x+y",
