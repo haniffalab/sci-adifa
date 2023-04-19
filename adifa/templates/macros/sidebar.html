@@ -5,14 +5,16 @@
     <div class="list-group list-group-flush"> 
       {% for cat, obs in dataset.data_obs.items()|groupby("1.category")|sort %}
         {% if cat|length > 0 %}
-          <div data-toggle="collapse" data-target="#collapse-cat-{{cat}}"
-            aria-controls="collapse-cat-{{cat}}">
-            <h6 class="main-sidebar__nav-title px-3">&nbsp;&nbsp;
-              {{ cat|replace("_"," ") }}
+          <div class="collapse-cat" data-toggle="collapse" data-target="#collapse-cat-{{cat}}"
+            aria-controls="collapse-cat-{{cat}}" aria-expanded="false">
+            <h6 class="main-sidebar__nav-title px-3">
+              <i class="fa fa-chevron-down"></i>
+              <i class="fa fa-chevron-up"></i>
+              &nbsp;&nbsp;{{ cat|replace("_"," ") }}
             </h6>
           </div>
         {% endif %}
-        <div id="collapse-cat-{{cat}}" aria-labelledby="heading-cat-{{cat}}" class="collapse show"> 
+        <div id="collapse-cat-{{cat}}" aria-labelledby="heading-cat-{{cat}}" class="collapse"> 
           {% for ob, ob_item in obs|sort %}
             <div class="list-group-item justify-content-between align-items-center"
               data-toggle="collapse" data-target="#collapse-{{ob}}" aria-controls="collapse-{{ob}}">
