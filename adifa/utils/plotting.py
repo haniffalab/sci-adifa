@@ -204,6 +204,10 @@ def plot_gene_expression(
     df_of_values = (adata.varm[adata.uns["masks"][mask]["varm"]].T)[gene]
     values = list(df_of_values.values)
 
+    #from sklearn.preprocessing import MinMaxScaler
+    #scaler = MinMaxScaler()
+    #values = np.concatenate(scaler.fit_transform(np.array(values).reshape(-1, 1))).tolist()
+
     title = f"Mean gene expression of <br> {gene} <br> for each section"
     text_template = partial(
         "<br>".join(
