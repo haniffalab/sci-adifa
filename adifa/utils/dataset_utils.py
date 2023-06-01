@@ -47,6 +47,7 @@ def auto_discover():
                 new.data_obs = annotations.get("obs")
                 new.data_obsm = annotations.get("obsm")
                 new.data_var = annotations.get("var")
+                new.has_masks = annotations.get("has_masks")
                 new.genes_deg = adata_utils.get_degs(adata)
                 new.title = filename
                 try:
@@ -62,6 +63,7 @@ def auto_discover():
                 record.data_obs = annotations.get("obs")
                 record.data_obsm = annotations.get("obsm")
                 record.data_var = annotations.get("var")
+                record.has_masks = annotations.get("has_masks")
                 record.genes_deg = adata_utils.get_degs(adata)
                 try:
                     db.session.commit()

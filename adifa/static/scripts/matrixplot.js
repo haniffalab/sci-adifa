@@ -36,12 +36,19 @@
       xhrPool = $.grep(xhrPool, function (x) { return x !== jqXHR })
     })
 
+    const abort = function () {
+      $.each(xhrPool, function (idx, jqXHR) {
+        jqXHR.abort()
+      })
+    }
+
     const escapeSelector = function (s) {
       return s.replace(/(:|\.|\[|\])/g, '\\$1')
     }
 
     // private methods
     const startLoader = function (id) {
+      $('#matrixplot-container').show()
       $('#canvas-loader').html('<div class="btn-group mb-3"><a class="btn btn-white">Loading...</a></div>')
       $('#loader').html('<div class="spinner"><div class="double-bounce1"></div><div class="double-bounce2"></div></div>')
       $('#canvas-controls').hide()
@@ -56,7 +63,7 @@
       $('#canvas-controls').show()
     }
 
-    const showError = function (message = false) {
+    const showMessage = function (message = null) {
       if (message) {
         $('#matrixplot-alert').removeClass('d-none').append(
           $('<div/>')
@@ -64,9 +71,25 @@
             .attr('role', 'alert')
             .text(message))
       }
-      $('#canvas-loader').html('<div class="btn-group mb-3"><a class="btn btn-white">Error</a></div>')
+      $('#canvas-loader').empty()
       $('#canvas-controls').hide()
+      $('#matrixplot-container').hide()
       $('#loader').removeClass().empty()
+    }
+
+    const showError = function (error) {
+      if (!(error.status === 0 && error.statusText === 'abort')) {
+        if (error.statusText) {
+          $('#matrixplot-alert').removeClass('d-none').append(
+            $('<div/>')
+              .addClass('alert alert-danger')
+              .attr('role', 'alert')
+              .text(error.statusText))
+        }
+        $('#canvas-loader').html('<div class="btn-group mb-3"><a class="btn btn-white">Error</a></div>')
+        $('#canvas-controls').hide()
+        $('#loader').removeClass().empty()
+      }
     }
 
     const transform = function (object) {
@@ -105,12 +128,12 @@
 
     const loadData = function () {
       if (!colorScaleKey) {
-        showError('Please select a group from the list of observations')
+        showMessage('Please select a group from the list of observations')
         return
       }
 
       if (!varList.length) {
-        showError('Select genes of interest from the sidebar on the right')
+        showMessage('Select genes of interest from the sidebar on the right')
         return
       }
 
@@ -143,6 +166,8 @@
       // http://bl.ocks.org/ianyfchang/8119685
 
       //= =================================================
+      $('#matrixplot-container').show()
+
       const tooltip = d3.select('#canvas_plot')
         .append('div')
         .style('position', 'absolute')
@@ -161,7 +186,7 @@
         $('.btn-gene-select').removeClass('active')
       }
       if (colorScaleId) {
-        $('#collapse' + colorScaleId).collapse('show')
+        $('#collapse-' + colorScaleId).collapse('show')
       }
       if (varList.length) {
         varList.forEach(function (v) {
@@ -193,6 +218,14 @@
           }
         })
       }
+
+      const groupedValues = Object.fromEntries(
+        Object.entries(active.data.values_df)
+          .map(([k, v]) =>
+            ([[k], Object.fromEntries(
+              myGroups.map((g) => ([[g], v[g]]))
+            )]
+            )))
 
       let svg = d3.select('#canvas_plot')
         .append('svg')
@@ -300,7 +333,7 @@
 
       let uid = 0
       svg.selectAll()
-        .data(Object.entries(active.data.values_df), function (d) { return d[1] })
+        .data(Object.entries(groupedValues), function (d) { return d[1] })
         .enter()
         .selectAll()
         .data(function (d, i) {
@@ -458,9 +491,10 @@
           .append(
             $('<div/>')
               .attr('id', 'canvas-controls')
+              .attr('class', 'd-flex justify-content-end flex-row flex-wrap mt-3 py-3 px-3 w-100 gap-1')
               .append(
                 $('<div/>')
-                  .addClass('btn-group mb-3 mr-1')
+                  .addClass('btn-group mr-1')
                   .append(
                     $('<select/>')
                       .attr('id', 'palette')
@@ -495,7 +529,7 @@
                           .text('Cool'))))
               .append(
                 $('<div/>')
-                  .addClass('btn-group mb-3 mr-1')
+                  .addClass('btn-group mr-1')
                   .append(
                     $('<a/>')
                       .attr('id', 'canvas-zoom-plus')
@@ -536,6 +570,8 @@
       varList = Cookies.get('ds' + datasetId + '-var-list')
         ? JSON.parse(Cookies.get('ds' + datasetId + '-var-list'))
         : ['ALB', 'AFP', 'C3', 'HP', 'SAA1', 'RARRES2', 'LRP1', 'NR1H4', 'NNMT', 'HPD', 'CES2', 'C1R', 'AOX1', 'GLUL']
+
+      $('#palette').val(colorScale)
 
       // get data
       startLoader()
@@ -593,7 +629,8 @@
 
       // get data
       startLoader()
-      loadData()
+      abort()
+      setTimeout(function () { loadData() }, 100)
     }
 
     this.genes = function (el) {
@@ -619,7 +656,8 @@
 
       // get data
       startLoader()
-      loadData()
+      abort()
+      setTimeout(function () { loadData() }, 100)
     }
 
     this.resetGenes = function () {
@@ -640,7 +678,8 @@
     }
 
     this.changePalette = function (paletteName) {
-      Cookies.set('d3-scale-chromatic', paletteName, {
+      colorScale = paletteName
+      Cookies.set('d3-scale-chromatic', colorScale, {
         expires: 30,
         sameSite: 'Strict',
         path: window.location.pathname
@@ -650,6 +689,7 @@
 
     $('.select2-gene-search').select2({
       placeholder: 'Search by name',
+      width: '100%',
       // closeOnSelect: false,
       sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
       ajax: {
@@ -681,6 +721,7 @@
 
     $('.select2-disease-search').select2({
       placeholder: 'Search for diseases',
+      width: '100%',
       sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
       ajax: {
         url: API_SERVER + 'api/v1/datasets/' + datasetId + '/search/diseases',

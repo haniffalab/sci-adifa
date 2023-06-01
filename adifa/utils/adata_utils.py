@@ -17,7 +17,7 @@ from adifa.resources.errors import (
 
 
 def get_annotations(adata):
-    annotations = {"obs": {}, "obsm": [], "var": []}
+    annotations = {"obs": {}, "obsm": [], "var": [], "has_masks": False}
 
     switcher = {
         "category": type_category,
@@ -26,6 +26,12 @@ def get_annotations(adata):
         "float": type_numeric,
         "complex": type_numeric,
     }
+
+    obs_cat = {}
+    if "column_ordering" in adata.uns:
+        for k in adata.uns["column_ordering"]:
+            for v in adata.uns["column_ordering"][k]:
+                obs_cat[v] = k
 
     for name in adata.obs:
         # Map numpy dtype to a simple type for switching
@@ -36,9 +42,13 @@ def get_annotations(adata):
         slug = re.sub(r"[^a-zA-Z0-9]", "", name).lower()
         annotations["obs"][slug] = func(adata.obs[name])
         annotations["obs"][slug]["name"] = name
+        annotations["obs"][slug]["category"] = obs_cat.get(name, "")
 
     annotations["obsm"] = adata.obsm_keys()
     annotations["var"] = adata.var_names.tolist()
+
+    if "masks" in adata.uns and len(adata.uns["masks"].keys()):
+        annotations["has_masks"] = True
 
     return annotations
 
@@ -123,6 +133,16 @@ def get_coordinates(datasetId, obsm):
     return output
 
 
+def get_masks(datasetId):
+    dataset = models.Dataset.query.get(datasetId)
+    adata = current_app.adata[dataset.filename]
+
+    if "masks" in adata.uns:
+        return list(adata.uns["masks"].keys())
+    else:
+        return []
+
+
 def get_labels(datasetId, obsm, gene="", obs=""):
     dataset = models.Dataset.query.get(datasetId)
     adata = current_app.adata[dataset.filename]
@@ -194,7 +214,7 @@ def categorised_expr(datasetId, cat, gene, func="mean"):
         expr = grouping.median()
 
     # counts = grouping.count()/grouping.count().sum()
-    #'count': counts.loc[group,gene]
+    # 'count': counts.loc[group,gene]
     output = [
         {"gene": gene, "cat": group, "expr": float(expr.loc[group, gene])}
         for group in grouping.groups.keys()

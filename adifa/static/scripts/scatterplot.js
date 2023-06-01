@@ -1,7 +1,7 @@
 /* global Cookies */
 /* global API_SERVER */
 /* global deck */
-/* global d3 */
+/* global d3scale */
 (function ($) {
   $.fn.scatterplot = function (options) {
     const defaults = {
@@ -263,7 +263,7 @@
         $('.btn-gene-select').removeClass('active')
       }
       if (colorScaleId) {
-        $('#collapse' + colorScaleId).collapse('show')
+        $('#collapse-' + colorScaleId).collapse('show')
         $('#colourise' + colorScaleId).addClass('active')
       }
 
@@ -274,12 +274,16 @@
 
       if (['categorical', 'boolean', 'date'].includes(colorScaleType)) {
         const arr = active.dataset.data_obs[colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()].values
-        const catColors = d3.scaleOrdinal().domain($.map(arr, (v, k) => v)).range(['#2f4f4f', '#2e8b57', '#7f0000', '#808000', '#483d8b', '#008000', '#000080', '#8b008b', '#b03060', '#ff0000', '#00ced1', '#ff8c00', '#ffff00', '#00ff00', '#8a2be2', '#00ff7f', '#dc143c', '#00bfff', '#f4a460', '#0000ff', '#f08080', '#adff2f', '#d8bfd8', '#ff00ff', '#1e90ff', '#90ee90', '#ff1493', '#7b68ee', '#ee82ee', '#ffdab9'])
+        const catColors = d3scale.scaleOrdinal().domain($.map(arr, (v, k) => v)).range(['#2f4f4f', '#2e8b57', '#7f0000', '#808000', '#483d8b', '#008000', '#000080', '#8b008b', '#b03060', '#ff0000', '#00ced1', '#ff8c00', '#ffff00', '#00ff00', '#8a2be2', '#00ff7f', '#dc143c', '#00bfff', '#f4a460', '#0000ff', '#f08080', '#adff2f', '#d8bfd8', '#ff00ff', '#1e90ff', '#90ee90', '#ff1493', '#7b68ee', '#ee82ee', '#ffdab9'])
         const checkboxCheck = {}
         for (const k in arr) {
           if (Object.prototype.hasOwnProperty.call(arr, k)) {
             document.getElementById(colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + '-' + k).style.backgroundColor = catColors(arr[k])
-            checkboxCheck[arr[k]] = $('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + arr[k] + '"]').is(':checked')
+            if (colorScaleType === 'boolean') {
+              checkboxCheck[arr[k]] = arr[k] === $('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + '"]:checked').val()
+            } else {
+              checkboxCheck[arr[k]] = $('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + arr[k] + '"]').is(':checked')
+            }
           }
         }
         myColor = function (d) { // Public Method
@@ -297,11 +301,11 @@
         //   }
         // }
       } else if (colorScaleType === 'continuous') {
-        myColor = d3.scaleSequential().domain([active.dataset.data_obs[colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()].min, active.dataset.data_obs[colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()].max]).interpolator(d3.interpolateViridis)
+        myColor = d3scale.scaleSequential().domain([active.dataset.data_obs[colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()].min, active.dataset.data_obs[colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()].max]).interpolator(d3scale.interpolateViridis)
         $('#continuous-legend').empty()
         createLegend(myColor)
       } else if (colorScaleType === 'gene') {
-        myColor = d3.scaleSequential().domain([active.min, active.max]).interpolator(d3.interpolateViridis)
+        myColor = d3scale.scaleSequential().domain([active.min, active.max]).interpolator(d3scale.interpolateViridis)
         $('#continuous-legend').empty()
         createLegend(myColor)
       } else {
@@ -331,7 +335,7 @@
           return [d[0], d[1], 0]
         },
         getFillColor: function (d) {
-          const v = d3.rgb(myColor(d[2]))
+          const v = d3scale.rgb(myColor(d[2]))
           return [v.r, v.g, v.b]
           // return [160, 160, 180, 200]
         },
@@ -358,7 +362,7 @@
       const legendwidth = 80
       const margin = { top: 10, right: 60, bottom: 10, left: 0 }
 
-      const canvas = d3.select(selectorId)
+      const canvas = d3scale.select(selectorId)
         .style('height', legendheight + 'px')
         .style('width', '100%')// legendwidth + 'px')
         .style('position', 'absolute')
@@ -377,14 +381,14 @@
 
       const ctx = canvas.getContext('2d')
 
-      const legendscale = d3.scaleLinear()
+      const legendscale = d3scale.scaleLinear()
         .range([legendheight - margin.top - margin.bottom, 1])
         .domain(colorscale.domain())
 
       // image data hackery based on http://bl.ocks.org/mbostock/048d21cf747371b11884f75ad896e5a5
       const image = ctx.createImageData(1, legendheight)
-      d3.range(legendheight).forEach(function (i) {
-        const c = d3.rgb(colorscale(legendscale.invert(i)))
+      d3scale.range(legendheight).forEach(function (i) {
+        const c = d3scale.rgb(colorscale(legendscale.invert(i)))
         image.data[4 * i] = c.r
         image.data[4 * i + 1] = c.g
         image.data[4 * i + 2] = c.b
@@ -395,18 +399,18 @@
       // A simpler way to do the above, but possibly slower. keep in mind the legend width is stretched because the width attr of the canvas is 1
       // See http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
       /*
-              d3.range(legendheight).forEach(function(i) {
+              d3scale.range(legendheight).forEach(function(i) {
               ctx.fillStyle = colorscale(legendscale.invert(i));
               ctx.fillRect(0,i,1,1);
               });
               */
 
-      const legendaxis = d3.axisRight()
+      const legendaxis = d3scale.axisRight()
         .scale(legendscale)
         .tickSize(6)
         .ticks(6)
 
-      const svg = d3.select(selectorId)
+      const svg = d3scale.select(selectorId)
         .append('svg')
         .attr('height', (legendheight) + 'px')
         .attr('width', (legendwidth) + 'px')
@@ -439,9 +443,10 @@
           .append(
             $('<div/>')
               .attr('id', 'canvas-controls')
+              .attr('class', 'd-flex justify-content-end flex-row flex-wrap mt-3 py-3 px-3 w-100 gap-1')
               .append(
                 $('<div/>')
-                  .addClass('btn-group mb-3 mr-1')
+                  .addClass('btn-group mr-1')
                   .append(
                     $('<a/>')
                       .attr('id', 'canvas-zoom-plus')
@@ -465,7 +470,7 @@
                           .addClass('fa fa-expand'))))
               .append(
                 $('<div/>')
-                  .addClass('btn-group mb-3 mr-1')
+                  .addClass('btn-group mr-1')
                   .append(
                     $('<a/>')
                       .attr('id', 'color-scale')
@@ -486,7 +491,7 @@
                           .addClass('fa fa-times'))))
               .append(
                 $('<div/>')
-                  .addClass('btn-group mb-3 mr-1')
+                  .addClass('btn-group mr-1')
                   .append(
                     $('<a/>')
                       .attr('id', 'color-scale')
@@ -500,7 +505,7 @@
                           .text(0))))
               .append(
                 $('<div/>')
-                  .addClass('btn-group mb-3 dropdown')
+                  .addClass('btn-group dropdown')
                   .append(
                     $('<button/>')
                       .attr('id', 'canvas-obsm-key')
@@ -738,6 +743,7 @@
 
     $('.select2-gene-search').select2({
       // closeOnSelect: false,
+      width: '100%',
       sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
       ajax: {
         url: API_SERVER + 'api/v1/datasets/' + datasetId + '/search/genes',
@@ -770,6 +776,7 @@
 
     $('.select2-disease-search').select2({
       placeholder: 'Search for diseases',
+      width: '100%',
       sorter: data => data.sort((a, b) => a.text.localeCompare(b.text)),
       ajax: {
         url: API_SERVER + 'api/v1/datasets/' + datasetId + '/search/diseases',

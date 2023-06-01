@@ -28,8 +28,10 @@
       </div>      
     </div>
     {% endif %}
-    <span class="text-uppercase page-subtitle"><a href="{{ config.HOME_URL or url_for('datasets.index') }}">Home</a> &#187; {{ breadcrumbs }}</span>
-    <h3 class="page-title my-1">{{ title }}</h3>
+    <div class="page-title">
+      <span class="text-uppercase page-subtitle"><a href="{{ config.HOME_URL or url_for('datasets.index') }}">Home</a> &#187; {{ breadcrumbs }}</span>
+      <h3 class="my-1">{{ title }}</h3>
+    </div>
   </div>
 </div>
 {% endmacro %}

@@ -1,5 +1,3 @@
-import json
-
 from flask import jsonify, request
 from flask_restful import Resource
 
@@ -23,6 +21,13 @@ class Coordinates(Resource):
         obsm = request.args.get("embedding", "X_umap", type=str)
 
         return adata_utils.get_coordinates(datasetId, obsm)
+
+
+class Masks(Resource):
+    def get(self):
+        datasetId = request.args.get("datasetId", 0, type=int)
+
+        return adata_utils.get_masks(datasetId)
 
 
 class Labels(Resource):
