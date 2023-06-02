@@ -7,6 +7,7 @@ from functools import partial
 
 from flask import current_app
 from sqlalchemy import exc
+import zarr
 import scanpy as sc
 import pandas as pd
 import numpy as np
@@ -17,6 +18,12 @@ import datetime
 from dateutil.relativedelta import relativedelta
 
 from adifa import models
+from adifa.utils.adata_utils import (
+    parse_data,
+    parse_array,
+    parse_group,
+    get_group_index,
+)
 from adifa.resources.errors import (
     InvalidDatasetIdError,
     DatabaseOperationError,
@@ -67,15 +74,40 @@ def get_matrixplot(
     except (ValueError, AttributeError) as e:
         raise DatasetNotExistsError
 
-    var_intersection = list(set(adata.var.index) & set(var_names))
+    vars = get_group_index(adata["var"])[:]
+    var_intersection = [
+        x for x in var_names if x in set(vars)
+    ]  # preserve var_names order
 
-    if adata.obs[groupby].dtype == "bool":
-        adata.obs[groupby] = adata.obs[groupby].astype("str").astype("category")
+    sorter = np.argsort(vars)
+    var_indx = sorter[np.searchsorted(vars, var_intersection, sorter=sorter)]
+
+    if type(adata["obs"][groupby]).__name__ == "Group":
+        obs_df = pd.DataFrame(
+            [str(x) for x in list(parse_group(adata["obs"][groupby]))],
+            index=get_group_index(adata["obs"])[:],
+            columns=[groupby],
+        )
+    else:
+        obs_arr = parse_array(adata["obs"][groupby], adata)
+        obs_df = pd.DataFrame(
+            [int(x) for x in list(obs_arr)]
+            if obs_arr.dtype in ["int"]
+            else [float(x) for x in list(obs_arr)]
+            if obs_arr.dtype in ["float"]
+            else [str(x) for x in list(obs_arr)],
+            index=get_group_index(adata["obs"])[:],
+            columns=[groupby],
+        )
+    tempdata = sc.AnnData(adata["X"].oindex[:, var_indx])
+
+    tempdata.var_names = var_intersection
+    tempdata.obs = obs_df
 
     plot = sc.pl.matrixplot(
-        adata,
-        var_intersection,
-        groupby,
+        tempdata,
+        var_intersection,  # multiple var
+        groupby,  # single obs
         use_raw,
         log,
         num_categories,
@@ -116,7 +148,7 @@ def get_matrixplot(
         "values_df": json.loads(plot.values_df.to_json()),
         "min_value": str(plot.values_df.min().min()),
         "max_value": str(plot.values_df.max().max()),
-        "excluded": list(set(var_names).difference(adata.var.index)),
+        "excluded": list(set(var_names).difference(vars)),
     }
 
     return output
@@ -129,9 +161,9 @@ def get_spatial_plot(
     cat: str = None,
     plot_value: list[str] = [],
     colormap: str = "viridis",
-    scale_mode: str = "auto",
-    scale_max: int = 15,
-    scale_min: int = 0,
+    # scale_mode: str = "auto",
+    # scale_max: int = 15,
+    # scale_min: int = 0,
     # tick_no: int = 8,
     scale_log: bool = False,
     plot_covid: bool = False,
@@ -154,59 +186,112 @@ def get_spatial_plot(
 
     # Check settings defined in function input
 
-    cat1 = adata.uns["masks"][mask]["obs"]
+    cat1 = adata.uns["masks"][mask]["obs"][()]
     cat2 = cat  # change to annotations of interest
     cmap = mpl.colormaps[
         colormap
     ]  # using premade colormaps e.g. viridis, plasma, inferno, magma, cividis, Reds
-    scale = scale_mode  # for the color bar: auto, manual
-    scale_lower_value = scale_min
-    scale_upper_value = scale_max
+    # scale = scale_mode  # for the color bar: auto, manual
+    # scale_lower_value = scale_min
+    # scale_upper_value = scale_max
 
-    adata.obs[cat1] = adata.obs[cat1].astype("category")
+    obs_cat1 = pd.Categorical(parse_data(adata.obs[cat1]))
+    obs_cat2 = parse_data(adata.obs[cat2], adata)
 
     if not mode:
         return plot_categorical(
-            adata, mode, cat1, cat2, plot_value, cmap, colormap, mask
+            adata=adata,
+            mode=mode,
+            obs_cat1=obs_cat1,
+            obs_cat2=obs_cat2,
+            plot_value=plot_value,
+            cmap=cmap,
+            colormap=colormap,
+            mask=mask,
         )
     if mode in ["counts", "percentage_within_sections", "percentage_across_sections"]:
+        # cat2 is categorical
         if len(plot_value) > 1:
-            adata.obs["combined_annotation"] = adata.obs[cat2].copy().astype(str)
+            obs_cat2_df = pd.DataFrame(
+                obs_cat2.astype(str),
+                index=get_group_index(adata.obs),
+                columns=["combined_annotation"],
+            )
             for value in plot_value:
-                adata.obs.loc[
-                    adata.obs[cat2].isin([value]), "combined_annotation"
+                obs_cat2_df.loc[
+                    obs_cat2.isin([value]), "combined_annotation"
                 ] = "combined_annotation"
-            cat2 = "combined_annotation"
+            obs_cat2 = pd.Categorical(obs_cat2_df["combined_annotation"])
             plot_value = "combined_annotation"
 
-            adata.obs[cat2] = adata.obs[cat2].astype(str).astype("category")
-
         return plot_categorical(
-            adata, mode, cat1, cat2, plot_value, cmap, colormap, mask
+            adata=adata,
+            mode=mode,
+            obs_cat1=obs_cat1,
+            obs_cat2=obs_cat2,
+            plot_value=plot_value,
+            cmap=cmap,
+            colormap=colormap,
+            mask=mask,
         )
     elif mode == "gene_expression":
-        return plot_gene_expression(adata, cat1, mask, plot_value[0], cmap, colormap)
+        return plot_gene_expression(
+            adata=adata,
+            obs_cat1=obs_cat1,
+            mask=mask,
+            gene=plot_value[0],
+            cmap=cmap,
+            colormap=colormap,
+        )
     elif mode == "distribution":
-        return plot_distribution(adata, cat1, cat2, cmap, scale_log)
+        return plot_distribution(
+            cat1=cat1,
+            cat2=cat2,
+            obs_cat1=obs_cat1,
+            obs_cat2=obs_cat2,
+            cmap=cmap,
+            scale_log=scale_log,
+        )
     elif mode in ["proportion_within_sections", "proportion_across_sections"]:
-        return plot_proportion(adata, mode, cat1, cat2, cmap, colormap, mask, plot_value[0])
+        return plot_proportion(
+            adata=adata,
+            mode=mode,
+            cat2=cat2,
+            obs_cat1=obs_cat1,
+            obs_cat2=obs_cat2,
+            cmap=cmap,
+            colormap=colormap,
+            mask=mask,
+            plot_value=plot_value[0],
+        )
     elif mode == "date":
         return plot_date(
-            adata, cat2, use_premade_info, plot_covid, datetime_add_info_col
+            adata=adata,
+            cat2=cat2,
+            obs_cat2=obs_cat2,
+            use_premade_info=use_premade_info,
+            plot_covid=plot_covid,
+            datetime_add_info_col=datetime_add_info_col,
         )
     else:
         raise
 
 
 def plot_gene_expression(
-    adata: sc.AnnData, cat1: str, mask: str, gene: str, cmap, colormap: str
+    adata: sc.AnnData,
+    obs_cat1: pd.Categorical,
+    mask: str,
+    gene: str,
+    cmap,
+    colormap: str,
 ):
-    df_of_values = (adata.varm[adata.uns["masks"][mask]["varm"]].T)[gene]
+    group_df = parse_group(adata.varm[adata.uns["masks"][mask]["varm"][()]])
+    df_of_values = (group_df.T)[gene]
     values = list(df_of_values.values)
 
-    #from sklearn.preprocessing import MinMaxScaler
-    #scaler = MinMaxScaler()
-    #values = np.concatenate(scaler.fit_transform(np.array(values).reshape(-1, 1))).tolist()
+    # from sklearn.preprocessing import MinMaxScaler
+    # scaler = MinMaxScaler()
+    # values = np.concatenate(scaler.fit_transform(np.array(values).reshape(-1, 1))).tolist()
 
     title = f"Mean gene expression of <br> {gene} <br> for each section"
     text_template = partial(
@@ -220,15 +305,16 @@ def plot_gene_expression(
     )
 
     return plot_polygons(
-        adata, cat1, mask, values, title, cmap, colormap, text_template
+        adata, obs_cat1, mask, values, title, cmap, colormap, text_template
     )
 
 
 def plot_proportion(
     adata: sc.AnnData,
     mode: str,
-    cat1: str,
     cat2: str,
+    obs_cat1: pd.Categorical,
+    obs_cat2: pd.Categorical,
     cmap,
     colormap: str,
     mask: str,
@@ -236,26 +322,21 @@ def plot_proportion(
 ):
 
     if not plot_value:
-        values = [0] * len(adata.obs[cat1])
+        values = [0] * len(obs_cat1)
         title = "Nothing selected to visualise"
 
-        return plot_polygons(adata, cat1, mask, values, title, cmap, colormap)
+        return plot_polygons(adata, obs_cat1, mask, values, title, cmap, colormap)
 
     else:
-        adata.obs[cat1] = adata.obs[cat1].astype("category")
-        adata.obs[cat2] = adata.obs[cat2].astype(str).astype("category")
+        obs_cat2 = pd.Categorical(obs_cat2.astype("str"))
 
-        counts_table = pd.crosstab(adata.obs[cat1], adata.obs[cat2])
+        counts_table = pd.crosstab(obs_cat1, obs_cat2)
 
         if mode == "proportion_within_sections":
 
-            values = (
-                counts_table[plot_value] / counts_table.sum(axis=1) * 100
-            ).values
+            values = (counts_table[plot_value] / counts_table.sum(axis=1) * 100).values
 
-            title = (
-                f"Percentage of {plot_value} <br> {cat2} <br> values within section"
-            )
+            title = f"Percentage of {plot_value} <br> {cat2} <br> values within section"
             text_template = partial(
                 "<br>".join(
                     [
@@ -265,13 +346,11 @@ def plot_proportion(
                     ]
                 ).format,
                 cat2=cat2,
-                b="" if plot_value == "True" else " not"
+                b="" if plot_value == "True" else " not",
             )
-        
+
         elif mode == "proportion_across_sections":
-            values = (
-                counts_table / counts_table.sum() * 100
-            )[plot_value].values
+            values = (counts_table / counts_table.sum() * 100)[plot_value].values
 
             title = (
                 f"Percentage of {plot_value} <br> {cat2} <br> values across sections"
@@ -285,19 +364,19 @@ def plot_proportion(
                     ]
                 ).format,
                 cat2=cat2,
-                b="" if plot_value == "True" else " not"
+                b="" if plot_value == "True" else " not",
             )
 
         return plot_polygons(
-            adata, cat1, mask, values, title, cmap, colormap, text_template
+            adata, obs_cat1, mask, list(values), title, cmap, colormap, text_template
         )
 
 
 def plot_categorical(
     adata: sc.AnnData,
     mode: str,
-    cat1: str,
-    cat2: str,
+    obs_cat1: pd.Categorical,
+    obs_cat2: pd.Categorical,
     plot_value: Union[list[str], str],
     cmap,
     colormap: str,
@@ -305,16 +384,16 @@ def plot_categorical(
 ):
 
     if not mode or not plot_value or not len(plot_value):
-        values = [0] * len(adata.obs[cat1])
+        values = [0] * len(obs_cat2)
         title = "Nothing selected to visualise"
 
-        return plot_polygons(adata, cat1, mask, values, title, cmap, colormap)
+        return plot_polygons(adata, obs_cat1, mask, values, title, cmap, colormap)
     elif isinstance(plot_value, list):
         plot_value = plot_value[0]
 
-    assert adata.obs[cat2].dtype == "category"
+    assert obs_cat2.dtype == "category"
 
-    counts_table = pd.crosstab(adata.obs[cat1], adata.obs[cat2])
+    counts_table = pd.crosstab(obs_cat1, obs_cat2)
 
     if mode == "counts":
         df_of_values = counts_table[plot_value]
@@ -368,15 +447,15 @@ def plot_categorical(
         )
 
     return plot_polygons(
-        adata, cat1, mask, values, title, cmap, colormap, text_template
+        adata, obs_cat1, mask, values, title, cmap, colormap, text_template
     )
 
 
 def plot_polygons(
     adata: sc.AnnData,
-    cat1: str,
+    obs_cat1: pd.Categorical,
     mask: str,
-    values: list[str],
+    values: list[float],
     title: str,
     cmap,
     colormap: str = "viridis",
@@ -386,7 +465,7 @@ def plot_polygons(
     scale_upper_value: int = 100,
 ):
 
-    values_dict = dict(zip(adata.obs[cat1].unique(), values))
+    values_dict = dict(zip(obs_cat1.unique(), values))
 
     if scale == "auto":
         vmax = max(values) if max(values) > 0 else 1
@@ -440,11 +519,13 @@ def plot_polygons(
                 )
             ),
             hoveron="fills",
-            text=wrap_text(text_template(
-                key=key,
-                value=[val for k, val in values_dict.items() if k in key][0],
-                sum_values=sum(values),
-            ))
+            text=wrap_text(
+                text_template(
+                    key=key,
+                    value=[val for k, val in values_dict.items() if k in key][0],
+                    sum_values=sum(values),
+                )
+            )
             if text_template
             else None,
             hoverinfo="text+x+y",
@@ -482,14 +563,19 @@ def plot_polygons(
 
 
 def plot_distribution(
-    adata: sc.AnnData, cat1: str, cat2: str, cmap, scale_log: bool = False
+    cat1: str,
+    cat2: str,
+    obs_cat1: pd.Categorical,
+    obs_cat2: np.ndarray,
+    cmap,
+    scale_log: bool = False,
 ):
-    assert adata.obs[cat2].dtype in ["float64", "int32", "int64"]
+    assert obs_cat2.dtype in ["float64", "int32", "int64"]
 
     fig = go.Figure()
 
-    for index, section in enumerate(adata.obs[cat1].unique()):
-        values = (adata.obs[cat2][adata.obs[cat1].isin([section])]).values
+    for index, section in enumerate(obs_cat1.unique()):
+        values = obs_cat2[obs_cat1.isin([section])]
 
         # hover_info_text = "<br>".join(["<b>{section}</b>",
         #    "",
@@ -517,7 +603,7 @@ def plot_distribution(
         else:
             x_title = f"{cat2}"
 
-        l = len(adata.obs[cat1].unique())
+        l = len(obs_cat1.unique())
         c = cm.get_cmap(cmap, l)
         fig.add_trace(
             go.Violin(
@@ -553,26 +639,33 @@ def plot_distribution(
 def plot_date(
     adata: sc.AnnData,
     cat2: str,
+    obs_cat2: pd.Categorical,
     use_premade_info: bool = True,
     plot_covid: bool = False,
     datetime_add_info_col: str = "haniffa_ID",
 ):
 
-    adata.obs[cat2] = adata.obs[cat2].astype("datetime64[ns]")
+    obs_cat2 = obs_cat2.astype("datetime64[ns]")
 
     if use_premade_info == True:
-        Dates = adata.uns["premade_date_information"][cat2]["dates"]
+        Dates = list(adata.uns["premade_date_information"][cat2]["dates"][:])
         dates = []
         for d in Dates:
             dates.append(datetime.date(*list(d)))
         labels = [
             "{0:%d %b %Y}:\n{1}".format(d, l)
-            for l, d in zip(adata.uns["premade_date_information"][cat2]["labels"], dates)
+            for l, d in zip(
+                list(adata.uns["premade_date_information"][cat2]["labels"][:]), dates
+            )
         ]
     else:
         df_new = (
-            (adata.obs[[datetime_add_info_col, cat2]])
-            .reset_index(drop=True)
+            pd.DataFrame(
+                {
+                    datetime_add_info_col: parse_data(adata.obs[datetime_add_info_col]),
+                    cat2: obs_cat2,
+                }
+            )
             .drop_duplicates()
             .reset_index(drop=True)
         ).set_index(datetime_add_info_col)
@@ -588,32 +681,11 @@ def plot_date(
         dates = date_dict.values()
         dates = [i.date() for i in dates]
 
-    if plot_covid == True:
-        covid_start = datetime.date(2020, 3, 23)
-        covid_end = datetime.date(2022, 2, 24)
-
-        if covid_start < min(dates):
-            start_date = (covid_start - relativedelta(months=1)).replace(day=1)
-        else:
-            start_date = (min(dates) - relativedelta(months=1)).replace(day=1)
-
-        if covid_end > max(dates):
-            end_date = (covid_end + relativedelta(months=1)).replace(day=1)
-        else:
-            end_date = (max(dates) + relativedelta(months=1)).replace(day=1)
-    else:
-        start_date = (min(dates) - relativedelta(months=1)).replace(day=1)
-        end_date = (max(dates) + relativedelta(months=1)).replace(day=1)
-
-    #stems = np.zeros(len(dates))
-    #stems[::2] = 1  # 0.3
-    #stems[1::2] = -1  # -0.3
-
     data = [
         go.Scatter(
             x=dates,
-            y = np.zeros(len(dates)),
-            #y=stems,
+            y=np.zeros(len(dates)),
+            # y=stems,
             mode="markers",
             marker=dict(color="red"),
             text=labels,
@@ -641,67 +713,20 @@ def plot_date(
     # Plot the chart
     fig = go.Figure(data, layout)
 
-    #fig.add_hline(y=0)
-
-    fig.update_layout(title={
-        'text' : f'Timeline for {cat2}',
-        'y' : 0.9,
-        'x' : 0.5,
-        'xanchor' : 'center',
-        'yanchor' : 'top'
-    })
-
-    # add month ticks and labels
-    #for i in list(
-    #    (pd.date_range(start=start_date, end=end_date, freq="1MS")).map(
-    #        lambda d: str(d.date())
-    #    )
-    #):
-    #    x_axis_pos = datetime.date(*list(map(int, i.replace("-", " ").split(" "))))
-    #    fig.add_vline(x=x_axis_pos, y0=0.45, y1=0.55, line_width=1, line_color="black")
-    #    if (x_axis_pos.strftime("%B")[:3]) == "Jan":
-    #        fig.add_annotation(
-    #            dict(
-    #                font=dict(color="black", size=7),
-    #                x=x_axis_pos,
-    #                y=-0.3,
-    #                showarrow=False,
-    #                text=x_axis_pos.strftime("%B")[:3],
-    #                textangle=0,
-    #                xanchor="left",
-    #                xref="x",
-    #                yref="y",
-    #            )
-    #        )
-    #        fig.add_annotation(
-    #            dict(
-    #                font=dict(color="black", size=10),
-    #                x=x_axis_pos,
-    #                y=0.5,
-    #                showarrow=False,
-    #                text=x_axis_pos.strftime("%Y"),
-    #                textangle=0,
-    #                xanchor="left",
-    #                xref="x",
-    #                yref="y",
-    #            )
-    #        )
-    #    else:
-    #        fig.add_annotation(
-    #            dict(
-    #                font=dict(color="black", size=7),
-    #                x=x_axis_pos,
-    #                y=-0.3,
-    #                showarrow=False,
-    #                text=x_axis_pos.strftime("%B")[:3],
-    #                textangle=0,
-    #                xanchor="left",
-    #                xref="x",
-    #                yref="y",
-    #            )
-    #        )
+    fig.update_layout(
+        title={
+            "text": f"Timeline for {cat2}",
+            "y": 0.9,
+            "x": 0.5,
+            "xanchor": "center",
+            "yanchor": "top",
+        }
+    )
 
     if plot_covid:
+        covid_start = datetime.date(2020, 3, 23)
+        covid_end = datetime.date(2022, 2, 24)
+
         fig.add_vline(
             x=covid_start, y0=0.55, y1=0.65, line_width=1, line_color="purple"
         )
@@ -730,11 +755,19 @@ def plot_date(
             )
         )
 
-    fig.update_xaxes(showline=True, linewidth=2, linecolor='black', visible=True, fixedrange=False, autorange=True,  rangeslider=dict(autorange=True,thickness=0.3, bgcolor="#e4f7fe"))
+    fig.update_xaxes(
+        showline=True,
+        linewidth=2,
+        linecolor="black",
+        visible=True,
+        fixedrange=False,
+        autorange=True,
+        rangeslider=dict(autorange=True, thickness=0.3, bgcolor="#e4f7fe"),
+    )
     fig.update_yaxes(visible=False, fixedrange=True)
     fig.update_layout(
         {"plot_bgcolor": "rgba(0,0,0,0)", "paper_bgcolor": "rgba(0,0,0,0)"},
-        autosize=True
+        autosize=True,
     )
     fig.update_xaxes(type="date")
 

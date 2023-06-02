@@ -2,10 +2,10 @@ import os
 import re
 
 from flask import current_app
-from scipy.sparse import spmatrix
 from sqlalchemy import exc
 import scanpy as sc
 import numpy as np
+import zarr
 import pandas as pd
 
 from adifa import models
@@ -14,6 +14,65 @@ from adifa.resources.errors import (
     DatabaseOperationError,
     DatasetNotExistsError,
 )
+
+
+def get_group_index_name(group):
+    if "_index" in group.attrs:
+        return group.attrs["_index"]
+    else:
+        return "_index"
+
+
+def get_group_index(group):
+    if "_index" in group.attrs:
+        return group[group.attrs["_index"]]
+    else:
+        return group["_index"]
+
+
+def parse_data(data, store=None):
+    if type(data) == zarr.Group:
+        return parse_group(data)
+    elif type(data) == zarr.Array:
+        return parse_array(data, store)
+
+
+def parse_group(group):
+    if "_index" in group.attrs:
+        df = pd.DataFrame(index=group[group.attrs["_index"]])
+        for name in [
+            name
+            for name in group.array_keys()
+            if not name.startswith("_") and name != get_group_index_name(group)
+        ]:
+            df[name] = group[name]
+        return df
+    elif "codes" in group and "categories" in group:
+        series = pd.Categorical.from_codes(
+            group["codes"][:], categories=group["categories"][:]
+        )
+        if np.array_equal(
+            np.sort(series.categories.values), np.sort(["True", "False"])
+        ):
+            return series.map({"True": True, "False": False}).astype(bool)
+        return series
+
+
+def parse_array(array, store=None):
+    if "categories" in array.attrs:
+        series = pd.Categorical.from_codes(
+            array[:],
+            categories=store[
+                os.path.join(os.path.dirname(array.path), array.attrs["categories"])
+            ],
+        )
+        if np.array_equal(
+            np.sort(series.categories.values), np.sort(["True", "False"])
+        ):
+            return series.map({"True": True, "False": False}).astype(bool)
+        return series
+    else:
+        return array[:]
 
 
 def get_annotations(adata):
@@ -29,23 +88,47 @@ def get_annotations(adata):
 
     obs_cat = {}
     if "column_ordering" in adata.uns:
-        for k in adata.uns["column_ordering"]:
-            for v in adata.uns["column_ordering"][k]:
+        for k in adata.uns["column_ordering"].keys():
+            for v in adata.uns["column_ordering"][k][:]:
                 obs_cat[v] = k
 
-    for name in adata.obs:
+    for name in [
+        name
+        for name in adata.obs.array_keys()
+        if not name.startswith("_") and name != get_group_index_name(adata.obs)
+    ]:
+        array = parse_array(adata.obs[name], adata)
         # Map numpy dtype to a simple type for switching
-        dtype = re.sub(r"[^a-zA-Z]", "", adata.obs[name].dtype.name)
+        dtype = re.sub(r"[^a-zA-Z]", "", array.dtype.name)
         # Get the function from switcher dictionary
         func = switcher.get(dtype, type_discrete)
         # Define an API key safe
         slug = re.sub(r"[^a-zA-Z0-9]", "", name).lower()
-        annotations["obs"][slug] = func(adata.obs[name])
+        annotations["obs"][slug] = func(array)
         annotations["obs"][slug]["name"] = name
         annotations["obs"][slug]["category"] = obs_cat.get(name, "")
 
-    annotations["obsm"] = adata.obsm_keys()
-    annotations["var"] = adata.var_names.tolist()
+    for group in [
+        group
+        for group in adata.obs.group_keys()
+        if not group.startswith("_") and group != get_group_index_name(adata.obs)
+    ]:
+        if all(
+            a in list(adata.obs[group].array_keys()) for a in ["categories", "codes"]
+        ):
+            array = parse_group(adata.obs[group])
+            dtype = re.sub(r"[^a-zA-Z]", "", array.dtype.name)
+            # Get the function from switcher dictionary
+            func = switcher.get(dtype, type_discrete)
+            # Define an API key safe
+            slug = re.sub(r"[^a-zA-Z0-9]", "", group).lower()
+
+            annotations["obs"][slug] = func(array)
+            annotations["obs"][slug]["name"] = group
+            annotations["obs"][slug]["category"] = obs_cat.get(group, "")
+
+    annotations["obsm"] = [value for value in adata.obsm.array_keys()]
+    annotations["var"] = list(get_group_index(adata.var)[:])
 
     if "masks" in adata.uns and len(adata.uns["masks"].keys()):
         annotations["has_masks"] = True
@@ -54,19 +137,20 @@ def get_annotations(adata):
 
 
 def get_degs(adata):
-    try:
-        sc.pp.normalize_total(adata, target_sum=1e4)
-        sc.pp.log1p(adata)
-        sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
-        adata.var.sort_values(by=["means"], ascending=False)
-        df = (
-            adata.var[adata.var["highly_variable"] == True]
-            .sort_values(by=["means"], ascending=False)
-            .head(10)
-        )
-        return df.index.tolist()
-    except Exception as e:
-        return False
+    # try:
+    #     sc.pp.normalize_total(adata, target_sum=1e4)
+    #     sc.pp.log1p(adata)
+    #     sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+    #     adata.var.sort_values(by=["means"], ascending=False)
+    #     df = (
+    #         adata.var[adata.var["highly_variable"] == True]
+    #         .sort_values(by=["means"], ascending=False)
+    #         .head(10)
+    #     )
+    #     return df.index.tolist()
+    # except Exception as e:
+    #     return False
+    return False
 
 
 def get_bounds(datasetId, obsm):
@@ -84,20 +168,22 @@ def get_bounds(datasetId, obsm):
         raise DatasetNotExistsError
 
     # Normalised [-1,1] @TODO
-    adata.obsm[obsm] = (
-        2.0 * (adata.obsm[obsm] - np.min(adata.obsm[obsm])) / np.ptp(adata.obsm[obsm])
+    norm_obsm = (
+        2.0
+        * (adata.obsm[obsm][:] - np.min(adata.obsm[obsm][:]))
+        / np.ptp(adata.obsm[obsm][:])
         - 1
     )
 
     # Embedded coordinate bounds
     output = {
         "x": {
-            "min": adata.obsm[obsm][:, 0].min().item(),
-            "max": adata.obsm[obsm][:, 0].max().item(),
+            "min": encode_dtype(np.nanmin(norm_obsm[:, 0])),
+            "max": encode_dtype(np.nanmax(norm_obsm[:, 0])),
         },
         "y": {
-            "min": adata.obsm[obsm][:, 1].min().item(),
-            "max": adata.obsm[obsm][:, 1].max().item(),
+            "min": encode_dtype(np.nanmin(norm_obsm[:, 1])),
+            "max": encode_dtype(np.nanmax(norm_obsm[:, 1])),
         },
     }
 
@@ -119,16 +205,18 @@ def get_coordinates(datasetId, obsm):
         raise DatasetNotExistsError
 
     # Normalised [-1,1] @TODO
-    adata.obsm[obsm] = (
-        2.0 * (adata.obsm[obsm] - np.min(adata.obsm[obsm])) / np.ptp(adata.obsm[obsm])
+    norm_obsm = (
+        2.0
+        * (adata.obsm[obsm][:] - np.min(adata.obsm[obsm][:]))
+        / np.ptp(adata.obsm[obsm][:])
         - 1
     )
 
     # True resolution sample generation
     output = []
-    for x in adata.obsm[obsm]:
+    for x in norm_obsm:
         # output.append(x[:2].tolist())
-        output.append([round(num, 4) for num in x[:2].tolist()])
+        output.append([encode_dtype(round(num, 4)) for num in x[:2].tolist()])
 
     return output
 
@@ -149,31 +237,27 @@ def get_labels(datasetId, obsm, gene="", obs=""):
 
     if gene:
         try:
-            # expression = adata[:,gene].X/max(1,adata[:,gene].X.max())
-            gene_idx = adata.var_names.get_loc(gene)
-            output = [
-                str(round(float(x), 4))
-                for x in (
-                    adata.X[:, gene_idx].toarray().reshape(-1)
-                    if isinstance(adata.X, spmatrix)
-                    else adata.X[:, gene_idx]
-                )
-            ]
+            gene_idx = np.where(get_group_index(adata.var)[:] == gene)[0][0]
+            expression = adata.X[:, gene_idx]
+            output = [str(round(float(x), 4)) for x in expression]
         except KeyError:
             # @todo HANDLE ERROR
-            output = [0] * len(adata.obs.index)
+            output = [0] * get_group_index(adata.obs).shape[0]
         except IndexError:
             # @todo HANDLE ERROR
-            output = [0] * len(adata.obs.index)
+            output = [0] * get_group_index(adata.obs).shape[0]
     elif obs:
         try:
-            output = adata.obs[obs].fillna(np.nan).astype(str).tolist()
+            if type(adata.obs[obs]).__name__ == "Group":
+                output = [str(x) for x in list(parse_group(adata.obs[obs]))]
+            else:
+                output = [str(x) for x in list(parse_array(adata.obs[obs], adata))]
         except KeyError:
             # @todo HANDLE ERROR
-            output = [0] * len(adata.obs.index)
+            output = [0] * get_group_index(adata.obs).shape[0]
         except IndexError:
             # @todo HANDLE ERROR
-            output = [0] * len(adata.obs.index)
+            output = [0] * get_group_index(adata.obs).shape[0]
 
     return output
 
@@ -182,7 +266,9 @@ def search_genes(datasetId, searchterm):
     dataset = models.Dataset.query.get(datasetId)
     adata = current_app.adata[dataset.filename]
     # adata = current_app.adata
-    output = [g for g in adata.var_names if searchterm.lower() in g.lower()]
+    output = [
+        g for g in get_group_index(adata.var)[:] if searchterm.lower() in g.lower()
+    ]
 
     return output
 
@@ -191,7 +277,7 @@ def gene_search(datasetId, searchterm):
     dataset = models.Dataset.query.get(datasetId)
     adata = current_app.adata[dataset.filename]
     # adata = current_app.adata
-    genes = [g for g in adata.var_names if searchterm in g]
+    genes = [g for g in get_group_index(adata.var)[:] if searchterm in g]
 
     output = []
     for gene in genes:
@@ -201,26 +287,26 @@ def gene_search(datasetId, searchterm):
     return output
 
 
-def categorised_expr(datasetId, cat, gene, func="mean"):
-    dataset = models.Dataset.query.get(datasetId)
-    adata = current_app.adata[dataset.filename]
+# def categorised_expr(datasetId, cat, gene, func="mean"):
+#     dataset = models.Dataset.query.get(datasetId)
+#     adata = current_app.adata[dataset.filename]
 
-    data = adata[:, [gene]].to_df()
-    grouping = data.join(adata.obs[cat]).groupby(cat)
+#     data = adata[:, [gene]].to_df()
+#     grouping = data.join(adata.obs[cat]).groupby(cat)
 
-    if func == "mean":
-        expr = grouping.mean()
-    elif func == "median":
-        expr = grouping.median()
+#     if func == "mean":
+#         expr = grouping.mean()
+#     elif func == "median":
+#         expr = grouping.median()
 
-    # counts = grouping.count()/grouping.count().sum()
-    # 'count': counts.loc[group,gene]
-    output = [
-        {"gene": gene, "cat": group, "expr": float(expr.loc[group, gene])}
-        for group in grouping.groups.keys()
-    ]
+#     # counts = grouping.count()/grouping.count().sum()
+#     # 'count': counts.loc[group,gene]
+#     output = [
+#         {"gene": gene, "cat": group, "expr": float(expr.loc[group, gene])}
+#         for group in grouping.groups.keys()
+#     ]
 
-    return output
+#     return output
 
 
 def cat_expr_w_counts(datasetId, cat, gene, func="mean"):
@@ -229,12 +315,22 @@ def cat_expr_w_counts(datasetId, cat, gene, func="mean"):
     dataset = models.Dataset.query.get(datasetId)
     adata = current_app.adata[dataset.filename]
 
-    groupall = adata[:, [gene]].to_df().join(adata.obs[cat]).groupby(cat)
+    gene_idx = np.where(get_group_index(adata.var)[:] == gene)[0][0]
+    cat_df = pd.DataFrame(
+        parse_group(adata.obs[cat])
+        if type(adata.obs[cat]).__name__ == "group"
+        else parse_array(adata.obs[cat], adata),
+        index=get_group_index(adata.obs)[:],
+        columns=[cat],
+    )
+    gene_df = pd.DataFrame(
+        adata.X[:, gene_idx], index=get_group_index(adata.obs), columns=[gene]
+    )
+
+    groupall = gene_df.join(cat_df).groupby(cat)
     groupexpr = (
-        adata[:, [gene]]
-        .to_df()
-        .replace(float(adata[:, [gene]].X.min()), NaN)
-        .join(adata.obs[cat])
+        gene_df.replace(float(adata.X[:, gene_idx].min()), NaN)
+        .join(cat_df)
         .groupby(cat)
     )
 
@@ -266,11 +362,11 @@ def mode(d):
 
 
 def type_category(obs):
-    categories = [str(i) for i in obs.cat.categories.values.flatten()]
+    categories = [str(i) for i in obs.categories.values.flatten()]
 
-    if pd.api.types.is_string_dtype(obs.cat.categories.dtype):
+    if pd.api.types.is_string_dtype(obs.categories.dtype):
         if all(
-            obs.str.match(
+            obs.categories.str.match(
                 "^(\d{4})-(0[1-9]|1[0-2]|[1-9])-([1-9]|0[1-9]|[1-2]\d|3[0-1])$"
             )
         ):
@@ -293,17 +389,17 @@ def type_category(obs):
 
 
 def type_bool(obs):
-    return {"type": "boolean", "values": {0: "True", 1: "False"}}
+    return {"type": "boolean", "values": {1: "True", 0: "False"}}
 
 
 def type_numeric(obs):
     accuracy = 4
     return {
         "type": "continuous",
-        "min": round(series_min(obs), accuracy),
-        "max": round(series_max(obs), accuracy),
-        "mean": round(series_mean(obs), accuracy),
-        "median": round(series_median(obs), accuracy),
+        "min": encode_dtype(round(ndarray_min(obs), accuracy)),
+        "max": encode_dtype(round(ndarray_max(obs), accuracy)),
+        "mean": encode_dtype(round(ndarray_mean(obs), accuracy)),
+        "median": encode_dtype(round(ndarray_median(obs), accuracy)),
     }
 
 
@@ -311,32 +407,47 @@ def type_discrete(obs):
     return {"type": "discrete"}
 
 
-def series_max(s):
-    if s.isna().all():
+def ndarray_max(a):
+    if np.isnan(a).all():
         return 0
     else:
-        return s.max().item()
+        return np.nanmax(a)
 
 
-def series_min(s):
-    if s.isna().all():
+def ndarray_min(a):
+    if np.isnan(a).all():
         return 0
     else:
-        return s.min().item()
+        return np.nanmin(a)
 
 
-def series_mean(s):
-    if s.isna().all():
+def ndarray_mean(a):
+    if np.isnan(a).all():
         return 0
     else:
-        return s.mean().item()
+        return np.nanmean(a)
 
 
-def series_median(s):
-    if s.isna().all():
+def ndarray_median(a):
+    if np.isnan(a).all():
         return 0
     else:
-        return s.median().item()
+        return np.nanmedian(a)
+
+
+def encode_dtype(a):
+    if hasattr(a, "dtype"):
+        if isinstance(a, np.integer):
+            return int(a)
+        if isinstance(a, np.floating):
+            return float(a)
+        if isinstance(a, np.bool_):
+            return bool(a)
+        if isinstance(a, np.ndarray) or isinstance(a, pd.Categorical):
+            return a.tolist()
+        return a
+    else:
+        return a
 
 
 def disease_filename():

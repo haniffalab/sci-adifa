@@ -3,7 +3,7 @@ import hashlib
 import gc
 
 from flask import current_app
-import scanpy as sc
+import zarr
 
 from adifa import db
 from adifa import models
@@ -11,25 +11,21 @@ from adifa.utils import adata_utils
 
 
 def auto_discover():
-    for filename in os.listdir(current_app.config.get("DATA_PATH")):
-        if filename.endswith(".h5ad"):
+    for zarr_dir in [
+        x
+        for x in os.listdir(current_app.config.get("DATA_PATH"))
+        if os.path.isdir(os.path.join(current_app.config.get("DATA_PATH"), x))
+    ]:
+        if zarr_dir.endswith(".zarr"):  #
             # process file
-            current_app.logger.info("Inspecting " + filename)
-            adata = sc.read(os.path.join(current_app.config.get("DATA_PATH"), filename))
+            current_app.logger.info("Inspecting " + zarr_dir)
+            adata = zarr.open(
+                os.path.join(current_app.config.get("DATA_PATH"), zarr_dir), "r"
+            )
             annotations = adata_utils.get_annotations(adata)
             # generate hash
-            current_app.logger.info("Hashing " + filename)
-            md5_object = hashlib.md5()
-            block_size = 128 * md5_object.block_size
-            with open(
-                os.path.join(current_app.config.get("DATA_PATH"), filename), "rb"
-            ) as a_file:
-                chunk = a_file.read(block_size)
-                while chunk:
-                    md5_object.update(chunk)
-                    chunk = a_file.read(block_size)
-
-            hash = md5_object.hexdigest()
+            current_app.logger.info("Hashing " + zarr_dir)
+            hash = adata.X.hexdigest()  #
 
             # check if exists
             try:
@@ -42,37 +38,35 @@ def auto_discover():
             if not exists:
                 new = models.Dataset()
                 new.published = 1
-                new.filename = filename
+                new.filename = zarr_dir
                 new.hash = hash
                 new.data_obs = annotations.get("obs")
                 new.data_obsm = annotations.get("obsm")
                 new.data_var = annotations.get("var")
                 new.has_masks = annotations.get("has_masks")
-                new.genes_deg = adata_utils.get_degs(adata)
-                new.title = filename
+                # new.genes_deg = adata_utils.get_degs(adata)
+                new.title = zarr_dir
                 try:
                     db.session.add(new)
                     db.session.commit()
                 except Exception as e:
                     current_app.logger.error("Error: " + str(e))
                 else:
-                    current_app.logger.info("Adding " + filename)
+                    current_app.logger.info("Adding " + zarr_dir)
             else:
-                record.filename = filename
+                record.filename = zarr_dir
                 record.published = 1
                 record.data_obs = annotations.get("obs")
                 record.data_obsm = annotations.get("obsm")
                 record.data_var = annotations.get("var")
                 record.has_masks = annotations.get("has_masks")
-                record.genes_deg = adata_utils.get_degs(adata)
+                # record.genes_deg = adata_utils.get_degs(adata)
                 try:
                     db.session.commit()
                 except Exception as e:
                     current_app.logger.error("Error: " + str(e))
                 else:
-                    current_app.logger.info("Reprocessed " + filename)
-            del adata
-            gc.collect()
+                    current_app.logger.info("Reprocessed " + zarr_dir)
         else:
             continue
 
@@ -87,9 +81,14 @@ def load_files():
         return
 
     for dataset in datasets:
-        file = os.path.join(current_app.config.get("DATA_PATH"), dataset.filename)
-        if os.path.isfile(file):
-            current_app.adata[dataset.filename] = sc.read(file)
+        zarr_dir = os.path.join(current_app.config.get("DATA_PATH"), dataset.filename)
+        if os.path.isdir(zarr_dir):
+            try:
+                current_app.adata[dataset.filename] = zarr.open_consolidated(
+                    zarr_dir, "r"
+                )
+            except:
+                current_app.adata[dataset.filename] = zarr.open(zarr_dir, "r")
             dataset.published = 1
             db.session.commit()
             current_app.logger.info("Loading " + dataset.title)
