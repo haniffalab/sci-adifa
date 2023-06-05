@@ -278,7 +278,7 @@ def get_spatial_plot(
 
 
 def plot_gene_expression(
-    adata: sc.AnnData,
+    adata: zarr.Group,
     obs_cat1: pd.Categorical,
     mask: str,
     gene: str,
@@ -310,7 +310,7 @@ def plot_gene_expression(
 
 
 def plot_proportion(
-    adata: sc.AnnData,
+    adata: zarr.Group,
     mode: str,
     cat2: str,
     obs_cat1: pd.Categorical,
@@ -373,7 +373,7 @@ def plot_proportion(
 
 
 def plot_categorical(
-    adata: sc.AnnData,
+    adata: zarr.Group,
     mode: str,
     obs_cat1: pd.Categorical,
     obs_cat2: pd.Categorical,
@@ -452,7 +452,7 @@ def plot_categorical(
 
 
 def plot_polygons(
-    adata: sc.AnnData,
+    adata: zarr.Group,
     obs_cat1: pd.Categorical,
     mask: str,
     values: list[float],
@@ -465,7 +465,7 @@ def plot_polygons(
     scale_upper_value: int = 100,
 ):
 
-    values_dict = dict(zip(obs_cat1.unique(), values))
+    values_dict = dict(zip(list(obs_cat1.unique()), values))
 
     if scale == "auto":
         vmax = max(values) if max(values) > 0 else 1
@@ -637,7 +637,7 @@ def plot_distribution(
 
 
 def plot_date(
-    adata: sc.AnnData,
+    adata: zarr.Group,
     cat2: str,
     obs_cat2: pd.Categorical,
     use_premade_info: bool = True,

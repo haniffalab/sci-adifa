@@ -55,10 +55,12 @@
     //   imgElem.show()
     // }
 
-    const showError = function () {
-      $('#spatial-div').hide()
-      $('#spatial-error').removeClass('d-none')
-      $('#spatial-loader').hide()
+    const showError = function (error) {
+      if (!(error.status === 0 && error.statusText === 'abort')) {
+        $('#spatial-div').hide()
+        $('#spatial-error').removeClass('d-none')
+        $('#spatial-loader').hide()
+      }
     }
 
     const doAjax = function (url, async = true) {
