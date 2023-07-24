@@ -630,14 +630,14 @@
         varList = []
       }
       if ($(el).hasClass('active')) {
-        $(el).removeClass('active')
+        const gene = $(el).attr('data-gene')
+        $('#gene-deg-'+escapeSelector(gene)+',#disease-gene-deg-'+escapeSelector(gene)).removeClass('active')
         varList = varList.filter(function (e) { return e !== $(el).data('gene') })
       } else {
         const gene = $(el).text()
         if (jQuery.inArray(gene, varList) === -1) {
           varList.push(gene)
         }
-        $(el).addClass('active')
       }
       Cookies.set('ds' + datasetId + '-var-list', JSON.stringify(varList), {
         expires: 30,
@@ -727,14 +727,20 @@
     }).on('select2:select', function (e) {
       const data = e.params.data
       const genes = data.id.split(',')
+      $('#search-genes-disease-set').empty()
       $.each(genes, function (i) {
+        let active = false
+        if ($('#gene-deg-'+genes[i]).length){
+          active = $('#gene-deg-'+genes[i]).hasClass('active')
+        }
         $('#search-genes-disease-set').append(
           $('<button/>')
             .attr('type', 'button')
-            .attr('id', "'gene-deg-" + genes[i])
+            .attr('id', 'disease-gene-deg-' + genes[i])
             .attr('data-gene', genes[i])
-            .addClass('btn-gene-select btn btn-outline-info btn-sm')
+            .addClass('btn-gene-select btn btn-outline-info btn-sm btn-disease-gene')
             .text(genes[i])
+            .addClass(active ? 'active' : '')
         )
       })
     })

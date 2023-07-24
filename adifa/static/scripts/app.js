@@ -1,5 +1,8 @@
 (function ($) {
   $(document).ready(function () {
+    const escapeSelector = function (s) {
+      return s.replace(/(:|\.|\[|\])/g, '\\$1')
+    }
     // Enable popovers everywhere.
     $('[data-toggle="popover"]').popover()
     // Enable tooltips everywhere.
@@ -39,6 +42,22 @@
       })
 
       $(document.body).on('click', '.btn-gene-select', function (event) {
+        // If selecting from #search-genes-disease-set add to search-genes-selected
+        // as selecting another disease will clear #search-genes-disease-set
+        const target = $(event.target)
+        if ($(target).hasClass("btn-disease-gene")) {
+          const gene = target.attr("data-gene")
+          if (!$('#search-genes-selected #gene-deg-' + escapeSelector(gene)).length) {
+            $('#search-genes-selected').append(
+              $('<button/>')
+                .attr('type', 'button')
+                .attr('id', 'gene-deg-' + gene)
+                .attr('data-gene', gene)
+                .addClass('btn-gene-select btn btn-outline-info btn-sm')
+                .text(gene)
+            )
+          }
+        }
         if ($(this).text() !== $('#color-scale-value').text() && scatterplot) scatterplot.colorize(this)
       })
 
@@ -79,15 +98,15 @@
 
     // Init matrixplot
     if ($('#matrixplot-container').length) {
-      const scatterplot = $('#matrixplot-container').matrixplot()
+      const matrixplot = $('#matrixplot-container').matrixplot()
       // Add events
       $(document.body).on('change', '#palette', function (event) {
-        scatterplot.changePalette($(this).val())
+        matrixplot.changePalette($(this).val())
       })
       // Accordion animations
       $('.obs-values').on('show.bs.collapse', function () {
         $(this).prev('.list-group-item').find('.fa').removeClass('fa-plus-square').addClass('fa-caret-square-up')
-        setTimeout(function (el) { scatterplot.interact(el) }, 100, this) // Defer to improve UX
+        setTimeout(function (el) { matrixplot.interact(el) }, 100, this) // Defer to improve UX
       }).on('shown.bs.collapse', function () {
         // $('.main-sidebar .nav-wrapper').animate({
         //     scrollTop: $(this).prev(".list-group-item").position().top - 61
@@ -97,25 +116,41 @@
       })
 
       $('.obs_value_cb').click(function (event) {
-        setTimeout(function () { scatterplot.redraw() }, 100) // Defer to improve UX
+        setTimeout(function () { matrixplot.redraw() }, 100) // Defer to improve UX
       })
 
       $('.checkall').click(function (event) {
         $('#collapse' + $(this).data('id')).find('input[type=checkbox]').prop('checked', true)
-        setTimeout(function () { scatterplot.redraw() }, 100) // Defer to improve UX
+        setTimeout(function () { matrixplot.redraw() }, 100) // Defer to improve UX
       })
 
       $('.uncheckall').click(function (event) {
         $('#collapse' + $(this).data('id')).find('input[type=checkbox]').prop('checked', false)
-        setTimeout(function () { scatterplot.redraw() }, 100) // Defer to improve UX
+        setTimeout(function () { matrixplot.redraw() }, 100) // Defer to improve UX
       })
 
       $('#canvas-gene-reset').click(function (event) {
-        scatterplot.resetGenes(this)
+        matrixplot.resetGenes(this)
       })
 
       $(document.body).on('click', '.btn-gene-select', function (event) {
-        if ($(this).text() !== $('#color-scale-value').text() && scatterplot) scatterplot.genes(this)
+        // If selecting from #search-genes-disease-set add to search-genes-selected
+        // as selecting another disease will clear #search-genes-disease-set
+        const target = $(event.target)
+        if ($(target).hasClass("btn-disease-gene")) {
+          const gene = target.attr("data-gene")
+          if (!$('#search-genes-selected #gene-deg-' + escapeSelector(gene)).length) {
+            $('#search-genes-selected').append(
+              $('<button/>')
+                .attr('type', 'button')
+                .attr('id', 'gene-deg-' + gene)
+                .attr('data-gene', gene)
+                .addClass('btn-gene-select btn btn-outline-info btn-sm')
+                .text(gene)
+            )
+          }
+        }
+        if ($(this).text() !== $('#color-scale-value').text() && matrixplot) matrixplot.genes(this)
       })
     }
   })
