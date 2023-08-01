@@ -610,7 +610,8 @@
           colorScaleKey = $(el).text()
           colorScaleId = 0
           colorScaleType = 'gene'
-          $(el).addClass('active')
+          const gene = $(el).attr('data-gene')
+          $('#gene-deg-'+gene+',#disease-gene-deg-'+gene).addClass('active')
         } else {
           colorScaleKey = $(el).data('name')
           colorScaleId = $(el).data('id')
@@ -750,14 +751,20 @@
     }).on('select2:select', function (e) {
       const data = e.params.data
       const genes = data.id.split(',')
+      $('#search-genes-disease-set').empty()
       $.each(genes, function (i) {
+        let active = false
+        if ($('#gene-deg-'+genes[i]).length){
+          active = $('#gene-deg-'+genes[i]).hasClass('active')
+        }
         $('#search-genes-disease-set').append(
           $('<button/>')
             .attr('type', 'button')
-            .attr('id', "'gene-deg-" + genes[i])
+            .attr('id', 'disease-gene-deg-' + genes[i])
             .attr('data-gene', genes[i])
-            .addClass('btn-gene-select btn btn-outline-info btn-sm')
+            .addClass('btn-gene-select btn btn-outline-info btn-sm btn-disease-gene')
             .text(genes[i])
+            .addClass(active ? 'active' : '')
         )
       })
     })

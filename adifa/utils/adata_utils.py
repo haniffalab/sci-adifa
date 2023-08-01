@@ -401,4 +401,10 @@ def encode_dtype(a):
 
 
 def disease_filename():
-    return os.path.join(current_app.root_path, "data", "disease.csv")
+    return (
+        os.path.join(current_app.config.get("DATA_PATH"), "disease.csv")
+        if os.path.isfile(
+            os.path.join(current_app.config.get("DATA_PATH"), "disease.csv")
+        )
+        else os.path.join(current_app.root_path, "data", "disease.csv")
+    )
