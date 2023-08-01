@@ -60,7 +60,7 @@ class SearchDiseases(Resource):
         q = request.args.get("search", "", type=str)
 
         output = {}
-        disease = "Haematological abnormality"
+        disease = "Disease"
         gene = "Gene mutation"
         datafile = adata_utils.disease_filename()
 
@@ -107,7 +107,7 @@ class DiseaseGeneList(Resource):
         term = request.args.get("term", "", str)
 
         output = {}
-        disease = "Haematological abnormality"
+        disease = "Disease"
         gene = "Gene mutation"
         datafile = adata_utils.disease_filename()
 
