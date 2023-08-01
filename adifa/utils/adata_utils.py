@@ -3,7 +3,7 @@ import re
 from xml.dom.pulldom import END_DOCUMENT
 
 from flask import current_app
-from scipy.sparse import find
+from scipy.sparse import spmatrix
 from sqlalchemy import exc
 import numpy as np
 import pandas as pd

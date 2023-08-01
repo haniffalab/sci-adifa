@@ -106,7 +106,15 @@ def create_app(test_config=None):
         inspector = inspect(db.engine)
         # load datasets files
         if is_running_server and inspector.has_table("datasets"):
+            app.logger.info(
+                "Server is running. Datasets table exists. Loading files..."
+            )
             dataset_utils.load_files()
+        else:
+            if not is_running_server:
+                app.logger.warning("Server is not running")
+            if not inspector.has_table("datasets"):
+                app.logger.warning("No 'datasets' table")
 
     @app.context_processor
     def inject_datasets():
@@ -143,9 +151,17 @@ def create_app(test_config=None):
     @click.command("init-db")
     @with_appcontext
     def init_db_command():
-        """Clear existing data and create new tables."""
+        """Create new tables."""
         db.create_all()
         click.echo("Initialized the database.")
+
+    @click.command("clear-init-db")
+    @with_appcontext
+    def clear_init_db_command():
+        """Clear existing tables and create new tables."""
+        db.drop_all()
+        db.create_all()
+        click.echo("Updated the database.")
 
     @click.command("autodiscover")
     @with_appcontext
@@ -156,6 +172,7 @@ def create_app(test_config=None):
         click.echo("Discovered Datasets.")
 
     app.cli.add_command(init_db_command)
+    app.cli.add_command(clear_init_db_command)
     app.cli.add_command(autodiscover_command)
 
     return app

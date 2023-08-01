@@ -74,9 +74,15 @@
       colorScaleId = null
       colorScaleKey = null
       colorScaleType = null
-      Cookies.remove('ds' + datasetId + '-obs-name')
-      Cookies.remove('ds' + datasetId + '-obs-id')
-      Cookies.remove('ds' + datasetId + '-obs-type')
+      Cookies.remove('ds' + datasetId + '-obs-name', {
+        path: window.location.pathname
+      })
+      Cookies.remove('ds' + datasetId + '-obs-id', {
+        path: window.location.pathname
+      })
+      Cookies.remove('ds' + datasetId + '-obs-type', {
+        path: window.location.pathname
+      })
       startLoader()
       render()
       endLoader()
@@ -537,9 +543,15 @@
           colorScaleKey = null
           colorScaleId = null
           colorScaleType = null
-          Cookies.remove('ds' + datasetId + '-obs-name')
-          Cookies.remove('ds' + datasetId + '-obs-id')
-          Cookies.remove('ds' + datasetId + '-obs-type')
+          Cookies.remove('ds' + datasetId + '-obs-name', {
+            path: window.location.pathname
+          })
+          Cookies.remove('ds' + datasetId + '-obs-id', {
+            path: window.location.pathname
+          })
+          Cookies.remove('ds' + datasetId + '-obs-type', {
+            path: window.location.pathname
+          })
         }
 
         // get data
