@@ -1,9 +1,6 @@
 import os
 import re
-from xml.dom.pulldom import END_DOCUMENT
-
 from flask import current_app
-from scipy.sparse import spmatrix
 from sqlalchemy import exc
 import numpy as np
 import pandas as pd
@@ -32,21 +29,41 @@ def get_group_index(group):
 
 # anndata versions >=0.8.0 write categorical values in a Group with categories and codes
 def parse_group(group):
-    series = pd.Categorical.from_codes(
-        group["codes"][:], categories=group["categories"][:]
-    )
-    return series
+    if "_index" in group.attrs:
+        df = pd.DataFrame(index=group[group.attrs["_index"]])
+        for name in [
+            name
+            for name in group.array_keys()
+            if not name.startswith("_") and name != get_group_index_name(group)
+        ]:
+            df[name] = group[name]
+        for name in group.group_keys():
+            df[name] = parse_group(group[name])
+        return df
+    elif "codes" in group and "categories" in group:
+        series = pd.Categorical.from_codes(
+            group["codes"][:], categories=group["categories"][:]
+        )
+        if np.array_equal(
+            np.sort(series.categories.values), np.sort(["True", "False"])
+        ):
+            return series.map({"True": True, "False": False}).astype(bool)
+        return series
 
 
 # anndata versions <0.8.0 write categorical values in an Array with categories in a separate group
-def parse_array(zarr, array):
+def parse_array(store, array):
     if "categories" in array.attrs:
         series = pd.Categorical.from_codes(
             array[:],
-            categories=zarr[
+            categories=store[
                 os.path.join(os.path.dirname(array.path), array.attrs["categories"])
             ],
         )
+        if np.array_equal(
+            np.sort(series.categories.values), np.sort(["True", "False"])
+        ):
+            return series.map({"True": True, "False": False}).astype(bool)
         return series
     else:
         return array[:]
