@@ -96,11 +96,10 @@
 <ul class="nav flex-column">
   <div id="obs-accordion">
     <div class="list-group list-group-flush">                                                              
-      {% for uid, ob in obs.items()|sort(attribute='name') %}
-        {% set name = ob.name.split(':') %}
+      {% for uid, ob in obs.items()|sort(attribute='display_name') %}
         <div class="list-group-item justify-content-between align-items-center" data-toggle="collapse" data-target="#collapse{{ ob.id }}" aria-controls="collapse{{ ob.id }}">
           <h4>
-            <i class="fa fa-plus-square"></i>&nbsp;&nbsp;{{ name[1] }}
+            <i class="fa fa-plus-square"></i>&nbsp;&nbsp;{{ ob.display_name }}
           </h4>
         </div>
         <div id="collapse{{ ob.id }}" class="collapse m-4 obs-values" data-parent="#obs-accordion" data-name="{{ ob.name }}" data-id="{{ ob.id }}" data-type="{{ ob.type }}">

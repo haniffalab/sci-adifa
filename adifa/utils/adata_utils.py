@@ -52,7 +52,15 @@ def get_annotations(adata):
         obs = func(adata.obs[name])
         obs["name"] = name
         obs["id"] = key
-        obs["group"] = name.split(":")[0] if len(name.split(":")) > 1 else "default"
+
+        if isinstance(adata, mu.MuData) and len(name.split(":")) > 1:
+            group, sufix = name.split(":")[0], ":".join(name.split(":")[1:])
+            obs["group"], obs["display_name"] = (
+                (group, sufix) if group in adata.mod.keys() else ("default", name)
+            )
+        else:
+            obs["group"], obs["display_name"] = ("default", name)
+
         annotations["obs"][key] = obs
 
     # remove unwanted obsm arrays
