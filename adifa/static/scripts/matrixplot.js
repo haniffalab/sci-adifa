@@ -37,12 +37,19 @@
       xhrPool = $.grep(xhrPool, function (x) { return x !== jqXHR })
     })
 
+    const abort = function () {
+      $.each(xhrPool, function (idx, jqXHR) {
+        jqXHR.abort()
+      })
+    }
+
     const escapeSelector = function (s) {
       return s.replace(/(:|\.|\[|\])/g, '\\$1')
     }
 
     // private methods
     const startLoader = function (id) {
+      $('#matrixplot-container').show()
       $('#canvas-loader').html('<div class="btn-group mb-3"><a class="btn btn-white">Loading...</a></div>')
       $('#loader').html('<div class="spinner"><div class="double-bounce1"></div><div class="double-bounce2"></div></div>')
       $('#canvas-controls').hide()
@@ -57,7 +64,7 @@
       $('#canvas-controls').show()
     }
 
-    const showError = function (message = false) {
+    const showMessage = function (message = null) {
       if (message) {
         $('#matrixplot-alert').removeClass('d-none').append(
           $('<div/>')
@@ -65,9 +72,25 @@
             .attr('role', 'alert')
             .text(message))
       }
-      $('#canvas-loader').html('<div class="btn-group mb-3"><a class="btn btn-white">Error</a></div>')
+      $('#canvas-loader').empty()
       $('#canvas-controls').hide()
+      $('#matrixplot-container').hide()
       $('#loader').removeClass().empty()
+    }
+
+    const showError = function (error) {
+      if (!(error.status === 0 && error.statusText === "abort")){
+        if (error.statusText) {
+          $('#matrixplot-alert').removeClass('d-none').append(
+            $('<div/>')
+              .addClass('alert alert-danger')
+              .attr('role', 'alert')
+              .text(error.statusText))
+        }
+        $('#canvas-loader').html('<div class="btn-group mb-3"><a class="btn btn-white">Error</a></div>')
+        $('#canvas-controls').hide()
+        $('#loader').removeClass().empty()
+      }
     }
 
     const transform = function (object) {
@@ -110,12 +133,12 @@
         return
       }
       if (!colorScaleKey) {
-        showError('Please select a group from the list of observations')
+        showMessage('Please select a group from the list of observations')
         return
       }
 
       if (!varList.length) {
-        showError('Select genes of interest from the sidebar on the right')
+        showMessage('Select genes of interest from the sidebar on the right')
         return
       }
 
@@ -148,6 +171,8 @@
       // http://bl.ocks.org/ianyfchang/8119685
 
       //= =================================================
+      $('#matrixplot-container').show()
+
       const tooltip = d3.select('#canvas_plot')
         .append('div')
         .style('position', 'absolute')
@@ -545,7 +570,9 @@
         ? JSON.parse(Cookies.get('ds' + datasetId + '-var-list'))
         : ['ALB', 'AFP', 'C3', 'HP', 'SAA1', 'RARRES2', 'LRP1', 'NR1H4', 'NNMT', 'HPD', 'CES2', 'C1R', 'AOX1', 'GLUL']
 
-      // get data
+      $('#palette').val(colorScale)
+      
+        // get data
       startLoader()
       $.when(
         doAjax(API_SERVER + 'api/v1/datasets/' + datasetId)).then(function (d) {
@@ -601,7 +628,8 @@
 
       // get data
       startLoader()
-      loadData()
+      abort()
+      setTimeout(function () { loadData() }, 100)
     }
 
     this.genes = function (el) {
@@ -610,14 +638,14 @@
         varList = []
       }
       if ($(el).hasClass('active')) {
-        $(el).removeClass('active')
+        const gene = $(el).attr('data-gene')
+        $('#gene-deg-'+escapeSelector(gene)+',#disease-gene-deg-'+escapeSelector(gene)).removeClass('active')
         varList = varList.filter(function (e) { return e !== $(el).data('gene') })
       } else {
         const gene = $(el).text()
         if (jQuery.inArray(gene, varList) === -1) {
           varList.push(gene)
         }
-        $(el).addClass('active')
       }
       Cookies.set('ds' + datasetId + '-var-list', JSON.stringify(varList), {
         expires: 30,
@@ -627,7 +655,8 @@
 
       // get data
       startLoader()
-      loadData()
+      abort()
+      setTimeout(function () { loadData() }, 100)
     }
 
     this.resetGenes = function () {
@@ -648,7 +677,8 @@
     }
 
     this.changePalette = function (paletteName) {
-      Cookies.set('d3-scale-chromatic', paletteName, {
+      colorScale = paletteName
+      Cookies.set('d3-scale-chromatic', colorScale, {
         expires: 30,
         sameSite: 'Strict',
         path: window.location.pathname
@@ -739,14 +769,20 @@
     }).on('select2:select', function (e) {
       const data = e.params.data
       const genes = data.id.split(',')
+      $('#search-genes-disease-set').empty()
       $.each(genes, function (i) {
+        let active = false
+        if ($('#gene-deg-'+genes[i]).length){
+          active = $('#gene-deg-'+genes[i]).hasClass('active')
+        }
         $('#search-genes-disease-set').append(
           $('<button/>')
             .attr('type', 'button')
-            .attr('id', "'gene-deg-" + genes[i])
+            .attr('id', 'disease-gene-deg-' + genes[i])
             .attr('data-gene', genes[i])
-            .addClass('btn-gene-select btn btn-outline-info btn-sm')
+            .addClass('btn-gene-select btn btn-outline-info btn-sm btn-disease-gene')
             .text(genes[i])
+            .addClass(active ? 'active' : '')
         )
       })
     })

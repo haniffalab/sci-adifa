@@ -27,7 +27,6 @@ def app():
 
     # create the database and load test data
     with app.app_context():
-
         _db.init_app(app)
         _db.create_all()
         with open(sql_path) as f:

@@ -82,7 +82,7 @@ def get_degs(adata):
             .head(10)
         )
         return df.index.tolist()
-    except Exception as e:
+    except Exception:
         return False
 
 
@@ -92,7 +92,7 @@ def get_bounds(datasetId, obsm):
 
     try:
         dataset = models.Dataset.query.get(datasetId)
-    except exc.SQLAlchemyError as e:
+    except exc.SQLAlchemyError:
         raise DatabaseOperationError
 
     parts = obsm.split(":")
@@ -111,7 +111,7 @@ def get_bounds(datasetId, obsm):
             adata = current_app.adata[dataset.filename][modality]
         elif dataset.filename.endswith(".h5mu"):
             adata = current_app.adata[dataset.filename]
-    except (ValueError, AttributeError) as e:
+    except (ValueError, AttributeError):
         raise DatasetNotExistsError
 
     # Normalised [-1,1] @TODO
@@ -141,7 +141,7 @@ def get_coordinates(datasetId, obsm):
 
     try:
         dataset = models.Dataset.query.get(datasetId)
-    except exc.SQLAlchemyError as e:
+    except exc.SQLAlchemyError:
         raise DatabaseOperationError
 
     parts = obsm.split(":")
@@ -160,7 +160,7 @@ def get_coordinates(datasetId, obsm):
             adata = current_app.adata[dataset.filename][modality]
         elif dataset.filename.endswith(".h5mu"):
             adata = current_app.adata[dataset.filename]
-    except (ValueError, AttributeError) as e:
+    except (ValueError, AttributeError):
         raise DatasetNotExistsError
 
     # Normalised [-1,1] @TODO
@@ -369,4 +369,10 @@ def series_median(s):
 
 
 def disease_filename():
-    return os.path.join(current_app.root_path, "data", "disease.csv")
+    return (
+        os.path.join(current_app.config.get("DATA_PATH"), "disease.csv")
+        if os.path.isfile(
+            os.path.join(current_app.config.get("DATA_PATH"), "disease.csv")
+        )
+        else os.path.join(current_app.root_path, "data", "disease.csv")
+    )
