@@ -1,0 +1,29 @@
+name: docker
+
+on:
+  push:
+    branches: [ anndata-zarr ]
+
+  pull_request:
+    branches: [ anndata-zarr ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: docker login
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}   
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}  
+      run: |
+        docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+
+    - name: docker build
+      run: |
+        docker build . -f ./Dockerfile -t haniffalab/adifa:zarr
+
+    - name: docker push 
+      run: |
+        docker push haniffalab/adifa:zarr
