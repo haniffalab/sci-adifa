@@ -50,12 +50,12 @@ def get_matrixplot(
 
     try:
         dataset = models.Dataset.query.get(datasetId)
-    except exc.SQLAlchemyError as e:
+    except exc.SQLAlchemyError:
         raise DatabaseOperationError
 
     try:
         adata = current_app.adata[dataset.filename]
-    except (ValueError, AttributeError) as e:
+    except (ValueError, AttributeError):
         raise DatasetNotExistsError
 
     vars = get_group_index(adata["var"])[:]
@@ -76,9 +76,11 @@ def get_matrixplot(
         obs_arr = parse_array(adata, adata["obs"][groupby])
         obs_df = pd.DataFrame(
             [int(x) for x in list(obs_arr)]
-            if obs_arr.dtype in ["int"]
+            if "int" in obs_arr.dtype.name
             else [float(x) for x in list(obs_arr)]
-            if obs_arr.dtype in ["float"]
+            if "float" in obs_arr.dtype.name
+            else [complex(x) for x in list(obs_arr)]
+            if "complex" in obs_arr.dtype.name
             else [str(x) for x in list(obs_arr)],
             index=get_group_index(adata["obs"])[:],
             columns=[groupby],

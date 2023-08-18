@@ -330,7 +330,7 @@
         .selectAll()
         .data(function (d, i) {
           uid++
-          const ownProps = Object.keys(d[1])
+          const ownProps = myGroups
           i = ownProps.length
           const resArray = new Array(i) // preallocate the Array
           while (i--) { resArray[i] = [d[0], ownProps[i], d[1][ownProps[i]]] }

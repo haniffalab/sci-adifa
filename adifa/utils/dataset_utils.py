@@ -1,6 +1,4 @@
 import os
-import hashlib
-import gc
 
 from flask import current_app
 import zarr
