@@ -193,6 +193,8 @@
       endLoader()
     }
 
+    const debouncedLoadData = $.debounce(300, loadData)
+
     const render = function () {
       // init deck
       const { ScatterplotLayer } = deck
@@ -636,7 +638,7 @@
 
         startLoader()
         abort()
-        setTimeout(function () { loadData() }, 100) // Defer to improve UX
+        setTimeout(function () { debouncedLoadData() }, 100) // Defer to improve UX
       }
     }
 

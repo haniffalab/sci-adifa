@@ -151,6 +151,8 @@
         }, showError))
     }
 
+    const debouncedLoadData = $.debounce(500, loadData)
+
     const render = function () {
       // ##########################################################################
       // Patrick.Brockmann@lsce.ipsl.fr
@@ -621,7 +623,7 @@
       // get data
       startLoader()
       abort()
-      setTimeout(function () { loadData() }, 100)
+      setTimeout(function () { debouncedLoadData() }, 100)
     }
 
     this.genes = function (el) {
@@ -648,7 +650,7 @@
       // get data
       startLoader()
       abort()
-      setTimeout(function () { loadData() }, 100)
+      setTimeout(function () { debouncedLoadData() }, 100)
     }
 
     this.resetGenes = function () {
