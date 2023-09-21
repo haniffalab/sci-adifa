@@ -613,7 +613,7 @@
           colorScaleId = 0
           colorScaleType = 'gene'
           const gene = $(el).attr('data-gene')
-          $('#gene-deg-'+gene+',#disease-gene-deg-'+gene).addClass('active')
+          $('#gene-deg-'+escapeSelector(gene)+',#disease-gene-deg-'+escapeSelector(gene)).addClass('active')
         } else {
           colorScaleKey = $(el).data('name')
           colorScaleId = $(el).data('id')
@@ -756,8 +756,8 @@
       $('#search-genes-disease-set').empty()
       $.each(genes, function (i) {
         let active = false
-        if ($('#gene-deg-'+genes[i]).length){
-          active = $('#gene-deg-'+genes[i]).hasClass('active')
+        if ($('#gene-deg-'+escapeSelector(genes[i])).length){
+          active = $('#gene-deg-'+escapeSelector(genes[i])).hasClass('active')
         }
         $('#search-genes-disease-set').append(
           $('<button/>')
