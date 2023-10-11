@@ -11,3 +11,4 @@ python-dotenv==0.20.0
 zarr==2.12.0
 #tables==3.6.1 # 3.7 causes DDL error in Windows
 mysqlclient==2.1.0 # required for Azure and Google MySQL support
+Werkzeug==2.3.7 # https://stackoverflow.com/questions/77213053/importerror-cannot-import-name-url-quote-from-werkzeug-urls
