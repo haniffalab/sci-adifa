@@ -24,7 +24,8 @@ def auto_discover():
             annotations = adata_utils.get_annotations(adata)
             # generate hash
             current_app.logger.info("Hashing " + zarr_dir)
-            hash = adata["X"].hexdigest()  #
+            # hash = adata["X"].hexdigest()  # we don't impliment hash usage, can be removed
+            hash = "1234"
 
             # check if exists
             try:
