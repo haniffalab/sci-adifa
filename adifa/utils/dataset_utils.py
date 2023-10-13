@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from flask import current_app
 import zarr
@@ -25,7 +26,7 @@ def auto_discover():
             # generate hash
             current_app.logger.info("Hashing " + zarr_dir)
             # hash = adata["X"].hexdigest()  # we don't impliment hash usage, can be removed
-            hash = "1234"
+            hash = datetime.now()
 
             # check if exists
             try:
