@@ -26,7 +26,7 @@ def auto_discover():
             # generate hash
             current_app.logger.info("Hashing " + zarr_dir)
             # hash = adata["X"].hexdigest()  # we don't impliment hash usage, can be removed
-            hash = datetime.now()
+            hash = zarr_dir
 
             # check if exists
             try:
