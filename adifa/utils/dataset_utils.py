@@ -22,6 +22,11 @@ def auto_discover():
                 os.path.join(current_app.config.get("DATA_PATH"), zarr_dir), "r"
             )
 
+            if "X" in adata.group_keys():
+                current_app.logger.warn(zarr_dir + "'s X matrix is not a dense matrix")
+                current_app.logger.warn("Skipping " + zarr_dir)
+                continue
+
             annotations = adata_utils.get_annotations(adata)
             # generate hash
             current_app.logger.info("Hashing " + zarr_dir)
