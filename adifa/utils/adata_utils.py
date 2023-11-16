@@ -102,7 +102,7 @@ def get_annotations(adata):
 
         annotations["obs"][slug] = func(array)
         annotations["obs"][slug]["name"] = name
-        annotations["obs"][slug]["category"] = obs_cat.get(name, "")
+        annotations["obs"][slug]["category"] = obs_cat.get(name, "other")
 
     for group in [
         group
@@ -121,7 +121,7 @@ def get_annotations(adata):
 
             annotations["obs"][slug] = func(array)
             annotations["obs"][slug]["name"] = group
-            annotations["obs"][slug]["category"] = obs_cat.get(group, "")
+            annotations["obs"][slug]["category"] = obs_cat.get(group, "other")
 
     annotations["obsm"] = [value for value in adata["obsm"].array_keys()]
     annotations["var"] = list(get_group_index(adata["var"])[:])
