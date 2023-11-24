@@ -230,7 +230,11 @@
         $('.btn-gene-select').removeClass('active')
       }
       if (colorScaleId) {
-        $('#collapse' + colorScaleId).collapse('show')
+        let colorScaleIdCat = $('#collapse-' + colorScaleId).attr('data-cat')
+        if (colorScaleIdCat) {
+          $('#collapse-cat-' + colorScaleIdCat).collapse('show')
+        }
+        $('#collapse-' + colorScaleId).collapse('show')
         $('#colourise' + colorScaleId).addClass('active')
       }
 

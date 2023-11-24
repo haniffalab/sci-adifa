@@ -80,6 +80,13 @@ def get_annotations(adata):
         "complex": type_numeric,
     }
 
+    obs_cat = {}
+    OBS_GROUPING = "column_ordering"
+    if OBS_GROUPING in adata.uns.group_keys():
+        for k in adata.uns[OBS_GROUPING]:
+            for v in adata.uns[OBS_GROUPING][k]:
+                obs_cat[v] = k
+
     for name in [
         name
         for name in adata["obs"].array_keys()
@@ -95,6 +102,7 @@ def get_annotations(adata):
 
         annotations["obs"][slug] = func(array)
         annotations["obs"][slug]["name"] = name
+        annotations["obs"][slug]["category"] = obs_cat.get(name, "main")
 
     for group in [
         group
@@ -113,6 +121,7 @@ def get_annotations(adata):
 
             annotations["obs"][slug] = func(array)
             annotations["obs"][slug]["name"] = group
+            annotations["obs"][slug]["category"] = obs_cat.get(group, "main")
 
     annotations["obsm"] = [value for value in adata["obsm"].array_keys()]
     annotations["var"] = list(get_group_index(adata["var"])[:])
