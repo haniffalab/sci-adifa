@@ -113,8 +113,6 @@ def create_app(test_config=None):
         else:
             if not is_running_server:
                 app.logger.warning("Server is not running")
-            if inspector.has_table("datasets"):
-                dataset_utils.load_files()
             else:
                 app.logger.warning("No 'datasets' table")
 
