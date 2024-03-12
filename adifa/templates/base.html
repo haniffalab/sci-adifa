@@ -29,7 +29,7 @@
   <body class="h-100">
     <div class="container-fluid">
       <div class="row">
-        <aside class="main-sidebar col-12 col-md-3 col-lg-2 px-0">
+        <aside class="main-sidebar col-12 col-sm-6 col-md-3 col-lg-2 px-0">
           <div class="main-navbar">
             <nav class="navbar align-items-stretch navbar-light bg-white flex-md-nowrap p-0">
               <a class="navbar-brand" href="{{ url_for('datasets.index') }}">
@@ -56,7 +56,7 @@
             {% endblock %}
           </footer>                     
         </aside>
-        <main class="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
+        <main class="main-content col-lg-10 col-md-9 col-sm-6 p-0 offset-lg-2 offset-md-3">
           <div class="main-navbar sticky-top bg-white">
             {% block navbar %}
               {% include 'blocks/navbar.html' %}
