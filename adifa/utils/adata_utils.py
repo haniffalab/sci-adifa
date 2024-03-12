@@ -303,9 +303,11 @@ def cat_expr_w_counts(datasetId, cat, gene, func="mean"):
 
     gene_idx = np.where(get_group_index(adata["var"])[:] == gene)[0][0]
     cat_df = pd.DataFrame(
-        parse_group(adata["obs"][cat])
-        if type(adata["obs"][cat]).__name__ == "group"
-        else parse_array(adata, adata["obs"][cat]),
+        (
+            parse_group(adata["obs"][cat])
+            if type(adata["obs"][cat]).__name__ == "group"
+            else parse_array(adata, adata["obs"][cat])
+        ),
         index=get_group_index(adata["obs"])[:],
         columns=[cat],
     )
@@ -350,7 +352,7 @@ def mode(d):
 def type_category(obs):
     categories = [str(i) for i in obs.categories.values.flatten()]
 
-    if len(categories) > 100:
+    if len(categories) > 100 and current_app.config.get("TRUNCATE_OBS", True):
         return {
             "type": "categorical",
             "is_truncated": True,
