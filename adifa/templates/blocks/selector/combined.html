@@ -1,11 +1,11 @@
-<div class="gene-sidebar">
-    <div class="card card-small">
+<div class="gene-sidebar d-flex" style="max-height:85vh; overflow-y: scroll;">
+    <div class="card card-small w-100">
       <div class="card-header border-bottom">
         <h6 class="m-0">Gene/Protein Expression</h6>
       </div>        
-      <div class="card-body p-0">
+      <div class="card-body p-0 container">
         <ul class="list-group list-group-flush">               
-          <li class="list-group-item p-0">
+          <li class="list-group-item p-0 sticky-top">
             <h6 class="gene-sidebar-title">Search for genes/proteins</h6>   
             <p class="gene-sidebar-info">Protein names are followed by "_protein"</p>     
           </li>            
@@ -14,7 +14,7 @@
             <div id="search-genes-selected" class="mt-2"></div>
           </li>       
           {% if dataset.genes_curated %}   
-          <li class="list-group-item p-0">
+          <li class="list-group-item p-0 sticky-top">
             <h6 class="gene-sidebar-title">Author curated genes</h6>              
           </li>        
           <li class="list-group-item">
@@ -23,7 +23,7 @@
             {% endfor %}
           </li>   
           {% endif %}                      
-          <li class="list-group-item p-0">
+          <li class="list-group-item p-0 sticky-top">
             <h6 class="gene-sidebar-title">Genes implicated with diseases</h6>        
           </li>          
           <li class="list-group-item">
@@ -31,7 +31,7 @@
             <div id="search-genes-disease-set" class="mt-2"></div>
           </li>    
           {% if dataset.genes_deg %}
-          <li class="list-group-item p-0">
+          <li class="list-group-item p-0 sticky-top">
             <h6 class="gene-sidebar-title">Differentially expressed genes</h6>        
           </li>                        
           <li class="list-group-item">
