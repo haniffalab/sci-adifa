@@ -78,7 +78,8 @@ class SearchDiseases(Resource):
                     if row[disease] not in output:
                         output[row[disease]] = []
 
-                    output[row[disease]].append(row[gene])
+                    if row[gene] not in output[row[disease]]:
+                        output[row[disease]].append(row[gene])
 
         # return output
         results = []
@@ -125,7 +126,8 @@ class DiseaseGeneList(Resource):
                     if row[disease] not in output:
                         output[row[disease]] = []
 
-                    output[row[disease]].append(row[gene])
+                    if row[gene] not in output[row[disease]]:
+                        output[row[disease]].append(row[gene])
 
         # return resources
         return {"data": output}
