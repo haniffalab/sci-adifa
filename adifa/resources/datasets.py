@@ -82,10 +82,13 @@ class SearchDiseases(Resource):
                         output[row[disease]] = {}
                         categories[row[disease]] = set()
 
-                    if row[gene] not in output[row[disease]]:
-                        cat = row.get(category, "default")
-                        output[row[disease]].setdefault(cat, []).append(row[gene])
-                        categories[row[disease]].add(cat)
+                    cat = row.get(category, "default")
+                    categories[row[disease]].add(cat)
+                    output[row[disease]].setdefault(cat, {}).setdefault(
+                        row[gene], {"gene": row[gene], "info": []}
+                    )
+                    if info in row:
+                        output[row[disease]][cat][row[gene]]["info"].append(row[info])
 
         # return output
         results = []
@@ -111,40 +114,4 @@ class CellByGeneAggregates(Resource):
         for gene in genes:
             output += adata_utils.cat_expr_w_counts(id, obs, gene)
 
-        return {"data": output}
-
-
-class DiseaseGeneList(Resource):
-    def get(self, id):
-        term = request.args.get("term", "", str)
-
-        output = {}
-        disease = "Disease"
-        gene = "Gene mutation"
-        category = "Category"
-        datafile = adata_utils.disease_filename()
-
-        # open csv file;
-        from csv import DictReader
-
-        with open(datafile, newline="", errors="ignore") as f:
-            reader = DictReader(f)
-
-            # grab diseases that match search + related genes
-            for row in reader:
-                if (
-                    term.lower() in row[disease].lower()
-                ):  # should also check gene is in dataset here
-                    if row[disease] not in output:
-                        output[row[disease]] = []
-
-                    if row[gene] not in output[row[disease]]:
-                        output[row[disease]].append(
-                            {
-                                "gene": row[gene],
-                                "category": row.get(category, "default"),
-                            }
-                        )
-
-        # return resources
         return {"data": output}

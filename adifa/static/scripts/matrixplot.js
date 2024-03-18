@@ -741,19 +741,27 @@
             $('<div/>').append('<p/>').text(cat.toUpperCase())
           )
         }
-        $.each(categories[cat], function (i) {
+        $.each(categories[cat], function (gene) {
           let active = false
-          if ($('#gene-deg-'+escapeSelector(categories[cat][i])).length){
-            active = $('#gene-deg-'+escapeSelector(categories[cat][i])).hasClass('active')
+          if ($('#gene-deg-'+escapeSelector(categories[cat][gene]["gene"])).length){
+            active = $('#gene-deg-'+escapeSelector(categories[cat][gene]["gene"])).hasClass('active')
           }
           $('#search-genes-disease-set').append(
             $('<button/>')
               .attr('type', 'button')
-              .attr('id', 'disease-gene-deg-' + categories[cat][i])
-              .attr('data-gene', categories[cat][i])
+              .attr('id', 'disease-gene-deg-' + categories[cat][gene]["gene"])
+              .attr('data-gene', categories[cat][gene]["gene"])
+              .attr('title', categories[cat][gene]["info"].join("; "))
               .addClass('btn-gene-select btn btn-outline-info btn-sm btn-disease-gene')
-              .text(categories[cat][i])
+              .text(categories[cat][gene]["gene"])
               .addClass(active ? 'active' : '')
+              .tooltip({
+                trigger: 'hover',
+                delay: {show: 350},
+                placement: 'top',
+                fallbackPlacement: 'flip',
+                boundary: 'viewport'
+              })
           )
         })
       })
