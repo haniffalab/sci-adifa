@@ -753,7 +753,6 @@
         }
       }
     }).on('select2:select', function (e) {
-      console.log(e)
       const data = e.params.data
       const categories = data.values
       $('#search-genes-disease-set').empty()
@@ -781,7 +780,7 @@
                 trigger: 'hover',
                 delay: {show: 350},
                 placement: 'top',
-                fallbackPlacement: ['left', 'right', 'bottom', 'flip'],
+                fallbackPlacement: 'flip',
                 boundary: 'viewport'
               })
           )
