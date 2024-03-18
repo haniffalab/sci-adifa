@@ -733,22 +733,29 @@
       }
     }).on('select2:select', function (e) {
       const data = e.params.data
-      const genes = data.id.split(',')
+      const categories = data.values
       $('#search-genes-disease-set').empty()
-      $.each(genes, function (i) {
-        let active = false
-        if ($('#gene-deg-'+escapeSelector(genes[i])).length){
-          active = $('#gene-deg-'+escapeSelector(genes[i])).hasClass('active')
+      $.each(categories, function (cat) {
+        if (cat!=='default'){
+          $('#search-genes-disease-set').append(
+            $('<div/>').append('<p/>').text(cat.toUpperCase())
+          )
         }
-        $('#search-genes-disease-set').append(
-          $('<button/>')
-            .attr('type', 'button')
-            .attr('id', 'disease-gene-deg-' + genes[i])
-            .attr('data-gene', genes[i])
-            .addClass('btn-gene-select btn btn-outline-info btn-sm btn-disease-gene')
-            .text(genes[i])
-            .addClass(active ? 'active' : '')
-        )
+        $.each(categories[cat], function (i) {
+          let active = false
+          if ($('#gene-deg-'+escapeSelector(categories[cat][i])).length){
+            active = $('#gene-deg-'+escapeSelector(categories[cat][i])).hasClass('active')
+          }
+          $('#search-genes-disease-set').append(
+            $('<button/>')
+              .attr('type', 'button')
+              .attr('id', 'disease-gene-deg-' + categories[cat][i])
+              .attr('data-gene', categories[cat][i])
+              .addClass('btn-gene-select btn btn-outline-info btn-sm btn-disease-gene')
+              .text(categories[cat][i])
+              .addClass(active ? 'active' : '')
+          )
+        })
       })
     })
 

@@ -245,13 +245,11 @@
 
       if (colorScaleType === 'categorical') {
         const arr = active.dataset.data_obs[colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()].values
-        const catColors = d3.scaleOrdinal().domain($.map(arr, (v, k) => v)).range(['#2f4f4f', '#2e8b57', '#7f0000', '#808000', '#483d8b', '#008000', '#000080', '#8b008b', '#b03060', '#ff0000', '#00ced1', '#ff8c00', '#ffff00', '#00ff00', '#8a2be2', '#00ff7f', '#dc143c', '#00bfff', '#f4a460', '#0000ff', '#f08080', '#adff2f', '#d8bfd8', '#ff00ff', '#1e90ff', '#90ee90', '#ff1493', '#7b68ee', '#ee82ee', '#ffdab9'])
+        const catColors = d3.scaleOrdinal().domain(Object.values(arr)).range(['#2f4f4f', '#2e8b57', '#7f0000', '#808000', '#483d8b', '#008000', '#000080', '#8b008b', '#b03060', '#ff0000', '#00ced1', '#ff8c00', '#ffff00', '#00ff00', '#8a2be2', '#00ff7f', '#dc143c', '#00bfff', '#f4a460', '#0000ff', '#f08080', '#adff2f', '#d8bfd8', '#ff00ff', '#1e90ff', '#90ee90', '#ff1493', '#7b68ee', '#ee82ee', '#ffdab9'])
         const checkboxCheck = {}
-        for (const k in arr) {
-          if (Object.prototype.hasOwnProperty.call(arr, k)) {
-            document.getElementById(colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + '-' + k).style.backgroundColor = catColors(arr[k])
-            checkboxCheck[arr[k]] = $('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + arr[k] + '"]').is(':checked')
-          }
+        for (const [k, v] of Object.entries(arr)) {
+          document.getElementById(colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + '-' + k).style.backgroundColor = catColors(v)
+          checkboxCheck[v] = $('#obs-list-' + colorScaleKey.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() + ' input[name="obs-' + v + '"]').is(':checked')
         }
         myColor = function (d) { // Public Method
           if (checkboxCheck[d]) {
@@ -756,22 +754,29 @@
       }
     }).on('select2:select', function (e) {
       const data = e.params.data
-      const genes = data.id.split(',')
+      const categories = data.values
       $('#search-genes-disease-set').empty()
-      $.each(genes, function (i) {
-        let active = false
-        if ($('#gene-deg-'+escapeSelector(genes[i])).length){
-          active = $('#gene-deg-'+escapeSelector(genes[i])).hasClass('active')
+      $.each(categories, function (cat) {
+        if (cat!=='default'){
+          $('#search-genes-disease-set').append(
+            $('<div/>').append('<p/>').text(cat.toUpperCase())
+          )
         }
-        $('#search-genes-disease-set').append(
-          $('<button/>')
-            .attr('type', 'button')
-            .attr('id', 'disease-gene-deg-' + genes[i])
-            .attr('data-gene', genes[i])
-            .addClass('btn-gene-select btn btn-outline-info btn-sm btn-disease-gene')
-            .text(genes[i])
-            .addClass(active ? 'active' : '')
-        )
+        $.each(categories[cat], function (i) {
+          let active = false
+          if ($('#gene-deg-'+escapeSelector(categories[cat][i])).length){
+            active = $('#gene-deg-'+escapeSelector(categories[cat][i])).hasClass('active')
+          }
+          $('#search-genes-disease-set').append(
+            $('<button/>')
+              .attr('type', 'button')
+              .attr('id', 'disease-gene-deg-' + categories[cat][i])
+              .attr('data-gene', categories[cat][i])
+              .addClass('btn-gene-select btn btn-outline-info btn-sm btn-disease-gene')
+              .text(categories[cat][i])
+              .addClass(active ? 'active' : '')
+          )
+        })
       })
     })
 
