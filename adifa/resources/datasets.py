@@ -1,4 +1,5 @@
 import json
+from collections import OrderedDict
 
 from flask import jsonify, request
 from flask_restful import Resource
@@ -82,7 +83,7 @@ class SearchDiseases(Resource):
                         output[row[disease]] = {}
                         categories[row[disease]] = set()
 
-                    cat = row.get(category, "default")
+                    cat = row.get(category, "default").replace("_", " ").upper()
                     categories[row[disease]].add(cat)
                     output[row[disease]].setdefault(cat, {}).setdefault(
                         row[gene], {"gene": row[gene], "info": []}
@@ -96,7 +97,9 @@ class SearchDiseases(Resource):
             sample = {
                 "id": key,
                 "text": key,
-                "values": value,
+                "values": {
+                    k: OrderedDict(sorted(v.items())) for k, v in sorted(value.items())
+                },
                 "categories": list(categories[key]),
             }
             results.append(sample)
