@@ -1,7 +1,7 @@
 {% macro menu(dataset, obs, type) %}
 {% set main_obs = [] %}
 {% set grouped_obs = [] %}
-{% for cat,obs in dataset.data_obs.items()|groupby("1.category")|sort %}
+{% for cat,obs in dataset.data_obs.items()|groupby("1.category", default="main")|sort %}
   {% if cat == "main" %}
     {% set dummy = main_obs.append([cat, obs]) %}
   {% else %}
