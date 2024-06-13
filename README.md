@@ -16,7 +16,7 @@ This developmental branch builds upon the original Adifa software to add a new w
 
 This includes three new visualisations for users to explore their droplet based scRNA-seq data.
 
-Guides and notebooks for mask generation and adapter notebook to process scRNA-seq ready for input into the sci-adifa-elmer will be available at [(https://github.com/arose20/Elmer)](https://github.com/arose20/Elmer)
+Guides and notebooks for mask generation and adapter notebook to process scRNA-seq ready for input into the sci-adifa-elmer will be available at [(https://github.com/arose20/Pseudo-spatial_visualisation_of_scRNAseq_data)](https://github.com/arose20/Pseudo-spatial_visualisation_of_scRNAseq_data)
 
 <br> <br>
 
