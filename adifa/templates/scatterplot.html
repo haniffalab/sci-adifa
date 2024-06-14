@@ -39,12 +39,13 @@ pseudo-spatial visualisation", breadcrumbs=dataset.title, dataset=dataset) }}
         </div>
         {% endif %} {% endblock %}
       </div>
+
       <div class="col-lg-5 col-md-12 p-0 m-0">
-        <div
+        <div id="spatial-column" class="container d-flex flex-column">
+          <div
           id="spatial-container"
           data-datasetId="{{ dataset.id }}"
           class="card card-small"
-          style="height: 100%"
         >
           <div
             class="card-body mx-auto row d-flex flex-wrap align-items-center p-0"
@@ -126,9 +127,25 @@ pseudo-spatial visualisation", breadcrumbs=dataset.title, dataset=dataset) }}
               </div>
               <!-- <div id="spatial-loader" class="spinner"><div class="double-bounce1"></div><div class="double-bounce2"></div></div> -->
               <!-- <img id="spatial-img" class="align-middle" style="max-width: 100%;"/> -->
-              <div id="spatial-plot" class="w-100 align-self-center"></div>
+              <div class="w-100 h-100" style="padding-top: 4rem;">
+                <div id="spatial-plot" class="w-100 h-100 align-self-center"></div>
+              </div>
             </div>
           </div>
+        </div>
+
+        <div class="container mt-2 p-0" id="spatial-ref-container">
+          <div class="card card-small h-100 w-100 d-flex align-items-center">
+            <div class="card-body h-100 d-flex align-items-center">
+              <img
+                id="spatial-ref"
+                class="align-middle mw-100 mh-100"
+                style="height: auto;"
+                src="/images/Elmer_section_reference.png"
+              />
+            </div>
+          </div>
+        </div>
         </div>
       </div>
     </div>
@@ -138,18 +155,6 @@ pseudo-spatial visualisation", breadcrumbs=dataset.title, dataset=dataset) }}
     'blocks/selector/combined.html' %} {% elif 'cite_seq' in dataset.title %} {%
     include 'blocks/selector/proteins.html' %} {% else %} {% include
     'blocks/selector/genes.html' %} {% endif %} {% endblock %}
-    <div class="container mt-2">
-      <div class="card card-small">
-        <div class="card-body">
-          <img
-            id="spatial-ref"
-            class="align-middle"
-            style="max-width: 100%"
-            src="/images/Elmer_section_reference.png"
-          />
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 {% endblock %}

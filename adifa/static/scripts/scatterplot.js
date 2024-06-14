@@ -678,6 +678,9 @@
         .parent()
         .height(height);
       $("#" + this.attr("id")).height(height);
+      $("#spatial-column").height(height);
+      $("#spatial-container").height(height * (2 / 3));
+      $("#spatial-ref-container").height(height * (1 / 3));
       // $('#' + this.attr('id')).width(width)
 
       // load dataset
