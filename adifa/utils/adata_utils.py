@@ -380,10 +380,12 @@ def mode(d):
     return int(mode[0])
 
 
-def type_category(obs):
+def type_category(obs, from_discrete=False):
     categories = [str(i) for i in obs.categories.values.flatten()]
 
-    if pd.api.types.is_string_dtype(obs.categories.dtype):
+    if from_discrete:
+        obs_type = "discrete"
+    elif pd.api.types.is_string_dtype(obs.categories.dtype):
         if all(
             obs.categories.str.match(
                 "^(\d{4})-(0[1-9]|1[0-2]|[1-9])-([1-9]|0[1-9]|[1-2]\d|3[0-1])$"
@@ -393,7 +395,9 @@ def type_category(obs):
         else:
             obs_type = "categorical"
 
-    if len(categories) > 100 and current_app.config.get("TRUNCATE_OBS", True):
+    if len(categories) > 100 and (
+        from_discrete or current_app.config.get("TRUNCATE_OBS", True)
+    ):
         return {
             "type": obs_type,
             "is_truncated": True,
@@ -423,7 +427,7 @@ def type_numeric(obs):
 
 
 def type_discrete(obs):
-    return {"type": "discrete"}
+    return type_category(pd.Series(obs).astype("category").cat, from_discrete=True)
 
 
 def ndarray_max(a):

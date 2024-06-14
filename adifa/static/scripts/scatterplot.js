@@ -348,7 +348,7 @@
           active.dataset.data_obs[
             colorScaleKey.replace(/[^a-zA-Z0-9]/g, "").toLowerCase()
           ].values;
-        const catColors = d3
+        const catColors = d3scale
           .scaleOrdinal()
           .domain(Object.values(arr))
           .range([
