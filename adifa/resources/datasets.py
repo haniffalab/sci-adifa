@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from flask import jsonify, request
 from flask_restful import Resource
 
@@ -65,8 +67,11 @@ class SearchDiseases(Resource):
         q = request.args.get("search", "", type=str)
 
         output = {}
-        disease = "Haematological abnormality"
+        categories = {}
+        disease = "Disease"
         gene = "Gene mutation"
+        category = "Category"
+        info = "Info"
         datafile = adata_utils.disease_filename()
 
         # open csv file;
@@ -81,14 +86,28 @@ class SearchDiseases(Resource):
                     q.lower() in row[disease].lower()
                 ):  # should also check gene is in dataset here
                     if row[disease] not in output:
-                        output[row[disease]] = []
+                        output[row[disease]] = {}
+                        categories[row[disease]] = set()
 
-                    output[row[disease]].append(row[gene])
+                    cat = row.get(category, "default").replace("_", " ").upper()
+                    categories[row[disease]].add(cat)
+                    output[row[disease]].setdefault(cat, {}).setdefault(
+                        row[gene], {"gene": row[gene], "info": []}
+                    )
+                    if info in row:
+                        output[row[disease]][cat][row[gene]]["info"].append(row[info])
 
         # return output
         results = []
         for key, value in output.items():
-            sample = {"id": ",".join(value), "text": key}
+            sample = {
+                "id": key,
+                "text": key,
+                "values": {
+                    k: OrderedDict(sorted(v.items())) for k, v in sorted(value.items())
+                },
+                "categories": list(categories[key]),
+            }
             results.append(sample)
 
         return {"results": results}
@@ -104,33 +123,4 @@ class CellByGeneAggregates(Resource):
         for gene in genes:
             output += adata_utils.cat_expr_w_counts(id, obs, gene)
 
-        return {"data": output}
-
-
-class DiseaseGeneList(Resource):
-    def get(self, id):
-        term = request.args.get("term", "", str)
-
-        output = {}
-        disease = "Haematological abnormality"
-        gene = "Gene mutation"
-        datafile = adata_utils.disease_filename()
-
-        # open csv file;
-        from csv import DictReader
-
-        with open(datafile, newline="", errors="ignore") as f:
-            reader = DictReader(f)
-
-            # grab diseases that match search + related genes
-            for row in reader:
-                if (
-                    term.lower() in row[disease].lower()
-                ):  # should also check gene is in dataset here
-                    if row[disease] not in output:
-                        output[row[disease]] = []
-
-                    output[row[disease]].append(row[gene])
-
-        # return resources
         return {"data": output}

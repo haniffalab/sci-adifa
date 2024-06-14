@@ -9,7 +9,6 @@ from adifa.resources.datasets import (
     Masks,
     Dataset,
     Datasets,
-    DiseaseGeneList,
     Labels,
     SearchGenes,
     SearchDiseases,
@@ -27,7 +26,6 @@ api.add_resource(CellByGeneAggregates, "/datasets/<id>/cxg")
 api.add_resource(Coordinates, "/coordinates")
 api.add_resource(Dataset, "/datasets/<id>")
 api.add_resource(Datasets, "/datasets")
-api.add_resource(DiseaseGeneList, "/datasets/<id>/diseases")
 api.add_resource(Masks, "/masks")
 api.add_resource(Labels, "/labels")
 api.add_resource(SearchGenes, "/datasets/<id>/search/genes")

@@ -15,7 +15,6 @@ import matplotlib as mpl
 from matplotlib import cm
 import plotly.graph_objs as go
 import datetime
-from dateutil.relativedelta import relativedelta
 
 from adifa import models
 from adifa.utils.adata_utils import (
@@ -66,12 +65,12 @@ def get_matrixplot(
 
     try:
         dataset = models.Dataset.query.get(datasetId)
-    except exc.SQLAlchemyError as e:
+    except exc.SQLAlchemyError:
         raise DatabaseOperationError
 
     try:
         adata = current_app.adata[dataset.filename]
-    except (ValueError, AttributeError) as e:
+    except (ValueError, AttributeError):
         raise DatasetNotExistsError
 
     vars = get_group_index(adata["var"])[:]
@@ -89,13 +88,21 @@ def get_matrixplot(
             columns=[groupby],
         )
     else:
-        obs_arr = parse_array(adata["obs"][groupby], adata)
+        obs_arr = parse_array(adata, adata["obs"][groupby])
         obs_df = pd.DataFrame(
-            [int(x) for x in list(obs_arr)]
-            if obs_arr.dtype in ["int"]
-            else [float(x) for x in list(obs_arr)]
-            if obs_arr.dtype in ["float"]
-            else [str(x) for x in list(obs_arr)],
+            (
+                [int(x) for x in list(obs_arr)]
+                if "int" in obs_arr.dtype.name
+                else (
+                    [float(x) for x in list(obs_arr)]
+                    if "float" in obs_arr.dtype.name
+                    else (
+                        [complex(x) for x in list(obs_arr)]
+                        if "complex" in obs_arr.dtype.name
+                        else [str(x) for x in list(obs_arr)]
+                    )
+                )
+            ),
             index=get_group_index(adata["obs"])[:],
             columns=[groupby],
         )
@@ -186,7 +193,7 @@ def get_spatial_plot(
 
     # Check settings defined in function input
 
-    cat1 = adata.uns["masks"][mask]["obs"][()]
+    cat1 = adata["uns"]["masks"][mask]["obs"][()]
     cat2 = cat  # change to annotations of interest
     cmap = mpl.colormaps[
         colormap
@@ -195,8 +202,8 @@ def get_spatial_plot(
     # scale_lower_value = scale_min
     # scale_upper_value = scale_max
 
-    obs_cat1 = pd.Categorical(parse_data(adata.obs[cat1]))
-    obs_cat2 = parse_data(adata.obs[cat2], adata)
+    obs_cat1 = pd.Categorical(parse_data(adata["obs"][cat1]))
+    obs_cat2 = parse_data(adata["obs"][cat2], adata)
 
     if not mode:
         return plot_categorical(
@@ -214,13 +221,13 @@ def get_spatial_plot(
         if len(plot_value) > 1:
             obs_cat2_df = pd.DataFrame(
                 obs_cat2.astype(str),
-                index=get_group_index(adata.obs),
+                index=get_group_index(adata["obs"]),
                 columns=["combined_annotation"],
             )
             for value in plot_value:
-                obs_cat2_df.loc[
-                    obs_cat2.isin([value]), "combined_annotation"
-                ] = "combined_annotation"
+                obs_cat2_df.loc[obs_cat2.isin([value]), "combined_annotation"] = (
+                    "combined_annotation"
+                )
             obs_cat2 = pd.Categorical(obs_cat2_df["combined_annotation"])
             plot_value = "combined_annotation"
 
@@ -519,15 +526,17 @@ def plot_polygons(
                 )
             ),
             hoveron="fills",
-            text=wrap_text(
-                text_template(
-                    key=key,
-                    value=[val for k, val in values_dict.items() if k in key][0],
-                    sum_values=sum(values),
+            text=(
+                wrap_text(
+                    text_template(
+                        key=key,
+                        value=[val for k, val in values_dict.items() if k in key][0],
+                        sum_values=sum(values),
+                    )
                 )
-            )
-            if text_template
-            else None,
+                if text_template
+                else None
+            ),
             hoverinfo="text+x+y",
             # hoverinfo="x+y",
         )
@@ -662,7 +671,9 @@ def plot_date(
         df_new = (
             pd.DataFrame(
                 {
-                    datetime_add_info_col: parse_data(adata.obs[datetime_add_info_col]),
+                    datetime_add_info_col: parse_data(
+                        adata["obs"][datetime_add_info_col]
+                    ),
                     cat2: obs_cat2,
                 }
             )

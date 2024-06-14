@@ -113,7 +113,7 @@ def create_app(test_config=None):
         else:
             if not is_running_server:
                 app.logger.warning("Server is not running")
-            if not inspector.has_table("datasets"):
+            else:
                 app.logger.warning("No 'datasets' table")
 
     @app.context_processor

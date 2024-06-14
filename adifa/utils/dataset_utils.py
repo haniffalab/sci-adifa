@@ -20,10 +20,17 @@ def auto_discover():
             adata = zarr.open(
                 os.path.join(current_app.config.get("DATA_PATH"), zarr_dir), "r"
             )
+
+            if "X" in adata.group_keys():
+                current_app.logger.warn(zarr_dir + "'s X matrix is not a dense matrix")
+                current_app.logger.warn("Skipping " + zarr_dir)
+                continue
+
             annotations = adata_utils.get_annotations(adata)
             # generate hash
             current_app.logger.info("Hashing " + zarr_dir)
-            hash = adata.X.hexdigest()  #
+            # hash = adata["X"].hexdigest()  # we don't implement hash usage, can be removed
+            hash = zarr_dir
 
             # check if exists
             try:
@@ -40,10 +47,10 @@ def auto_discover():
                 new.hash = hash
                 new.data_obs = annotations.get("obs")
                 new.data_obsm = annotations.get("obsm")
-                new.data_var = annotations.get("var")
-                new.has_masks = annotations.get("has_masks")
                 # new.genes_deg = adata_utils.get_degs(adata)
                 new.title = zarr_dir
+                new.data_var = annotations.get("var")
+                new.has_masks = annotations.get("has_masks")
                 try:
                     db.session.add(new)
                     db.session.commit()
@@ -56,9 +63,9 @@ def auto_discover():
                 record.published = 1
                 record.data_obs = annotations.get("obs")
                 record.data_obsm = annotations.get("obsm")
+                # record.genes_deg = adata_utils.get_degs(adata)
                 record.data_var = annotations.get("var")
                 record.has_masks = annotations.get("has_masks")
-                # record.genes_deg = adata_utils.get_degs(adata)
                 try:
                     db.session.commit()
                 except Exception as e:

@@ -1,12 +1,10 @@
 import os
 import re
-
 from flask import current_app
 from sqlalchemy import exc
-import scanpy as sc
 import numpy as np
-import zarr
 import pandas as pd
+import zarr
 
 from adifa import models
 from adifa.resources.errors import (
@@ -31,12 +29,13 @@ def get_group_index(group):
 
 
 def parse_data(data, store=None):
-    if type(data) == zarr.Group:
+    if isinstance(data, zarr.Group):
         return parse_group(data)
-    elif type(data) == zarr.Array:
-        return parse_array(data, store)
+    elif isinstance(data, zarr.Array):
+        return parse_array(store, data)
 
 
+# anndata versions >=0.8.0 write categorical values in a Group with categories and codes
 def parse_group(group):
     if "_index" in group.attrs:
         df = pd.DataFrame(index=group[group.attrs["_index"]])
@@ -46,6 +45,8 @@ def parse_group(group):
             if not name.startswith("_") and name != get_group_index_name(group)
         ]:
             df[name] = group[name]
+        for name in group.group_keys():
+            df[name] = parse_group(group[name])
         return df
     elif "codes" in group and "categories" in group:
         series = pd.Categorical.from_codes(
@@ -58,7 +59,8 @@ def parse_group(group):
         return series
 
 
-def parse_array(array, store=None):
+# anndata versions <0.8.0 write categorical values in an Array with categories in a separate group
+def parse_array(store, array):
     if "categories" in array.attrs:
         series = pd.Categorical.from_codes(
             array[:],
@@ -87,36 +89,38 @@ def get_annotations(adata):
     }
 
     obs_cat = {}
-    if "column_ordering" in adata.uns:
-        for k in adata.uns["column_ordering"].keys():
-            for v in adata.uns["column_ordering"][k][:]:
+    OBS_GROUPING = "column_ordering"
+    if OBS_GROUPING in adata["uns"].group_keys():
+        for k in adata["uns"][OBS_GROUPING]:
+            for v in adata["uns"][OBS_GROUPING][k]:
                 obs_cat[v] = k
 
     for name in [
         name
-        for name in adata.obs.array_keys()
-        if not name.startswith("_") and name != get_group_index_name(adata.obs)
+        for name in adata["obs"].array_keys()
+        if not name.startswith("_") and name != get_group_index_name(adata["obs"])
     ]:
-        array = parse_array(adata.obs[name], adata)
+        array = parse_array(adata, adata["obs"][name])
         # Map numpy dtype to a simple type for switching
         dtype = re.sub(r"[^a-zA-Z]", "", array.dtype.name)
         # Get the function from switcher dictionary
         func = switcher.get(dtype, type_discrete)
         # Define an API key safe
         slug = re.sub(r"[^a-zA-Z0-9]", "", name).lower()
+
         annotations["obs"][slug] = func(array)
         annotations["obs"][slug]["name"] = name
-        annotations["obs"][slug]["category"] = obs_cat.get(name, "")
+        annotations["obs"][slug]["category"] = obs_cat.get(name, "main")
 
     for group in [
         group
-        for group in adata.obs.group_keys()
-        if not group.startswith("_") and group != get_group_index_name(adata.obs)
+        for group in adata["obs"].group_keys()
+        if not group.startswith("_") and group != get_group_index_name(adata["obs"])
     ]:
         if all(
-            a in list(adata.obs[group].array_keys()) for a in ["categories", "codes"]
+            a in list(adata["obs"][group].array_keys()) for a in ["categories", "codes"]
         ):
-            array = parse_group(adata.obs[group])
+            array = parse_group(adata["obs"][group])
             dtype = re.sub(r"[^a-zA-Z]", "", array.dtype.name)
             # Get the function from switcher dictionary
             func = switcher.get(dtype, type_discrete)
@@ -125,12 +129,12 @@ def get_annotations(adata):
 
             annotations["obs"][slug] = func(array)
             annotations["obs"][slug]["name"] = group
-            annotations["obs"][slug]["category"] = obs_cat.get(group, "")
+            annotations["obs"][slug]["category"] = obs_cat.get(group, "main")
 
-    annotations["obsm"] = [value for value in adata.obsm.array_keys()]
-    annotations["var"] = list(get_group_index(adata.var)[:])
+    annotations["obsm"] = [value for value in adata["obsm"].array_keys()]
+    annotations["var"] = list(get_group_index(adata["var"])[:])
 
-    if "masks" in adata.uns and len(adata.uns["masks"].keys()):
+    if "masks" in adata["uns"] and len(adata["uns"]["masks"].keys()):
         annotations["has_masks"] = True
 
     return annotations
@@ -159,19 +163,19 @@ def get_bounds(datasetId, obsm):
 
     try:
         dataset = models.Dataset.query.get(datasetId)
-    except exc.SQLAlchemyError as e:
+    except exc.SQLAlchemyError:
         raise DatabaseOperationError
 
     try:
         adata = current_app.adata[dataset.filename]
-    except (ValueError, AttributeError) as e:
+    except (ValueError, AttributeError):
         raise DatasetNotExistsError
 
     # Normalised [-1,1] @TODO
     norm_obsm = (
         2.0
-        * (adata.obsm[obsm][:] - np.min(adata.obsm[obsm][:]))
-        / np.ptp(adata.obsm[obsm][:])
+        * (adata["obsm"][obsm][:] - np.min(adata["obsm"][obsm][:]))
+        / np.ptp(adata["obsm"][obsm][:])
         - 1
     )
 
@@ -196,19 +200,19 @@ def get_coordinates(datasetId, obsm):
 
     try:
         dataset = models.Dataset.query.get(datasetId)
-    except exc.SQLAlchemyError as e:
+    except exc.SQLAlchemyError:
         raise DatabaseOperationError
 
     try:
         adata = current_app.adata[dataset.filename]
-    except (ValueError, AttributeError) as e:
+    except (ValueError, AttributeError):
         raise DatasetNotExistsError
 
     # Normalised [-1,1] @TODO
     norm_obsm = (
         2.0
-        * (adata.obsm[obsm][:] - np.min(adata.obsm[obsm][:]))
-        / np.ptp(adata.obsm[obsm][:])
+        * (adata["obsm"][obsm][:] - np.min(adata["obsm"][obsm][:]))
+        / np.ptp(adata["obsm"][obsm][:])
         - 1
     )
 
@@ -225,8 +229,8 @@ def get_masks(datasetId):
     dataset = models.Dataset.query.get(datasetId)
     adata = current_app.adata[dataset.filename]
 
-    if "masks" in adata.uns:
-        return list(adata.uns["masks"].keys())
+    if "masks" in adata["uns"]:
+        return list(adata["uns"]["masks"].keys())
     else:
         return []
 
@@ -237,27 +241,31 @@ def get_labels(datasetId, obsm, gene="", obs=""):
 
     if gene:
         try:
-            gene_idx = np.where(get_group_index(adata.var)[:] == gene)[0][0]
-            expression = adata.X[:, gene_idx]
-            output = [str(round(float(x), 4)) for x in expression]
+            output = [0] * get_group_index(adata["obs"]).shape[0]
+            # expression = adata[:,gene].X/max(1,adata[:,gene].X.max())
+            gene_idx = np.where(get_group_index(adata["var"])[:] == gene)[0][0]
+            expression = adata["X"][:, gene_idx]
+            nonzero_idx = np.nonzero(expression)[0]
+            for i in nonzero_idx:
+                output[i] = str(round(expression[i], 4))
         except KeyError:
             # @todo HANDLE ERROR
-            output = [0] * get_group_index(adata.obs).shape[0]
+            output = [0] * get_group_index(adata["obs"]).shape[0]
         except IndexError:
             # @todo HANDLE ERROR
-            output = [0] * get_group_index(adata.obs).shape[0]
+            output = [0] * get_group_index(adata["obs"]).shape[0]
     elif obs:
         try:
-            if type(adata.obs[obs]).__name__ == "Group":
-                output = [str(x) for x in list(parse_group(adata.obs[obs]))]
+            if type(adata["obs"][obs]).__name__ == "Group":
+                output = [str(x) for x in list(parse_group(adata["obs"][obs]))]
             else:
-                output = [str(x) for x in list(parse_array(adata.obs[obs], adata))]
+                output = [str(x) for x in list(parse_array(adata, adata["obs"][obs]))]
         except KeyError:
             # @todo HANDLE ERROR
-            output = [0] * get_group_index(adata.obs).shape[0]
+            output = [0]
         except IndexError:
             # @todo HANDLE ERROR
-            output = [0] * get_group_index(adata.obs).shape[0]
+            output = [0]
 
     return output
 
@@ -265,9 +273,8 @@ def get_labels(datasetId, obsm, gene="", obs=""):
 def search_genes(datasetId, searchterm):
     dataset = models.Dataset.query.get(datasetId)
     adata = current_app.adata[dataset.filename]
-    # adata = current_app.adata
     output = [
-        g for g in get_group_index(adata.var)[:] if searchterm.lower() in g.lower()
+        g for g in get_group_index(adata["var"])[:] if searchterm.lower() in g.lower()
     ]
 
     return output
@@ -277,7 +284,7 @@ def gene_search(datasetId, searchterm):
     dataset = models.Dataset.query.get(datasetId)
     adata = current_app.adata[dataset.filename]
     # adata = current_app.adata
-    genes = [g for g in get_group_index(adata.var)[:] if searchterm in g]
+    genes = [g for g in get_group_index(adata["var"])[:] if searchterm in g]
 
     output = []
     for gene in genes:
@@ -290,10 +297,19 @@ def gene_search(datasetId, searchterm):
 # def categorised_expr(datasetId, cat, gene, func="mean"):
 #     dataset = models.Dataset.query.get(datasetId)
 #     adata = current_app.adata[dataset.filename]
+# def categorised_expr(datasetId, cat, gene, func="mean"):
+#     dataset = models.Dataset.query.get(datasetId)
+#     adata = current_app.adata[dataset.filename]
 
 #     data = adata[:, [gene]].to_df()
 #     grouping = data.join(adata.obs[cat]).groupby(cat)
+#     data = adata[:, [gene]].to_df()
+#     grouping = data.join(adata.obs[cat]).groupby(cat)
 
+#     if func == "mean":
+#         expr = grouping.mean()
+#     elif func == "median":
+#         expr = grouping.median()
 #     if func == "mean":
 #         expr = grouping.mean()
 #     elif func == "median":
@@ -307,6 +323,7 @@ def gene_search(datasetId, searchterm):
 #     ]
 
 #     return output
+#     return output
 
 
 def cat_expr_w_counts(datasetId, cat, gene, func="mean"):
@@ -315,21 +332,23 @@ def cat_expr_w_counts(datasetId, cat, gene, func="mean"):
     dataset = models.Dataset.query.get(datasetId)
     adata = current_app.adata[dataset.filename]
 
-    gene_idx = np.where(get_group_index(adata.var)[:] == gene)[0][0]
+    gene_idx = np.where(get_group_index(adata["var"])[:] == gene)[0][0]
     cat_df = pd.DataFrame(
-        parse_group(adata.obs[cat])
-        if type(adata.obs[cat]).__name__ == "group"
-        else parse_array(adata.obs[cat], adata),
-        index=get_group_index(adata.obs)[:],
+        (
+            parse_group(adata["obs"][cat])
+            if type(adata["obs"][cat]).__name__ == "group"
+            else parse_array(adata, adata["obs"][cat])
+        ),
+        index=get_group_index(adata["obs"])[:],
         columns=[cat],
     )
     gene_df = pd.DataFrame(
-        adata.X[:, gene_idx], index=get_group_index(adata.obs), columns=[gene]
+        adata["X"][:, gene_idx], index=get_group_index(adata["obs"]), columns=[gene]
     )
 
     groupall = gene_df.join(cat_df).groupby(cat)
     groupexpr = (
-        gene_df.replace(float(adata.X[:, gene_idx].min()), NaN)
+        gene_df.replace(float(adata["X"][:, gene_idx].min()), NaN)
         .join(cat_df)
         .groupby(cat)
     )
@@ -374,7 +393,7 @@ def type_category(obs):
         else:
             obs_type = "categorical"
 
-    if len(categories) > 100:
+    if len(categories) > 100 and current_app.config.get("TRUNCATE_OBS", True):
         return {
             "type": obs_type,
             "is_truncated": True,
@@ -451,4 +470,10 @@ def encode_dtype(a):
 
 
 def disease_filename():
-    return os.path.join(current_app.root_path, "data", "disease.csv")
+    return (
+        os.path.join(current_app.config.get("DATA_PATH"), "disease.csv")
+        if os.path.isfile(
+            os.path.join(current_app.config.get("DATA_PATH"), "disease.csv")
+        )
+        else os.path.join(current_app.root_path, "data", "disease.csv")
+    )
