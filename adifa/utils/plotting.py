@@ -177,7 +177,6 @@ def get_spatial_plot(
     use_premade_info: bool = True,
     datetime_add_info_col: str = "haniffa_ID",
 ):
-
     if not datasetId > 0:
         raise InvalidDatasetIdError
 
@@ -225,9 +224,9 @@ def get_spatial_plot(
                 columns=["combined_annotation"],
             )
             for value in plot_value:
-                obs_cat2_df.loc[obs_cat2.isin([value]), "combined_annotation"] = (
-                    "combined_annotation"
-                )
+                obs_cat2_df.loc[
+                    obs_cat2.isin([value]), "combined_annotation"
+                ] = "combined_annotation"
             obs_cat2 = pd.Categorical(obs_cat2_df["combined_annotation"])
             plot_value = "combined_annotation"
 
@@ -330,7 +329,6 @@ def plot_proportion(
     mask: str,
     plot_value: str,
 ):
-
     if not plot_value:
         values = [0] * len(obs_cat1)
         title = "Nothing selected to visualise"
@@ -343,7 +341,6 @@ def plot_proportion(
         counts_table = pd.crosstab(obs_cat1, obs_cat2)
 
         if mode == "proportion_within_sections":
-
             values = (counts_table[plot_value] / counts_table.sum(axis=1) * 100).values
 
             title = f"Percentage of {plot_value} <br> {cat2} <br> values within section"
@@ -392,7 +389,6 @@ def plot_categorical(
     colormap: str,
     mask: str,
 ):
-
     if not mode or not plot_value or not len(plot_value):
         values = [0] * len(obs_cat2)
         title = "Nothing selected to visualise"
@@ -474,7 +470,6 @@ def plot_polygons(
     scale_lower_value: int = 0,
     scale_upper_value: int = 100,
 ):
-
     values_dict = dict(zip(list(obs_cat1.unique()), values))
 
     if scale == "auto":
@@ -490,7 +485,6 @@ def plot_polygons(
     fig = go.Figure()
 
     for i, key in enumerate(adata.uns["masks"][mask]["polygons"].keys()):
-
         polygon0 = go.Scatter(
             x=list(*adata.uns["masks"][mask]["polygons"][key][:, :, 0, 0]),
             y=list(*adata.uns["masks"][mask]["polygons"][key][:, :, 0, 1]),
@@ -656,7 +650,6 @@ def plot_date(
     plot_covid: bool = False,
     datetime_add_info_col: str = "haniffa_ID",
 ):
-
     obs_cat2 = obs_cat2.astype("datetime64[ns]")
 
     if use_premade_info == True:
