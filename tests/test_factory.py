@@ -19,7 +19,7 @@ def test_privacy(client):
 
 def test_scatterplot(client):
     response = client.get("/dataset/1/scatterplot")
-    assert b"Scatterplot in embedding basis" in response.data
+    assert b"Scatterplot and pseudo-spatial visualisation" in response.data
 
 
 def test_matrixplot(client):

@@ -21,6 +21,7 @@ class Dataset(db.Model):
     data_uns = db.Column(db.JSON, default={})
     data_obsm = db.Column(db.JSON, default={})
     data_varm = db.Column(db.JSON, default={})
+    has_masks = db.Column(db.Boolean, default=False)
     pub_doi = db.Column(db.String(120), nullable=True)
     pub_link = db.Column(db.String(512), nullable=True)
     pub_author = db.Column(db.String(120), nullable=True)
@@ -47,4 +48,5 @@ class Dataset(db.Model):
             "data_obsm": self.data_obsm,
             "data_var": self.data_var,
             "title": self.title,
+            "has_masks": self.has_masks,
         }

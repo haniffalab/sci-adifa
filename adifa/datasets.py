@@ -1,4 +1,3 @@
-import os
 from signal import SIG_DFL
 
 from flask import (
@@ -49,6 +48,7 @@ def scatterplot(id):
         obs = OrderedDict(
             sorted(dataset.data_obs.items(), key=lambda x: getitem(x[1], "name"))
         )
+
     return render_template("scatterplot.html", dataset=dataset, obs=obs)
 
 

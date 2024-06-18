@@ -1,52 +1,160 @@
-{% extends 'base.html' %}
-{% import 'macros/content.html' as content %}
-{% import 'macros/sidebar.html' as sidebar %}
-{% block title %}Scatterplot - {{dataset.title}}{% endblock %}
-
-{% block sidebar %}
-    {{ sidebar.menu(dataset, obs, 'scatterplot') }}
-{% endblock %}
-
-{% block bodyend %}
-{{ super() }}
+{% extends 'base.html' %} {% import 'macros/content.html' as content %} {%
+import 'macros/sidebar.html' as sidebar %} {% block title %}Scatterplot -
+{{dataset.title}}{% endblock %} {% block sidebar %} {{ sidebar.menu(dataset,
+obs, 'scatterplot') }} {% endblock %} {% block bodyend %} {{ super() }}
 <script src="{{ url_for('static', filename='scripts/scatterplot.js') }}"></script>
+<script src="{{ url_for('static', filename='scripts/spatial.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/deck.gl@latest/dist.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@deck.gl/core@^8.0.0/debug.min.js"></script>
 <script src="https://d3js.org/d3.v6.js"></script>
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-{% endblock %}
+<script>
+  window.d3scale = window.d3;
+</script>
+<script src="https://cdn.plot.ly/plotly-2.18.0.min.js"></script>
+{% endblock %} {% block content %} {{ content.header( title="Scatterplot and
+pseudo-spatial visualisation", breadcrumbs=dataset.title, dataset=dataset) }}
+<div class="row">
+  <div class="container col-lg-9 col-md-12">
+    <div class="row">
+      <div class="col-lg-7 col-md-12">
+        {% block visualisation %} {% if dataset.data_obsm|length > 0 %}
+        <div class="col-12" style="width: 100%">
+          <div
+            id="canvas-container"
+            data-datasetId="{{ dataset.id }}"
+            class="card card-small"
+            style="width: 100%"
+          ></div>
+        </div>
 
-{% block content %}
-  {{ content.header(
-    title="Scatterplot in embedding basis", 
-    breadcrumbs=dataset.title,
-    dataset=dataset) }}
-  <div class="row">
-    <div class="col-lg-9 col-md-12">
-      {% block visualisation %}
-        {% if dataset.data_obsm|length > 0 %}
-          <div id="canvas-container" data-datasetId="{{ dataset.id }}" class="card card-small"></div>
         {% else %}
-          <div class="card card-small">
-            <div class="card-body">
-              <div class="alert alert-info" role="alert">
-                This dataset has no embeddings and can not be visualised as a scatterplot. Please select a different type of plot. 
-              </div>
-            </div>            
+        <div class="card card-small">
+          <div class="card-body">
+            <div class="alert alert-info" role="alert">
+              This dataset has no embeddings and can not be visualised as a
+              scatterplot. Please select a different type of plot.
+            </div>
           </div>
-        {% endif %}
-      {% endblock %}
-    </div>
-    <div class="col-lg-3 col-md-12">
-      {% block selector %}
-        {% if 'hstack' in dataset.title %}
-          {% include 'blocks/selector/combined.html' %}
-        {% elif 'cite_seq' in dataset.title %}
-          {% include 'blocks/selector/proteins.html' %}
-        {% else %}
-          {% include 'blocks/selector/genes.html' %}
-        {% endif %}
-      {% endblock %}
+        </div>
+        {% endif %} {% endblock %}
+      </div>
+
+      <div class="col-lg-5 col-md-12 p-0 m-0">
+        <div id="spatial-column" class="container d-flex flex-column p-0">
+          <div
+          id="spatial-container"
+          data-datasetId="{{ dataset.id }}"
+          class="card card-small"
+        >
+          <div
+            class="card-body mx-auto row d-flex flex-wrap align-items-center p-0"
+            style="width: 100%"
+          >
+            <div id="spatial-error" class="btn-group mb-3 d-none">
+              <a class="btn btn-white">Error</a>
+            </div>
+            <div id="spatial-div" class="d-flex w-100 h-100 p-0">
+              <div
+                id="spatial-controls"
+                class="d-flex justify-content-end flex-row flex-wrap mt-3 py-3 px-3 w-100 gap-1"
+              >
+                <div id="distribution-controls" class="btn-group d-none">
+                  <div id="spatial-log-scale" class="spatial-log-scale">
+                    <input
+                      type="checkbox"
+                      class="btn-check"
+                      id="btn-check-log-scale"
+                      autocomplete="off"
+                    />
+                    <label
+                      class="btn btn-outline-info px-2"
+                      for="btn-check-log-scale"
+                      >Log scale</label
+                    >
+                  </div>
+                </div>
+                <div class="btn-group dropdown mr-1">
+                  <button
+                    id="spatial-colormap"
+                    type="button"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    class="btn btn-white dropdown-toggle px-2"
+                  >
+                    <i class="fas fa-palette"></i>
+                  </button>
+                  <div
+                    id="spatial-colormap-dropdown"
+                    aria-labelledby="spatial-colormap"
+                    class="dropdown-menu"
+                    style="z-index: 10000"
+                  ></div>
+                </div>
+                <div class="btn-group dropdown">
+                  <button
+                    id="spatial-mask"
+                    type="button"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    class="btn btn-white dropdown-toggle"
+                  ></button>
+                  <div
+                    id="spatial-mask-dropdown"
+                    aria-labelledby="spatial-mask"
+                    class="dropdown-menu"
+                    style="z-index: 10000"
+                  ></div>
+                </div>
+                <div class="btn-group dropdown">
+                  <button
+                    id="spatial-mode"
+                    type="button"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    class="btn btn-white dropdown-toggle"
+                  ></button>
+                  <div
+                    id="spatial-mode-dropdown"
+                    aria-labelledby="spatial-mode"
+                    class="dropdown-menu"
+                    style="z-index: 10000"
+                  ></div>
+                </div>
+              </div>
+              <!-- <div id="spatial-loader" class="spinner"><div class="double-bounce1"></div><div class="double-bounce2"></div></div> -->
+              <!-- <img id="spatial-img" class="align-middle" style="max-width: 100%;"/> -->
+              <div class="w-100 h-100" style="padding-top: 4rem;">
+                <div id="spatial-plot" class="w-100 h-100 align-self-center"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="spatial-ref-container" class="container mt-2 p-0" style="z-index: 10;">
+          <div class="card card-small h-100 w-100 d-flex align-items-center">
+            <div class="card-body h-100 d-flex align-items-center">
+              <img
+                id="spatial-ref"
+                class="align-middle mw-100 mh-100"
+                style="height: auto;"
+                src="/images/Elmer_section_reference.png"
+              />
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
     </div>
   </div>
+  <div class="col-lg-3 col-md-12">
+    {% block selector %} {% if 'hstack' in dataset.title %} {% include
+    'blocks/selector/combined.html' %} {% elif 'cite_seq' in dataset.title %} {%
+    include 'blocks/selector/proteins.html' %} {% else %} {% include
+    'blocks/selector/genes.html' %} {% endif %} {% endblock %}
+  </div>
+</div>
 {% endblock %}

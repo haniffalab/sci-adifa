@@ -1,45 +1,66 @@
-<div class="gene-sidebar d-flex" style="max-height:85vh; overflow-y: scroll;">
-  <div class="card card-small w-100">
+<div class="gene-sidebar d-flex" style="max-height: 85vh; overflow-y: scroll">
+  <div class="card card-small w-100" style="z-index: 1">
     <div class="card-header border-bottom">
       <h6 class="m-0">Gene Expression</h6>
-    </div>        
+    </div>
     <div class="card-body p-0 container">
-      <ul class="list-group list-group-flush">               
+      <ul class="list-group list-group-flush">
         <li class="list-group-item p-0 sticky-top">
-          <h6 class="gene-sidebar-title">Search for genes</h6>        
-        </li>            
+          <h6 class="gene-sidebar-title">Search for genes</h6>
+        </li>
         <li class="list-group-item">
-          <select class="select2-gene-search form-control" style="width: 100%"></select>
+          <select
+            class="select2-gene-search form-control"
+            style="width: 100%"
+          ></select>
           <div id="search-genes-selected" class="mt-2"></div>
-        </li>       
-        {% if dataset.genes_curated %}   
+        </li>
+        {% if dataset.genes_curated %}
         <li class="list-group-item p-0 sticky-top">
-          <h6 class="gene-sidebar-title">Author curated genes</h6>              
-        </li>        
+          <h6 class="gene-sidebar-title">Author curated genes</h6>
+        </li>
         <li class="list-group-item">
           {% for gene in dataset.genes_curated %}
-          <button type="button" id="gene-deg-{{ gene }}" data-gene="{{ gene }}" class="btn-gene-select btn btn-outline-info btn-sm">{{ gene }}</button>
+          <button
+            type="button"
+            id="gene-deg-{{ gene }}"
+            data-gene="{{ gene }}"
+            class="btn-gene-select btn btn-outline-info btn-sm"
+          >
+            {{ gene }}
+          </button>
           {% endfor %}
-        </li>   
-        {% endif %}                      
+        </li>
+        {% endif %}
         <li class="list-group-item p-0 sticky-top">
-          <h6 class="gene-sidebar-title">Genes implicated with diseases</h6>        
-        </li>          
+          <h6 class="gene-sidebar-title">Genes implicated with diseases</h6>
+        </li>
         <li class="list-group-item">
-          <select class="select2-disease-search form-control" style="width: 100%"></select>
+          <div id="gene-disease-info"></div>
+          <select
+            class="select2-disease-search form-control"
+            style="width: 100%"
+          ></select>
           <div id="search-genes-disease-set" class="mt-2"></div>
-        </li>    
+        </li>
         {% if dataset.genes_deg %}
         <li class="list-group-item p-0 sticky-top">
-          <h6 class="gene-sidebar-title">Differentially expressed genes</h6>        
-        </li>                        
+          <h6 class="gene-sidebar-title">Differentially expressed genes</h6>
+        </li>
         <li class="list-group-item">
           {% for gene in dataset.genes_deg %}
-          <button type="button" id="gene-deg-{{ gene }}" data-gene="{{ gene }}" class="btn-gene-select btn btn-outline-info btn-sm">{{ gene }}</button>
+          <button
+            type="button"
+            id="gene-deg-{{ gene }}"
+            data-gene="{{ gene }}"
+            class="btn-gene-select btn btn-outline-info btn-sm"
+          >
+            {{ gene }}
+          </button>
           {% endfor %}
-        </li>  
+        </li>
         {% endif %}
       </ul>
-    </div>      
+    </div>
   </div>
 </div>

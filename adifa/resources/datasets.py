@@ -1,4 +1,3 @@
-import json
 from collections import OrderedDict
 
 from flask import jsonify, request
@@ -24,6 +23,13 @@ class Coordinates(Resource):
         obsm = request.args.get("embedding", "X_umap", type=str)
 
         return adata_utils.get_coordinates(datasetId, obsm)
+
+
+class Masks(Resource):
+    def get(self):
+        datasetId = request.args.get("datasetId", 0, type=int)
+
+        return adata_utils.get_masks(datasetId)
 
 
 class Labels(Resource):
@@ -105,6 +111,13 @@ class SearchDiseases(Resource):
             results.append(sample)
 
         return {"results": results}
+
+
+class SearchDiseaseGene(Resource):
+    def get(self):
+        q = request.args.get("search", "", type=str)
+
+        return {"results": adata_utils.get_disease_data(q)}
 
 
 class CellByGeneAggregates(Resource):

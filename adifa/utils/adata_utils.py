@@ -4,6 +4,7 @@ from flask import current_app
 from sqlalchemy import exc
 import numpy as np
 import pandas as pd
+import zarr
 
 from adifa import models
 from adifa.resources.errors import (
@@ -25,6 +26,13 @@ def get_group_index(group):
         return group[group.attrs["_index"]]
     else:
         return group["_index"]
+
+
+def parse_data(data, store=None):
+    if isinstance(data, zarr.Group):
+        return parse_group(data)
+    elif isinstance(data, zarr.Array):
+        return parse_array(store, data)
 
 
 # anndata versions >=0.8.0 write categorical values in a Group with categories and codes
@@ -70,7 +78,7 @@ def parse_array(store, array):
 
 
 def get_annotations(adata):
-    annotations = {"obs": {}, "obsm": [], "var": []}
+    annotations = {"obs": {}, "obsm": [], "var": [], "has_masks": False}
 
     switcher = {
         "category": type_category,
@@ -82,9 +90,9 @@ def get_annotations(adata):
 
     obs_cat = {}
     OBS_GROUPING = "column_ordering"
-    if OBS_GROUPING in adata.uns.group_keys():
-        for k in adata.uns[OBS_GROUPING]:
-            for v in adata.uns[OBS_GROUPING][k]:
+    if OBS_GROUPING in adata["uns"].group_keys():
+        for k in adata["uns"][OBS_GROUPING]:
+            for v in adata["uns"][OBS_GROUPING][k]:
                 obs_cat[v] = k
 
     for name in [
@@ -126,6 +134,9 @@ def get_annotations(adata):
     annotations["obsm"] = [value for value in adata["obsm"].array_keys()]
     annotations["var"] = list(get_group_index(adata["var"])[:])
 
+    if "masks" in adata["uns"] and len(adata["uns"]["masks"].keys()):
+        annotations["has_masks"] = True
+
     return annotations
 
 
@@ -152,12 +163,12 @@ def get_bounds(datasetId, obsm):
 
     try:
         dataset = models.Dataset.query.get(datasetId)
-    except exc.SQLAlchemyError as e:
+    except exc.SQLAlchemyError:
         raise DatabaseOperationError
 
     try:
         adata = current_app.adata[dataset.filename]
-    except (ValueError, AttributeError) as e:
+    except (ValueError, AttributeError):
         raise DatasetNotExistsError
 
     # Normalised [-1,1] @TODO
@@ -189,12 +200,12 @@ def get_coordinates(datasetId, obsm):
 
     try:
         dataset = models.Dataset.query.get(datasetId)
-    except exc.SQLAlchemyError as e:
+    except exc.SQLAlchemyError:
         raise DatabaseOperationError
 
     try:
         adata = current_app.adata[dataset.filename]
-    except (ValueError, AttributeError) as e:
+    except (ValueError, AttributeError):
         raise DatasetNotExistsError
 
     # Normalised [-1,1] @TODO
@@ -212,6 +223,16 @@ def get_coordinates(datasetId, obsm):
         output.append([encode_dtype(round(num, 4)) for num in x[:2].tolist()])
 
     return output
+
+
+def get_masks(datasetId):
+    dataset = models.Dataset.query.get(datasetId)
+    adata = current_app.adata[dataset.filename]
+
+    if "masks" in adata["uns"]:
+        return list(adata["uns"]["masks"].keys())
+    else:
+        return []
 
 
 def get_labels(datasetId, obsm, gene="", obs=""):
@@ -276,7 +297,12 @@ def gene_search(datasetId, searchterm):
 # def categorised_expr(datasetId, cat, gene, func="mean"):
 #     dataset = models.Dataset.query.get(datasetId)
 #     adata = current_app.adata[dataset.filename]
+# def categorised_expr(datasetId, cat, gene, func="mean"):
+#     dataset = models.Dataset.query.get(datasetId)
+#     adata = current_app.adata[dataset.filename]
 
+#     data = adata[:, [gene]].to_df()
+#     grouping = data.join(adata.obs[cat]).groupby(cat)
 #     data = adata[:, [gene]].to_df()
 #     grouping = data.join(adata.obs[cat]).groupby(cat)
 
@@ -284,14 +310,19 @@ def gene_search(datasetId, searchterm):
 #         expr = grouping.mean()
 #     elif func == "median":
 #         expr = grouping.median()
+#     if func == "mean":
+#         expr = grouping.mean()
+#     elif func == "median":
+#         expr = grouping.median()
 
 #     # counts = grouping.count()/grouping.count().sum()
-#     #'count': counts.loc[group,gene]
+#     # 'count': counts.loc[group,gene]
 #     output = [
 #         {"gene": gene, "cat": group, "expr": float(expr.loc[group, gene])}
 #         for group in grouping.groups.keys()
 #     ]
 
+#     return output
 #     return output
 
 
@@ -349,25 +380,39 @@ def mode(d):
     return int(mode[0])
 
 
-def type_category(obs):
+def type_category(obs, from_discrete=False):
     categories = [str(i) for i in obs.categories.values.flatten()]
 
-    if len(categories) > 100 and current_app.config.get("TRUNCATE_OBS", True):
+    if from_discrete:
+        obs_type = "discrete"
+    elif pd.api.types.is_string_dtype(obs.categories.dtype):
+        if all(
+            obs.categories.str.match(
+                "^(\d{4})-(0[1-9]|1[0-2]|[1-9])-([1-9]|0[1-9]|[1-2]\d|3[0-1])$"
+            )
+        ):
+            obs_type = "date"
+        else:
+            obs_type = "categorical"
+
+    if len(categories) > 100 and (
+        from_discrete or current_app.config.get("TRUNCATE_OBS", True)
+    ):
         return {
-            "type": "categorical",
+            "type": obs_type,
             "is_truncated": True,
             "values": dict(enumerate(categories[:99], 1)),
         }
 
     return {
-        "type": "categorical",
+        "type": obs_type,
         "is_truncated": False,
         "values": dict(enumerate(categories, 1)),
     }
 
 
 def type_bool(obs):
-    return {"type": "categorical", "values": {1: "True", 0: "False"}}
+    return {"type": "boolean", "values": {1: "True", 0: "False"}}
 
 
 def type_numeric(obs):
@@ -382,7 +427,7 @@ def type_numeric(obs):
 
 
 def type_discrete(obs):
-    return {"type": "discrete"}
+    return type_category(pd.Series(obs).astype("category").cat, from_discrete=True)
 
 
 def ndarray_max(a):
@@ -436,3 +481,12 @@ def disease_filename():
         )
         else os.path.join(current_app.root_path, "data", "disease.csv")
     )
+
+
+def get_disease_data(gene):
+    datafile = disease_filename()
+    try:
+        df = pd.read_csv(datafile)
+        return df[df["Gene mutation"] == gene].to_dict("records")
+    except Exception:
+        return []

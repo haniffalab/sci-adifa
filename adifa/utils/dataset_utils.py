@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 
 from flask import current_app
 import zarr
@@ -30,7 +29,7 @@ def auto_discover():
             annotations = adata_utils.get_annotations(adata)
             # generate hash
             current_app.logger.info("Hashing " + zarr_dir)
-            # hash = adata["X"].hexdigest()  # we don't impliment hash usage, can be removed
+            # hash = adata["X"].hexdigest()  # we don't implement hash usage, can be removed
             hash = zarr_dir
 
             # check if exists
@@ -51,6 +50,7 @@ def auto_discover():
                 # new.genes_deg = adata_utils.get_degs(adata)
                 new.title = zarr_dir
                 new.data_var = annotations.get("var")
+                new.has_masks = annotations.get("has_masks")
                 try:
                     db.session.add(new)
                     db.session.commit()
@@ -65,6 +65,7 @@ def auto_discover():
                 record.data_obsm = annotations.get("obsm")
                 # record.genes_deg = adata_utils.get_degs(adata)
                 record.data_var = annotations.get("var")
+                record.has_masks = annotations.get("has_masks")
                 try:
                     db.session.commit()
                 except Exception as e:
@@ -87,7 +88,12 @@ def load_files():
     for dataset in datasets:
         zarr_dir = os.path.join(current_app.config.get("DATA_PATH"), dataset.filename)
         if os.path.isdir(zarr_dir):
-            current_app.adata[dataset.filename] = zarr.open(zarr_dir, "r")
+            try:
+                current_app.adata[dataset.filename] = zarr.open_consolidated(
+                    zarr_dir, "r"
+                )
+            except:
+                current_app.adata[dataset.filename] = zarr.open(zarr_dir, "r")
             dataset.published = 1
             db.session.commit()
             current_app.logger.info("Loading " + dataset.title)
