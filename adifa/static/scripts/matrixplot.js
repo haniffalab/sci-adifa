@@ -836,7 +836,7 @@
         const categories = data.values;
         $("#search-genes-disease-set").empty();
         $.each(categories, function (cat) {
-          if (cat !== "default") {
+          if (cat.toLowerCase() !== "default") {
             $("#search-genes-disease-set").append(
               $("<div/>").append("<p/>").text(cat.toUpperCase())
             );

@@ -293,8 +293,11 @@ def plot_gene_expression(
     colormap: str,
 ):
     group_df = parse_group(adata.varm[adata.uns["masks"][mask]["varm"][()]])
-    df_of_values = (group_df.T)[gene]
-    values = list(df_of_values.values)
+    try:
+        df_of_values = (group_df.T)[gene]
+        values = list(df_of_values.values)
+    except KeyError:
+        values = [0] * len(obs_cat1)
 
     # from sklearn.preprocessing import MinMaxScaler
     # scaler = MinMaxScaler()

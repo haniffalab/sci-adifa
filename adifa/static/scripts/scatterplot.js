@@ -765,6 +765,10 @@
 
           // get data
           loadEmbedding();
+
+          if (colorScaleType === "gene") {
+            getGeneDiseaseInfo(colorScaleKey);
+          }
         },
         showError
       );
@@ -807,6 +811,42 @@
       return this;
     };
 
+    const getGeneDiseaseInfo = function (gene) {
+      $.when(
+        doAjax(API_SERVER + "api/v1/search/disease_gene?search=" + gene, false)
+      ).then(function (d) {
+        populateGeneDiseaseInfo(gene, d.results);
+      });
+    };
+
+    const populateGeneDiseaseInfo = function (gene, info) {
+      const geneDiseaseInfo = $("#gene-disease-info");
+      geneDiseaseInfo.empty();
+      geneDiseaseInfo.removeClass();
+      if (info.length) {
+        geneDiseaseInfo.addClass("mb-4");
+        geneDiseaseInfo.append($("<h6/>").addClass("mb-0").text(gene));
+        const infoList = $("<ul/>")
+          .addClass("list-group")
+          .css("max-height", "15vh")
+          .css("overflow-y", "auto");
+        info.forEach(function (i) {
+          const infoItem = $("<li/>").addClass("list-group-item p-3");
+          Object.keys(i).forEach(function (k) {
+            if (k !== "Gene mutation") {
+              infoItem.append(
+                $("<p>")
+                  .addClass("m-0")
+                  .html("<strong>" + k + "</strong>: " + i[k])
+              );
+            }
+          });
+          infoList.append(infoItem);
+        });
+        geneDiseaseInfo.append(infoList);
+      }
+    };
+
     this.colorize = function (el) {
       if ($(el).hasClass("active")) {
         decolorize();
@@ -834,6 +874,9 @@
           colorScaleType = $(el).data("type");
           $("#colourise" + colorScaleId).addClass("active");
         }
+
+        if (colorScaleType === "gene") getGeneDiseaseInfo(colorScaleKey);
+
         Cookies.set("ds" + datasetId + "-obs-name", colorScaleKey, {
           expires: 30,
           sameSite: "Strict",
@@ -981,7 +1024,7 @@
         const categories = data.values;
         $("#search-genes-disease-set").empty();
         $.each(categories, function (cat) {
-          if (cat !== "default") {
+          if (cat.toLowerCase() !== "default") {
             $("#search-genes-disease-set").append(
               $("<div/>").append("<p/>").text(cat.toUpperCase())
             );

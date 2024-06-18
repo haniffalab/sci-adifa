@@ -113,6 +113,13 @@ class SearchDiseases(Resource):
         return {"results": results}
 
 
+class SearchDiseaseGene(Resource):
+    def get(self):
+        q = request.args.get("search", "", type=str)
+
+        return {"results": adata_utils.get_disease_data(q)}
+
+
 class CellByGeneAggregates(Resource):
     def get(self, id):
         genes = request.args.getlist("genes")

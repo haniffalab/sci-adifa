@@ -481,3 +481,9 @@ def disease_filename():
         )
         else os.path.join(current_app.root_path, "data", "disease.csv")
     )
+
+
+def get_disease_data(gene):
+    datafile = disease_filename()
+    df = pd.read_csv(datafile)
+    return df[df["Gene mutation"] == gene].to_dict("records")

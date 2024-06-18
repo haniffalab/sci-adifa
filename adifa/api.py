@@ -12,6 +12,7 @@ from adifa.resources.datasets import (
     Labels,
     SearchGenes,
     SearchDiseases,
+    SearchDiseaseGene,
 )
 from adifa.resources.plotting import Matrixplot, Spatial
 from adifa.resources.errors import errors
@@ -30,5 +31,6 @@ api.add_resource(Masks, "/masks")
 api.add_resource(Labels, "/labels")
 api.add_resource(SearchGenes, "/datasets/<id>/search/genes")
 api.add_resource(SearchDiseases, "/datasets/<id>/search/diseases")
+api.add_resource(SearchDiseaseGene, "/search/disease_gene")
 api.add_resource(Matrixplot, "/datasets/<int:id>/plotting/matrixplot")
 api.add_resource(Spatial, "/datasets/<int:id>/plotting/spatial")
