@@ -485,5 +485,8 @@ def disease_filename():
 
 def get_disease_data(gene):
     datafile = disease_filename()
-    df = pd.read_csv(datafile)
-    return df[df["Gene mutation"] == gene].to_dict("records")
+    try:
+        df = pd.read_csv(datafile)
+        return df[df["Gene mutation"] == gene].to_dict("records")
+    except Exception:
+        return []
