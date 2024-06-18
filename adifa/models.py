@@ -31,6 +31,7 @@ class Dataset(db.Model):
     password = db.Column(db.String(120), nullable=True)
     genes_deg = db.Column(db.JSON, default={})
     genes_curated = db.Column(db.JSON, default={})
+    ref_img = db.Column(db.String(512), nullable=True)
 
     def __repr__(self):
         return f"Dataset('{self.filename}')"

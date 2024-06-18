@@ -68,7 +68,7 @@
     //   imgElem.show()
     // }
 
-    const showError = function () {
+    const showError = function (error) {
       if (!(error.status === 0 && error.statusText === "abort")) {
         $("#spatial-div").hide();
         $("#spatial-error").removeClass("d-none");

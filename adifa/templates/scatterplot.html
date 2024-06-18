@@ -137,12 +137,18 @@ pseudo-spatial visualisation", breadcrumbs=dataset.title, dataset=dataset) }}
         <div id="spatial-ref-container" class="container mt-2 p-0" style="z-index: 10;">
           <div class="card card-small h-100 w-100 d-flex align-items-center">
             <div class="card-body h-100 d-flex align-items-center">
-              <img
-                id="spatial-ref"
-                class="align-middle mw-100 mh-100"
-                style="height: auto;"
-                src="/images/Elmer_section_reference.png"
-              />
+              {% if dataset.ref_img %}
+                <img
+                  id="spatial-ref"
+                  class="align-middle mw-100 mh-100"
+                  style="height: auto;"
+                  src="{{dataset.ref_img}}"
+                />
+              {% else %}
+                <div class="alert alert-info" role="alert">
+                  This dataset has no reference image.
+                </div>
+              {% endif %}
             </div>
           </div>
         </div>
