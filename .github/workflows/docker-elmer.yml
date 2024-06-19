@@ -1,11 +1,11 @@
-name: docker:dev
+name: docker:elmer
 
 on:
   push:
-    branches: [ dev ]
+    branches: [ elmer ]
 
   pull_request:
-    branches: [ dev ]
+    branches: [ elmer ]
 
 jobs:
   build:
@@ -22,8 +22,8 @@ jobs:
 
     - name: docker build
       run: |
-        docker build . -f ./Dockerfile -t haniffalab/adifa:dev
+        docker build . -f ./Dockerfile -t haniffalab/adifa:elmer
 
     - name: docker push 
       run: |
-        docker push haniffalab/adifa:dev
+        docker push haniffalab/adifa:elmer

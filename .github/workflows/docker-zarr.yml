@@ -1,4 +1,4 @@
-name: docker
+name: docker:zarr
 
 on:
   push:
