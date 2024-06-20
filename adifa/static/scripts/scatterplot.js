@@ -137,6 +137,7 @@
       });
       startLoader();
       render();
+      clearGeneDiseaseInfo();
       endLoader();
     };
 
@@ -819,6 +820,10 @@
       });
     };
 
+    const clearGeneDiseaseInfo = function () {
+      $("#gene-disease-info").empty();
+    }
+
     const populateGeneDiseaseInfo = function (gene, info) {
       const geneDiseaseInfo = $("#gene-disease-info");
       geneDiseaseInfo.empty();
@@ -876,6 +881,7 @@
         }
 
         if (colorScaleType === "gene") getGeneDiseaseInfo(colorScaleKey);
+        else clearGeneDiseaseInfo();
 
         Cookies.set("ds" + datasetId + "-obs-name", colorScaleKey, {
           expires: 30,

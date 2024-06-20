@@ -52,27 +52,25 @@
       });
     });
 
-    // const abort = function () {
-    //   $.each(xhrPool, function (idx, jqXHR) {
-    //     jqXHR.abort()
-    //   })
-    // }
+    const abort = function () {
+      $.each(xhrPool, function (idx, jqXHR) {
+        jqXHR.abort()
+      })
+    }
 
-    // const startLoader = function () {
-    //   imgElem.hide()
-    //   $('#spatial-loader').show()
-    // }
+    const startLoader = function () {
+      $('#spatial-loader').show()
+    }
 
-    // const endLoader = function () {
-    //   $('#spatial-loader').hide()
-    //   imgElem.show()
-    // }
+    const endLoader = function () {
+      $('#spatial-loader').hide()
+    }
 
     const showError = function (error) {
       if (!(error.status === 0 && error.statusText === "abort")) {
         $("#spatial-div").hide();
         $("#spatial-error").removeClass("d-none");
-        $("#spatial-loader").hide();
+        endLoader();
       }
     };
 
@@ -105,7 +103,8 @@
     this.initialize = function () {
       $("#spatial-div").show();
       $("#spatial-error").addClass("d-none");
-      $("#spatial-loader").hide();
+
+      startLoader();
 
       populateModes();
       populateColormaps();
@@ -230,7 +229,7 @@
     };
 
     const loadPlot = function () {
-      // startLoader()
+      startLoader();
       $("#spatial-mode").text(
         spatialMode
           ? spatialMode
@@ -308,13 +307,12 @@
             "/plotting/spatial" +
             paramsStr
         ).then(function (dataString) {
-          // imgElem.attr('src', imgsrc`${data}`)
           const data = JSON.parse(dataString);
           Plotly.newPlot("spatial-plot", data.data, data.layout, {
             responsive: true,
             displaylogo: false,
           });
-          // endLoader()
+          endLoader();
         }, showError)
       );
     };
