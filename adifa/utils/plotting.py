@@ -76,8 +76,9 @@ def get_matrixplot(
         raise DatasetNotExistsError
 
     vars = get_group_index(adata["var"])[:]
+    var_set = set(vars)
     var_intersection = [
-        x for x in var_names if x in set(vars)
+        x for x in var_names if x in var_set
     ]  # preserve var_names order
 
     sorter = np.argsort(vars)
@@ -462,6 +463,7 @@ def plot_polygons(
     scale_upper_value: int = 100,
 ):
     values_dict = dict(zip(list(obs_cat1.unique()), values))
+    values_sum = sum(values)
 
     if scale == "auto":
         vmax = max(values) if max(values) > 0 else 1
@@ -475,7 +477,7 @@ def plot_polygons(
 
     fig = go.Figure()
 
-    for i, key in enumerate(adata.uns["masks"][mask]["polygons"].keys()):
+    for key in adata.uns["masks"][mask]["polygons"].keys():
         polygon0 = go.Scatter(
             x=list(*adata.uns["masks"][mask]["polygons"][key][:, :, 0, 0]),
             y=list(*adata.uns["masks"][mask]["polygons"][key][:, :, 0, 1]),
@@ -483,43 +485,17 @@ def plot_polygons(
             mode="lines",
             fill="toself",
             line=dict(
-                color=(
-                    "#%02x%02x%02x"
-                    % tuple(
-                        list(
-                            int((255 * x))
-                            for x in list(
-                                sm.to_rgba(
-                                    [val for k, val in values_dict.items() if k in key][
-                                        0
-                                    ]
-                                )
-                            )[0:3]
-                        )
-                    )
-                ),
+                color=("#%02x%02x%02x" % sm.to_rgba(values_dict[key], bytes=True)[0:3]),
                 width=1,
             ),
-            fillcolor=(
-                "#%02x%02x%02x"
-                % tuple(
-                    list(
-                        int((255 * x))
-                        for x in list(
-                            sm.to_rgba(
-                                [val for k, val in values_dict.items() if k in key][0]
-                            )
-                        )[0:3]
-                    )
-                )
-            ),
+            fillcolor=("#%02x%02x%02x" % sm.to_rgba(values_dict[key], bytes=True)[0:3]),
             hoveron="fills",
             text=(
                 wrap_text(
                     text_template(
                         key=key,
-                        value=[val for k, val in values_dict.items() if k in key][0],
-                        sum_values=sum(values),
+                        value=values_dict[key],
+                        sum_values=values_sum,
                     )
                 )
                 if text_template
@@ -594,7 +570,7 @@ def plot_distribution(
         #    )
         # )
 
-        if scale_log == True:
+        if scale_log:
             values = np.log(np.square(values))
             x_title = f"{cat2} (log(x^2))"
         else:
@@ -670,16 +646,14 @@ def plot_date(
             )
             df_new.set_index(datetime_add_info_col)
 
-        date_dict = {}
-        for i in df_new.index:
-            date_dict[i] = df_new.loc[i][0]
+        date_dict = {i: df_new.loc[i][0] for i in df_new.index}
 
         labels = [
             "{0:%d %b %Y}:\n{1}".format(d, l)
             for l, d in zip(date_dict.keys(), date_dict.values())
         ]
         dates = date_dict.values()
-        dates = [i.date() for i in dates]
+        dates = [d.date() for d in dates]
 
     data = [
         go.Scatter(

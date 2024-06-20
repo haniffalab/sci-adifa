@@ -226,7 +226,7 @@
 
     this.redraw = function () {
       abort();
-      loadPlot();
+      debouncedLoadPlot();
     };
 
     const loadPlot = function () {
