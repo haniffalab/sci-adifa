@@ -225,6 +225,7 @@
     };
 
     this.redraw = function () {
+      abort();
       loadPlot();
     };
 
@@ -317,6 +318,8 @@
       );
     };
 
+    const debouncedLoadPlot = $.debounce(300, loadPlot);
+
     this.colorize = function (el, active) {
       if (active) {
         this.decolorize();
@@ -344,8 +347,9 @@
             setMode(prevObsMode[colorScaleType] || "counts");
           }
         }
+        abort();
         displayModes();
-        loadPlot();
+        debouncedLoadPlot();
       }
     };
 

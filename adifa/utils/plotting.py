@@ -29,6 +29,8 @@ from adifa.resources.errors import (
     DatasetNotExistsError,
 )
 
+combined_annotation = "selected observations"
+
 
 def get_matrixplot(
     datasetId,
@@ -173,33 +175,27 @@ def get_spatial_plot(
     # scale_min: int = 0,
     # tick_no: int = 8,
     scale_log: bool = False,
-    plot_covid: bool = False,
-    use_premade_info: bool = True,
-    datetime_add_info_col: str = "haniffa_ID",
+    use_premade_info: bool = False,
+    datetime_add_info_col: str = None,
 ):
     if not datasetId > 0:
         raise InvalidDatasetIdError
 
     try:
         dataset = models.Dataset.query.get(datasetId)
-    except exc.SQLAlchemyError as e:
+    except exc.SQLAlchemyError:
         raise DatabaseOperationError
 
     try:
         adata = current_app.adata[dataset.filename]
-    except (ValueError, AttributeError) as e:
+    except (ValueError, AttributeError):
         raise DatasetNotExistsError
 
     # Check settings defined in function input
 
     cat1 = adata["uns"]["masks"][mask]["obs"][()]
     cat2 = cat  # change to annotations of interest
-    cmap = mpl.colormaps[
-        colormap
-    ]  # using premade colormaps e.g. viridis, plasma, inferno, magma, cividis, Reds
-    # scale = scale_mode  # for the color bar: auto, manual
-    # scale_lower_value = scale_min
-    # scale_upper_value = scale_max
+    cmap = mpl.colormaps[colormap]
 
     obs_cat1 = pd.Categorical(parse_data(adata["obs"][cat1]))
     obs_cat2 = parse_data(adata["obs"][cat2], adata)
@@ -221,14 +217,14 @@ def get_spatial_plot(
             obs_cat2_df = pd.DataFrame(
                 obs_cat2.astype(str),
                 index=get_group_index(adata["obs"]),
-                columns=["combined_annotation"],
+                columns=[combined_annotation],
             )
             for value in plot_value:
-                obs_cat2_df.loc[
-                    obs_cat2.isin([value]), "combined_annotation"
-                ] = "combined_annotation"
-            obs_cat2 = pd.Categorical(obs_cat2_df["combined_annotation"])
-            plot_value = "combined_annotation"
+                obs_cat2_df.loc[obs_cat2.isin([value]), combined_annotation] = (
+                    combined_annotation
+                )
+            obs_cat2 = pd.Categorical(obs_cat2_df[combined_annotation])
+            plot_value = combined_annotation
 
         return plot_categorical(
             adata=adata,
@@ -276,7 +272,6 @@ def get_spatial_plot(
             cat2=cat2,
             obs_cat2=obs_cat2,
             use_premade_info=use_premade_info,
-            plot_covid=plot_covid,
             datetime_add_info_col=datetime_add_info_col,
         )
     else:
@@ -297,10 +292,6 @@ def plot_gene_expression(
         values = list(df_of_values.values)
     except KeyError:
         values = [0] * len(obs_cat1)
-
-    # from sklearn.preprocessing import MinMaxScaler
-    # scaler = MinMaxScaler()
-    # values = np.concatenate(scaler.fit_transform(np.array(values).reshape(-1, 1))).tolist()
 
     title = f"Mean gene expression of <br> {gene} <br> for each section"
     text_template = partial(
@@ -646,13 +637,12 @@ def plot_date(
     adata: zarr.Group,
     cat2: str,
     obs_cat2: pd.Categorical,
-    use_premade_info: bool = True,
-    plot_covid: bool = False,
-    datetime_add_info_col: str = "haniffa_ID",
+    use_premade_info: bool = False,
+    datetime_add_info_col: str = None,
 ):
     obs_cat2 = obs_cat2.astype("datetime64[ns]")
 
-    if use_premade_info == True:
+    if use_premade_info:
         Dates = list(adata.uns["premade_date_information"][cat2]["dates"][:])
         dates = []
         for d in Dates:
@@ -667,15 +657,18 @@ def plot_date(
         df_new = (
             pd.DataFrame(
                 {
-                    datetime_add_info_col: parse_data(
-                        adata["obs"][datetime_add_info_col]
-                    ),
                     cat2: obs_cat2,
                 }
             )
             .drop_duplicates()
             .reset_index(drop=True)
-        ).set_index(datetime_add_info_col)
+        )
+
+        if datetime_add_info_col:
+            df_new[datetime_add_info_col] = parse_data(
+                adata["obs"][datetime_add_info_col]
+            )
+            df_new.set_index(datetime_add_info_col)
 
         date_dict = {}
         for i in df_new.index:
@@ -729,38 +722,6 @@ def plot_date(
             "yanchor": "top",
         }
     )
-
-    if plot_covid:
-        covid_start = datetime.date(2020, 3, 23)
-        covid_end = datetime.date(2022, 2, 24)
-
-        fig.add_vline(
-            x=covid_start, y0=0.55, y1=0.65, line_width=1, line_color="purple"
-        )
-        fig.add_vline(x=covid_end, y0=0.55, y1=0.65, line_width=1, line_color="purple")
-        fig.add_shape(
-            type="line",
-            x0=covid_start,
-            y0=0.25,
-            x1=covid_end,
-            y1=0.25,
-            line=dict(color="purple", width=1),
-            xref="x",
-            yref="y",
-        )
-        fig.add_annotation(
-            dict(
-                font=dict(color="purple", size=10),
-                x=covid_start,
-                y=0.5,
-                showarrow=False,
-                text="Covid",
-                textangle=0,
-                xanchor="left",
-                xref="x",
-                yref="y",
-            )
-        )
 
     fig.update_xaxes(
         showline=True,
