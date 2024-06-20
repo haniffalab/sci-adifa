@@ -92,17 +92,18 @@ def get_matrixplot(
         )
     else:
         obs_arr = parse_array(adata, adata["obs"][groupby])
+        obs_arr, obs_dtype = list(obs_arr), obs_arr.dtype
         obs_df = pd.DataFrame(
             (
-                [int(x) for x in list(obs_arr)]
-                if "int" in obs_arr.dtype.name
+                [int(x) for x in obs_arr]
+                if "int" in obs_dtype.name
                 else (
-                    [float(x) for x in list(obs_arr)]
-                    if "float" in obs_arr.dtype.name
+                    [float(x) for x in obs_arr]
+                    if "float" in obs_dtype.name
                     else (
-                        [complex(x) for x in list(obs_arr)]
-                        if "complex" in obs_arr.dtype.name
-                        else [str(x) for x in list(obs_arr)]
+                        [complex(x) for x in obs_arr]
+                        if "complex" in obs_dtype.name
+                        else [str(x) for x in obs_arr]
                     )
                 )
             ),
@@ -158,7 +159,7 @@ def get_matrixplot(
         "values_df": json.loads(plot.values_df.to_json()),
         "min_value": str(plot.values_df.min().min()),
         "max_value": str(plot.values_df.max().max()),
-        "excluded": list(set(var_names).difference(vars)),
+        "excluded": list(var_set.difference(vars)),
     }
 
     return output
@@ -289,8 +290,7 @@ def plot_gene_expression(
 ):
     group_df = parse_group(adata.varm[adata.uns["masks"][mask]["varm"][()]])
     try:
-        df_of_values = (group_df.T)[gene]
-        values = list(df_of_values.values)
+        values = group_df.loc[gene].values.tolist()
     except KeyError:
         values = [0] * len(obs_cat1)
 
