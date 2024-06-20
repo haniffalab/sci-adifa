@@ -31,7 +31,7 @@ def scatterplot(id):
         dataset = models.Dataset.query.get(id)
         if not dataset:
             abort(404)
-    except exc.SQLAlchemyError as e:
+    except exc.SQLAlchemyError:
         abort(500)
 
     authenticated = session.get("auth_dataset_" + str(id), False)
@@ -49,7 +49,10 @@ def scatterplot(id):
             sorted(dataset.data_obs.items(), key=lambda x: getitem(x[1], "name"))
         )
 
-    return render_template("scatterplot.html", dataset=dataset, obs=obs)
+    if dataset.has_masks:
+        return render_template("scatterplot-spatial.html", dataset=dataset, obs=obs)
+    else:
+        return render_template("scatterplot.html", dataset=dataset, obs=obs)
 
 
 @bp.route("/dataset/<int:id>/matrixplot")
@@ -58,7 +61,7 @@ def matrixplot(id):
         dataset = models.Dataset.query.get(id)
         if not dataset:
             abort(404)
-    except exc.SQLAlchemyError as e:
+    except exc.SQLAlchemyError:
         abort(500)
 
     # Check protected status
@@ -85,7 +88,7 @@ def download(id):
         dataset = models.Dataset.query.get(id)
         if not dataset:
             abort(404)
-    except exc.SQLAlchemyError as e:
+    except exc.SQLAlchemyError:
         abort(500)
 
     # Check protected status
@@ -108,7 +111,7 @@ def password(id):
         dataset = models.Dataset.query.get(id)
         if not dataset:
             abort(404)
-    except exc.SQLAlchemyError as e:
+    except exc.SQLAlchemyError:
         abort(500)
 
     authenticated = session.get("auth_dataset_" + str(id), False)
